@@ -124,11 +124,25 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     const v = sState.model.viewports.find((x) => x.id === viewportId);
     const el = contentRefs.current.get(viewportId);
     if (!v || !el) return;
+    const canvas = canvasRef.current;
     try {
       userInteracted.current = true;
       const cardEl = (el.closest(`.${s.card}`) as HTMLElement) || el;
-      cardEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
-      await new Promise((r) => setTimeout(r, 100));
+      if (canvas) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const cardRect = cardEl.getBoundingClientRect();
+        const targetTop = canvas.scrollTop + (cardRect.top - canvasRect.top) - (canvasRect.height - cardRect.height) / 2;
+        const targetLeft = canvas.scrollLeft + (cardRect.left - canvasRect.left) - (canvasRect.width - cardRect.width) / 2;
+        canvas.scrollTo({
+          top: Math.max(0, Math.round(targetTop)),
+          left: Math.max(0, Math.round(targetLeft)),
+          behavior: 'instant' as any,
+        });
+      } else {
+        cardEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
+      }
+
+      await new Promise((r) => setTimeout(r, 180));
 
       const dataUrl = await requestCapture('png');
       const p = sState.profileOf(v);
@@ -153,22 +167,50 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     try {
       let n = 0;
       const vps = sState.visibleViewports();
-      for (const v of vps) {
+      for (let i = 0; i < vps.length; i++) {
+        const v = vps[i];
+        if (!v) continue;
         const el = contentRefs.current.get(v.id);
         if (!el) continue;
         const p = sState.profileOf(v);
         const { width, height } = effectiveSize(p, v.orientation);
+        const cardEl = (el.closest(`.${s.card}`) as HTMLElement) || el;
+
         try {
-          const cardEl = (el.closest(`.${s.card}`) as HTMLElement) || el;
-          cardEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
-          await new Promise((r) => setTimeout(r, 120));
+          if (canvas) {
+            const canvasRect = canvas.getBoundingClientRect();
+            const cardRect = cardEl.getBoundingClientRect();
+            const targetTop = canvas.scrollTop + (cardRect.top - canvasRect.top) - (canvasRect.height - cardRect.height) / 2;
+            const targetLeft = canvas.scrollLeft + (cardRect.left - canvasRect.left) - (canvasRect.width - cardRect.width) / 2;
+            canvas.scrollTo({
+              top: Math.max(0, Math.round(targetTop)),
+              left: Math.max(0, Math.round(targetLeft)),
+              behavior: 'instant' as any,
+            });
+          } else {
+            cardEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
+          }
+
+          await new Promise((r) => setTimeout(r, 200));
 
           const dataUrl = await requestCapture('png');
           const blob = await cropToBlob(dataUrl, rectOf(el), 'png');
-          downloadBlob(blob, captureFileName({ device: p.name, w: width, h: height, ext: 'png', ts: Date.now() + n }));
+          downloadBlob(
+            blob,
+            captureFileName({
+              device: p.name,
+              w: width,
+              h: height,
+              ext: 'png',
+              ts: Date.now(),
+              index: i,
+            }),
+          );
           n++;
+
+          await new Promise((r) => setTimeout(r, 150));
         } catch (err) {
-          console.error(`Failed capturing ${p.name}:`, err);
+          console.error(`Failed capturing ${p.name} (viewport ${v.id}):`, err);
         }
       }
 

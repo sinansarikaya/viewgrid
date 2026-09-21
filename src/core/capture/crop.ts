@@ -32,9 +32,11 @@ export function captureFileName(parts: {
   h: number;
   ext: 'png' | 'jpg';
   ts?: number;
+  index?: number;
 }): string {
   const safe = parts.device.replace(/[^\w.-]+/g, '_').slice(0, 40);
   const d = new Date(parts.ts ?? Date.now());
   const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
-  return `viewgrid_${safe}_${parts.w}x${parts.h}_${stamp}.${parts.ext}`;
+  const idx = parts.index !== undefined ? `_${parts.index + 1}` : '';
+  return `viewgrid_${safe}_${parts.w}x${parts.h}_${stamp}${idx}.${parts.ext}`;
 }
