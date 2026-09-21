@@ -1,5 +1,4 @@
 import React from 'react';
-import { siteConfig } from '../data/site.config';
 import { InteractiveHeroDemo } from './InteractiveHeroDemo';
 
 export function Hero() {

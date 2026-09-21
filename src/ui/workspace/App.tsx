@@ -46,7 +46,7 @@ function matchesShortcut(e: KeyboardEvent, comboStr?: string): boolean {
 }
 import { CompareModal } from './CompareModal';
 
-export function App({ hub }: { hub: LoopGuard }) {
+export function App({ hub: _hub }: { hub: LoopGuard }) {
   const st = useStore();
   const t = getTranslation(st.language);
   const canvasRef = useRef<HTMLDivElement>(null);

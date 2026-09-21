@@ -9,7 +9,6 @@ import {
   MAX_VIEWPORTS,
 } from '../../core/types';
 import { BUILTIN_DEVICES, BUILTIN_PRESETS } from '../../core/devices/builtin';
-import { mergeDeviceDb } from '../../core/devices/merge';
 import { makeCustomDevice } from '../../core/devices/schema';
 import {
   canAddViewports,

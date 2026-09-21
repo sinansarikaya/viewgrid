@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import s from './SettingsModal.module.css';
 import { useStore, DEFAULT_SHORTCUTS } from './store';
-import { getTranslation } from './i18n';
 import { b } from '../../platform/browser';
 
 function formatEventKeyCombo(e: React.KeyboardEvent): string {
@@ -22,7 +21,6 @@ function formatEventKeyCombo(e: React.KeyboardEvent): string {
 
 export function SettingsModal() {
   const st = useStore();
-  const t = getTranslation(st.language);
   const [recordingAction, setRecordingAction] = useState<string | null>(null);
 
   useEffect(() => {
