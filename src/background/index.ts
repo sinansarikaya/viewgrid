@@ -228,17 +228,17 @@ if (b.webRequest?.onBeforeSendHeaders) {
         const isSubFrame = details.type === 'sub_frame';
         const isFromWorkspace =
           (typeof details.tabId === 'number' && workspaceTabs.has(details.tabId)) ||
-          details.documentUrl?.startsWith(wsUrlBase) ||
-          details.originUrl?.startsWith(wsUrlBase) ||
-          details.documentUrl?.includes('workspace.html') ||
-          details.originUrl?.includes('workspace.html') ||
-          details.originUrl?.startsWith('moz-extension://') ||
-          details.documentUrl?.startsWith('moz-extension://') ||
+          (details.documentUrl && wsUrlBase && details.documentUrl.startsWith(wsUrlBase)) ||
+          (details.originUrl && wsUrlBase && details.originUrl.startsWith(wsUrlBase)) ||
+          (details.documentUrl && details.documentUrl.startsWith('moz-extension://') && details.documentUrl.includes('/workspace.html')) ||
+          (details.originUrl && details.originUrl.startsWith('moz-extension://') && details.originUrl.includes('/workspace.html')) ||
           details.frameAncestors?.some(
-            (a: any) => a.url?.includes('workspace.html') || a.url?.startsWith('moz-extension://') || (wsUrlBase && a.url?.startsWith(wsUrlBase)),
+            (a: any) =>
+              (wsUrlBase && a.url?.startsWith(wsUrlBase)) ||
+              (a.url?.startsWith('moz-extension://') && a.url?.includes('/workspace.html')),
           );
 
-        const shouldHandle = isSubFrame || isFromWorkspace;
+        const shouldHandle = isSubFrame && isFromWorkspace;
         if (!shouldHandle) return {};
 
         // Auto-register workspace tab if request is identified as coming from workspace
@@ -316,17 +316,17 @@ if (b.webRequest?.onHeadersReceived) {
         const isSubFrame = details.type === 'sub_frame';
         const isFromWorkspace =
           (typeof details.tabId === 'number' && workspaceTabs.has(details.tabId)) ||
-          details.documentUrl?.startsWith(wsUrlBase) ||
-          details.originUrl?.startsWith(wsUrlBase) ||
-          details.documentUrl?.includes('workspace.html') ||
-          details.originUrl?.includes('workspace.html') ||
-          details.originUrl?.startsWith('moz-extension://') ||
-          details.documentUrl?.startsWith('moz-extension://') ||
+          (details.documentUrl && wsUrlBase && details.documentUrl.startsWith(wsUrlBase)) ||
+          (details.originUrl && wsUrlBase && details.originUrl.startsWith(wsUrlBase)) ||
+          (details.documentUrl && details.documentUrl.startsWith('moz-extension://') && details.documentUrl.includes('/workspace.html')) ||
+          (details.originUrl && details.originUrl.startsWith('moz-extension://') && details.originUrl.includes('/workspace.html')) ||
           details.frameAncestors?.some(
-            (a: any) => a.url?.includes('workspace.html') || a.url?.startsWith('moz-extension://') || (wsUrlBase && a.url?.startsWith(wsUrlBase)),
+            (a: any) =>
+              (wsUrlBase && a.url?.startsWith(wsUrlBase)) ||
+              (a.url?.startsWith('moz-extension://') && a.url?.includes('/workspace.html')),
           );
 
-        const shouldUnblock = isSubFrame || isFromWorkspace;
+        const shouldUnblock = isSubFrame && isFromWorkspace;
         if (!shouldUnblock) return {};
 
         // Auto-learn tabId for subsequent sub_frame redirects
