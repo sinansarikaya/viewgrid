@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ViewGrid</title>
+    <style>
+      body { width: 320px; margin: 0; padding: 12px; font: 13px/1.45 system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+      h1 { font-size: 14px; margin: 0 0 8px; letter-spacing: 0.3px; }
+      .row { display: flex; gap: 6px; margin: 8px 0; }
+      input { flex: 1; min-width: 0; background: #16233f; border: 1px solid #24344f; border-radius: 6px; color: inherit; padding: 6px 8px; }
+      button { background: #0ea5e9; border: 0; color: #04121f; font-weight: 600; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+      button.ghost { background: transparent; border: 1px solid #24344f; color: inherit; font-weight: 400; }
+      .hint { color: #94a3b8; font-size: 12px; margin: 6px 0; }
+      .status { font-size: 12px; margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./popup/main.tsx"></script>
+  </body>
+</html>
