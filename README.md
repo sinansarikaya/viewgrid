@@ -104,3 +104,18 @@ viewgrid/
 
 Store name **ViewGrid** (decided). Logo/icon set: generated placeholder icons ship now;
 branding polish tracked in TASK.md → Release. License: TBD (MIT vs MPL-2.0).
+
+## Status Summary (2026-09-21)
+
+**Done (v0.1 MVP core):** workspace shell (popup + tab), multi-viewport cards
+(21 presets + custom devices, orientation, zoom, minimize/hide/duplicate/remove/reorder,
+focus mode), grid/row/column layouts, URL bar + back/forward/reload-all, managed framing
+(workspace-tab-scoped XFO/CSP policy + permission onboarding), sync scroll/click/nav
+with loop-proof protocol, screenshots (single/batch/workspace, HiDPI crop), issue
+scanning (overflow, text clip, out-of-viewport, tap targets) + panel, workspace
+save/load/autosave, dark/light, keyboard map, 31 unit tests, `web-ext lint` 0 errors.
+
+**Next (live list in TASK.md):** real-Firefox smoke, remaining sync channels, simulation
+(UA/env/network), device frames, dev tools + measurement, annotation, design overlay,
+full-page capture, video, presentation mode, regression diffs, reports, a11y framework,
+AI (opt-in), Chromium adapter parity.

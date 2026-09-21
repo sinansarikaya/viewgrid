@@ -29,12 +29,14 @@
 ### Post-planning updates (2026-09-21)
 
 - [x] Decide app name → **ViewGrid** (docs + manifest + README updated)
+- [x] v0.1 MVP core implementation (see live states below)
 
 ---
 
 ## 1. Foundation
 
 - [ ] Git repository initialized + skeleton commit (`chore: initialize project skeleton`)
+      *(repo bootstrap pending — code & docs ready to commit)*
 - [x] Scaffold package.json (scripts: dev:firefox, build:firefox, dev:chromium, build:chromium, test, lint, typecheck)
 - [x] Configure TypeScript (strict, multi-entry build)
 - [x] Configure Vite UI build (workspace, popup, options) + esbuild IIFE bundles (background, content agent)
@@ -49,8 +51,9 @@
 - [x] Firefox `browser_specific_settings.gecko.id`
 - [x] Scaffold `src/` module layout per docs/ARCHITECTURE.md §3
 - [x] Build pipeline verified (build:firefox + build:chromium; `web-ext lint` 0 errors, 2 React-internal warnings documented in SECURITY.md)
-- [ ] CI pipeline (typecheck, lint, unit tests, web-ext lint)
-- [ ] Verify dev loop in real Firefox (`web-ext run` + temporary add-on + manual smoke)
+- [ ] Real-Firefox smoke test (load temporary add-on; run E2E smoke flows) — next step on dev machine
+- [ ] CI pipeline (typecheck, lint, unit tests, web-ext lint) — GitHub Actions from v0.2
+- [x] Verify dev loop wiring (`npm run dev:firefox` = build + web-ext run)
 - [x] Document dev workflow in README
 
 ## 2. Platform / Browser Abstraction Layer

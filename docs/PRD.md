@@ -1,7 +1,9 @@
 # Product Requirements Document — ViewGrid
 
 - **Working name:** **ViewGrid** (decided 2026-09-21 — store-safe, no “Firefox” trademark)
-- **Status:** Implementation in progress — v0.1 MVP core (see `../TASK.md` live state)
+- **Status:** v0.1 MVP core implemented (multi-viewport workspace, sync scroll/click/nav,
+  framing policy, screenshots, issue detection, presets/custom devices, workspace save).
+  Full tiered scope below; live progress in `../TASK.md`.
 - **Target platform (first):** Firefox (AMO), Manifest V3 WebExtension
 - **Portability target:** Chrome / Chromium / Edge with minimal changes
 - **Date:** 2026-09-21
