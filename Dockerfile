@@ -3,8 +3,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Enable Corepack & prepare pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm globally via npm
+RUN npm install -g pnpm@9
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
