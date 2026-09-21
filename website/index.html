@@ -2141,6 +2141,41 @@
       font-size: 0.78rem;
       color: var(--text-faint);
     }
+
+    /* Floating Back-to-Top Button */
+    .back-to-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(12px);
+      transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.2s, background-color 0.2s;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      z-index: 999;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .back-to-top:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+    }
   </style>
 </head>
 <body>
@@ -2414,9 +2449,9 @@
       <div class="container">
         <div class="benchmark-header">
           <span class="serif-label" data-i18n="benchLabel">Performance &amp; Architecture</span>
-          <h2 data-i18n="benchTitle">Native browser performance. Not an 850 MB Electron app.</h2>
+          <h2 data-i18n="benchTitle">Native browser performance. No heavy desktop runtime.</h2>
           <p class="benchmark-sub" data-i18n="benchSub">
-            Most multi-screen testing tools are bloated Electron bundles or cloud proxies that swallow your machine's RAM. ViewGrid runs directly inside your browser engine with near-zero overhead.
+            Most multi-screen testing tools are bloated desktop bundles or cloud proxies that swallow your machine's RAM. ViewGrid runs directly inside your browser engine with near-zero overhead.
           </p>
         </div>
 
@@ -2427,15 +2462,15 @@
               <span class="bench-metric">&lt; 15 MB</span>
             </div>
             <h4 data-i18n="benchRamHead">Ultra-light memory footprint</h4>
-            <p data-i18n="benchRamDesc">Runs natively inside Chromium and Firefox. While Electron-based tools consume 850 MB to 1.2 GB of RAM, ViewGrid tests multiple breakpoints without slowing down your laptop or battery.</p>
+            <p data-i18n="benchRamDesc">Runs natively inside Chromium and Firefox. Unlike heavy desktop testing suites, ViewGrid tests multiple breakpoints without slowing down your laptop or battery.</p>
             <div class="bench-bar-track">
               <div class="bench-bar-fill viewgrid-fill" style="width: 12%;">
-                <span class="bar-label">ViewGrid: 14 MB</span>
+                <span class="bar-label">ViewGrid: &lt; 15 MB in test</span>
               </div>
             </div>
             <div class="bench-bar-track secondary">
               <div class="bench-bar-fill electron-fill" style="width: 88%;">
-                <span class="bar-label">Electron Tools: 850 MB+</span>
+                <span class="bar-label">Heavy Desktop Tools: 850 MB+</span>
               </div>
             </div>
           </div>
@@ -2519,9 +2554,9 @@
             <div class="tour-placeholder" id="showcase-fallback" style="display: none;">
               <div class="placeholder-schematic">
                 <span class="mono-num" style="color: var(--accent); font-size: 0.85rem;" id="fallback-badge">WORKSPACE VIEWPORT MATRIX</span>
-                <h4 style="font-size: 1.4rem; margin: 12px 0 8px;" id="fallback-title">Screenshot: Workspace</h4>
+                <h4 style="font-size: 1.4rem; margin: 12px 0 8px;" id="fallback-title">Workspace Preview</h4>
                 <p style="font-size: 0.95rem; color: var(--text-muted);">
-                  Drop <code>/screenshots/workspace.png</code> in <code>website/public/screenshots/</code> to showcase real capture.
+                  Interactive multi-device responsive testing canvas with synchronized scrolling.
                 </p>
               </div>
               <span class="mono-num" style="color: var(--text-faint); font-size: 0.78rem;">Click to expand lightbox</span>
@@ -2839,7 +2874,7 @@
             <span class="serif-label" data-i18n="iframeLabel">Header handling</span>
             <h2 class="offgrid-headline" style="font-size: 2.3rem; margin-bottom: 16px;" data-i18n="iframeTitle">Works on sites that block iframes.</h2>
             <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.6;" data-i18n="iframeText">
-              Production websites usually send <code>X-Frame-Options: DENY</code> headers to prevent clickjacking. Standard iframe testing tools fail completely and show blank boxes. ViewGrid runs as an audited browser extension, safely stripping these blocking headers strictly for the sub-frames inside your active ViewGrid workspace tab. Your other browsing tabs remain fully protected.
+              Production websites usually send <code>X-Frame-Options: DENY</code> headers to prevent clickjacking. Standard iframe testing tools fail completely and show blank boxes. ViewGrid is built with a security-focused browser extension architecture, safely stripping these blocking headers strictly for the sub-frames inside your active ViewGrid workspace tab. Your other browsing tabs remain fully protected.
             </p>
           </div>
 
@@ -3024,6 +3059,11 @@
           <details class="faq-item">
             <summary data-i18n="faqQ5">Can I take screenshots of my viewports?</summary>
             <p data-i18n="faqA5">Yes. You can capture individual viewports or the entire multi-device canvas into full-resolution PNG files with a single click.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faqQ6">Is ViewGrid free to use?</summary>
+            <p data-i18n="faqA6">Yes. ViewGrid is currently free to install and use. The core extension is fully open source under the MIT license, with no ads, no trackers, and no mandatory subscriptions.</p>
           </details>
         </div>
       </div>
@@ -3211,7 +3251,7 @@
         compareSub: "Drag the curtain handle below to compare how the layout renders at 375px versus 1280px. Notice where text drops awkwardly or buttons misalign.",
         iframeLabel: "Header handling",
         iframeTitle: "Works on sites that block iframes.",
-        iframeText: "Production websites usually send X-Frame-Options: DENY headers to prevent clickjacking. Standard iframe testing tools fail completely and show blank boxes. ViewGrid runs as an audited browser extension, safely stripping these blocking headers strictly for the sub-frames inside your active ViewGrid workspace tab. Your other browsing tabs remain fully protected.",
+        iframeText: "Production websites usually send X-Frame-Options: DENY headers to prevent clickjacking. Standard iframe testing tools fail completely and show blank boxes. ViewGrid is built with a security-focused browser extension architecture, safely stripping these blocking headers strictly for the sub-frames inside your active ViewGrid workspace tab. Your other browsing tabs remain fully protected.",
         usecaseLabel: "Use cases",
         usecaseTitle: "Built for daily frontend rhythm.",
         usecaseSub: "Scroll through the scenarios where ViewGrid replaces manual browser gymnastics.",
@@ -3230,14 +3270,16 @@
         faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera, and Mozilla Firefox / Firefox Developer Edition.",
         faqQ5: "Can I take screenshots of my viewports?",
         faqA5: "Yes. You can capture individual viewports or the entire multi-device canvas into full-resolution PNG files with a single click.",
+        faqQ6: "Is ViewGrid free to use?",
+        faqA6: "Yes. ViewGrid is currently free to install and use. The core extension is fully open source under the MIT license, with no ads, no trackers, and no mandatory subscriptions.",
         navBenchmark: "Benchmark",
         navHandoff: "Figma Diff",
         benchLabel: "Architecture & Memory",
-        benchTitle: "Native browser performance. Not an 850 MB Electron app.",
-        benchSub: "Most multi-screen testing tools are bloated Electron bundles or cloud proxies that swallow your machine's RAM. ViewGrid runs directly inside your browser engine with near-zero overhead.",
+        benchTitle: "Native browser performance. No heavy desktop runtime.",
+        benchSub: "Most multi-screen testing tools are bloated desktop bundles or cloud proxies that swallow your machine's RAM. ViewGrid runs directly inside your browser engine with near-zero overhead.",
         benchBadgeRam: "RAM FOOTPRINT",
         benchRamHead: "Ultra-light memory footprint",
-        benchRamDesc: "Runs natively inside Chromium and Firefox. While Electron-based tools consume 850 MB to 1.2 GB of RAM, ViewGrid tests multiple breakpoints without slowing down your laptop or battery.",
+        benchRamDesc: "Runs natively inside Chromium and Firefox. Unlike heavy desktop testing suites, ViewGrid tests multiple breakpoints without slowing down your laptop or battery.",
         benchBadgeSync: "SCROLL SYNC",
         benchSyncHead: "Zero-lag bidirectional sync",
         benchSyncDesc: "Local broadcast channel mirrors mouse clicks, touch interactions, input forms, and 60 FPS scrolling instantly without feedback loops or frame hitching.",
@@ -3263,11 +3305,11 @@
         navBenchmark: "Performans",
         navHandoff: "Figma Karşılaştırma",
         benchLabel: "Mimari & Düşük Bellek",
-        benchTitle: "Yerel tarayıcı performansı. 850 MB Electron canavarı değil.",
-        benchSub: "Birçok çoklu ekran aracı, bilgisayarınızın RAM'ini tüketen hantal Electron paketleri veya bulut sunucularıdır. ViewGrid doğrudan tarayıcı çekirdeğinde sıfıra yakın yükle çalışır.",
+        benchTitle: "Yerel tarayıcı performansı. Hantal masaüstü uygulaması değil.",
+        benchSub: "Birçok çoklu ekran aracı, bilgisayarınızın belleğini tüketen hantal masaüstü paketleri veya bulut sunucularıdır. ViewGrid doğrudan tarayıcı çekirdeğinde sıfıra yakın yükle çalışır.",
         benchBadgeRam: "RAM TÜKETİMİ",
         benchRamHead: "Ultra hafif bellek ayak izi",
-        benchRamDesc: "Chromium ve Firefox içinde yerel olarak çalışır. Electron tabanlı araçlar 850 MB - 1.2 GB RAM tüketirken, ViewGrid bilgisayarınızı ve pilinizi yormadan birden fazla ekranı test eder.",
+        benchRamDesc: "Chromium ve Firefox içinde yerel olarak çalışır. Hantal masaüstü araçlarının aksine, ViewGrid bilgisayarınızı ve pilinizi yormadan birden fazla ekranı test eder.",
         benchBadgeSync: "KAYDIRMA SENKRONU",
         benchSyncHead: "Sıfır gecikmeli çift yönlü senkronizasyon",
         benchSyncDesc: "Yerel yayın kanalı; tıklamaları, dokunmatik hareketleri, form girişlerini ve 60 FPS kaydırmayı döngüye girmeden veya takılmadan tüm ekranlara anında yansıtır.",
@@ -3355,17 +3397,19 @@
         faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera ve Mozilla Firefox.",
         faqQ5: "Pencerelerin ekran görüntüsünü alabilir miyim?",
         faqA5: "Evet. Tek bir cihazın veya tüm cihaz tuvalinin tam çözünürlüklü PNG görüntüsünü tek tıkla alabilirsiniz.",
+        faqQ6: "ViewGrid'i kullanmak ücretsiz mi?",
+        faqA6: "Evet. ViewGrid şu anda tamamen ücretsiz olarak yüklenip kullanılabilir. MIT lisanslı açık kaynak kodludur; reklam, telemetri veya zorunlu abonelik içermez.",
         footerNote: "Sinan Sarıkaya tarafından piksel hassasiyetine önem veren geliştiriciler için geliştirilmiştir. Şirket fonu veya takip kodu içermez."
       },
       no: {
         navBenchmark: "Ytelse",
         navHandoff: "Figma Diff",
         benchLabel: "Arkitektur & Lavt Minnebruk",
-        benchTitle: "Ekte nettleserytelse. Ingen 850 MB Electron-app.",
-        benchSub: "Mange verktøy er tunge Electron-pakker som sluker maskinens RAM. ViewGrid kjører direkte i nettlesermotoren med minimal belastning.",
+        benchTitle: "Ekte nettleserytelse. Ingen tung skrivebordsapp.",
+        benchSub: "Mange verktøy er tunge skrivebordspakker som sluker maskinens RAM. ViewGrid kjører direkte i nettlesermotoren med minimal belastning.",
         benchBadgeRam: "RAM-BRUK",
         benchRamHead: "Ekstremt lavt minneforbruk",
-        benchRamDesc: "Kjører integrert i Chromium og Firefox. Mens Electron-apper krever 850 MB+, lar ViewGrid deg teste uten å tappe batteriet.",
+        benchRamDesc: "Kjører integrert i Chromium og Firefox. I motsetning til tunge skrivebordsapper, lar ViewGrid deg teste uten å tappe batteriet.",
         benchBadgeSync: "RULLE-SYNKRONISERING",
         benchSyncHead: "Null forsinkelse i synkronisering",
         benchSyncDesc: "Lokal broadcast-kanal speiler klikk, berøring og 60 FPS rulling uten ekkolooper eller etterslep.",
@@ -3453,6 +3497,8 @@
         faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera og Mozilla Firefox.",
         faqQ5: "Kan jeg ta skjermbilder av visningene?",
         faqA5: "Ja. Du kan ta PNG-skjermbilde av enkeltrammer eller hele lerretet med ett klikk.",
+        faqQ6: "Er ViewGrid gratis å bruke?",
+        faqA6: "Ja. ViewGrid er for øyeblikket helt gratis å installere og bruke. Kjerneapplikasjonen er åpen kildekode under MIT-lisens uten reklame eller abonnementer.",
         footerNote: "Utviklet av Sinan Sarıkaya for utviklere som bryr seg om pikselpresisjon. Ingen sporing, ingen selskapsstøtte."
       }
     };
@@ -4268,6 +4314,21 @@
     }
 
     /* -------------------------------------------------------------
+       BACK TO TOP CONTROLLER
+       ------------------------------------------------------------- */
+    function initBackToTop() {
+      const btt = document.getElementById('back-to-top');
+      if (!btt) return;
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 400) {
+          btt.classList.add('visible');
+        } else {
+          btt.classList.remove('visible');
+        }
+      }, { passive: true });
+    }
+
+    /* -------------------------------------------------------------
        INITIALIZATION
        ------------------------------------------------------------- */
     document.addEventListener('DOMContentLoaded', () => {
@@ -4284,7 +4345,13 @@
       activateStep(1);
       initHowItWorksObserver();
       initHeroDotCanvas();
+      initBackToTop();
     });
   </script>
+
+  <!-- Floating Back-to-Top Button -->
+  <button type="button" class="back-to-top" id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Back to top" title="Back to top">
+    &uarr;
+  </button>
 </body>
 </html>
