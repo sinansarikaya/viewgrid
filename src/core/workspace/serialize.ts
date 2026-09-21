@@ -43,6 +43,9 @@ function parseViewport(v: unknown, errors: string[], i: number): ViewportState |
   if (typeof (v as any).frameFinish === 'string') {
     out.frameFinish = (v as any).frameFinish;
   }
+  if (isObj((v as any).position) && typeof (v as any).position.x === 'number' && typeof (v as any).position.y === 'number') {
+    out.position = { x: Math.round((v as any).position.x), y: Math.round((v as any).position.y) };
+  }
   return out;
 }
 
@@ -70,7 +73,7 @@ export function parseWorkspace(input: unknown): ParseResult {
     name: typeof input.name === 'string' ? input.name : 'Workspace',
     url: typeof input.url === 'string' ? input.url : '',
     viewports,
-    layout: (['grid', 'row', 'col'] as LayoutMode[]).includes(input.layout as LayoutMode)
+    layout: (['grid', 'row', 'col', 'free'] as LayoutMode[]).includes(input.layout as LayoutMode)
       ? (input.layout as LayoutMode)
       : 'grid',
     alignItems: (['flex-start', 'center', 'flex-end'] as AlignItemsMode[]).includes(input.alignItems as AlignItemsMode)

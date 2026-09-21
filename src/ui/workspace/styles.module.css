@@ -60,9 +60,9 @@
     var(--bg);
 }
 .canvasGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 2), max-content);
+  gap: 24px;
   align-items: var(--align-items, flex-start);
   justify-content: var(--justify-content, flex-start);
 }
@@ -79,6 +79,36 @@
   gap: 20px;
   align-items: var(--align-items, center);
   justify-content: var(--justify-content, flex-start);
+}
+.canvasFree {
+  position: relative;
+  min-width: 3200px;
+  min-height: 3200px;
+}
+.cardFree {
+  position: absolute !important;
+  transition: none !important;
+  margin: 0 !important;
+}
+.guideLineV {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 1px;
+  background: var(--accent, #00f0ff);
+  box-shadow: 0 0 8px var(--accent, #00f0ff);
+  pointer-events: none;
+  z-index: 999;
+}
+.guideLineH {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--accent, #00f0ff);
+  box-shadow: 0 0 8px var(--accent, #00f0ff);
+  pointer-events: none;
+  z-index: 999;
 }
 
 /* —— Viewport card —— */

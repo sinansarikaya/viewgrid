@@ -16,6 +16,7 @@ interface Props {
   index: number;
   isDragging?: boolean;
   isDropTarget?: boolean;
+  isFreeLayout?: boolean;
   onRegister: (id: string, el: HTMLElement | null) => void;
   onShot: () => void;
   onInjected: () => void;
@@ -23,6 +24,7 @@ interface Props {
   onDragEndCard?: () => void;
   onDragOverCard?: (idx: number, pos?: 'before' | 'after') => void;
   onDropCard?: (idx: number, pos?: 'before' | 'after') => void;
+  onFreeDrag?: (id: string, e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 export function ViewportCard({
@@ -30,6 +32,7 @@ export function ViewportCard({
   index,
   isDragging,
   isDropTarget,
+  isFreeLayout,
   onRegister,
   onShot,
   onInjected,
@@ -37,6 +40,7 @@ export function ViewportCard({
   onDragEndCard,
   onDragOverCard,
   onDropCard,
+  onFreeDrag,
 }: Props) {
   const st = useStore();
   const t = getTranslation(st.language);
@@ -145,14 +149,23 @@ export function ViewportCard({
       )}
       <div
         className={s.cardHeader}
-        draggable
+        draggable={!isFreeLayout}
+        onMouseDown={(e) => {
+          if (isFreeLayout && onFreeDrag) {
+            e.preventDefault();
+            e.stopPropagation();
+            onFreeDrag(vp.id, e);
+          }
+        }}
         onDragStart={(e) => {
+          if (isFreeLayout) return;
           e.dataTransfer.setData('text/viewgrid-card-id', vp.id);
           e.dataTransfer.setData('text/plain', vp.id);
           e.dataTransfer.effectAllowed = 'move';
           onDragStartCard?.(vp.id);
         }}
         onDragEnd={() => {
+          if (isFreeLayout) return;
           onDragEndCard?.();
         }}
       >

@@ -17,7 +17,7 @@ import {
   sendAgentCmd,
 } from './bridge';
 import { LoopGuard } from '../../core/sync/protocol';
-import { effectiveSize } from '../../core/workspace/layout';
+import { effectiveSize, gridColumns, calculateSnapGuides, type GuideLine, type Bounds } from '../../core/workspace/layout';
 import { b } from '../../platform/browser';
 import type { LayoutMode, AlignItemsMode, JustifyContentMode } from '../../core/types';
 import { ZOOM_PRESETS } from '../../core/types';
@@ -360,7 +360,13 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
 
   const visible = st.visibleViewports();
   const canvasClass =
-    st.model.layout === 'grid' ? s.canvasGrid : st.model.layout === 'row' ? s.canvasRow : s.canvasCol;
+    st.model.layout === 'grid'
+      ? s.canvasGrid
+      : st.model.layout === 'row'
+      ? s.canvasRow
+      : st.model.layout === 'col'
+      ? s.canvasCol
+      : s.canvasFree;
 
   const [dragState, setDragState] = useState<{
     draggingId: string | null;
@@ -407,6 +413,64 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     });
   }, [visible, st]);
 
+  const [activeGuides, setActiveGuides] = useState<GuideLine[]>([]);
+
+  const handleFreeDrag = useCallback(
+    (id: string, startEvent: React.MouseEvent<HTMLDivElement>) => {
+      const sState = useStore.getState();
+      const targetVp = sState.model.viewports.find((v) => v.id === id);
+      if (!targetVp) return;
+
+      const cardEl = contentRefs.current.get(id)?.closest(`.${s.card}`) as HTMLElement;
+      const canvasEl = canvasRef.current;
+      if (!canvasEl || !cardEl) return;
+
+      const canvasRect = canvasEl.getBoundingClientRect();
+      const cardRect = cardEl.getBoundingClientRect();
+
+      const initialX = targetVp.position?.x ?? Math.round(cardRect.left - canvasRect.left + canvasEl.scrollLeft);
+      const initialY = targetVp.position?.y ?? Math.round(cardRect.top - canvasRect.top + canvasEl.scrollTop);
+
+      const startMouseX = startEvent.clientX;
+      const startMouseY = startEvent.clientY;
+
+      const visibleVps = sState.visibleViewports();
+      const otherBounds: Bounds[] = [];
+      visibleVps.forEach((v) => {
+        if (v.id === id) return;
+        const el = contentRefs.current.get(v.id)?.closest(`.${s.card}`) as HTMLElement;
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const vx = v.position?.x ?? Math.round(r.left - canvasRect.left + canvasEl.scrollLeft);
+        const vy = v.position?.y ?? Math.round(r.top - canvasRect.top + canvasEl.scrollTop);
+        otherBounds.push({ id: v.id, x: vx, y: vy, width: r.width, height: r.height });
+      });
+
+      const onMouseMove = (e: MouseEvent) => {
+        const dx = e.clientX - startMouseX;
+        const dy = e.clientY - startMouseY;
+        const candX = Math.max(0, initialX + dx);
+        const candY = Math.max(0, initialY + dy);
+
+        const targetBounds = { x: candX, y: candY, width: cardRect.width, height: cardRect.height };
+        const snapped = calculateSnapGuides(targetBounds, otherBounds, 12);
+
+        sState.setPosition(id, { x: snapped.x, y: snapped.y });
+        setActiveGuides(snapped.guides);
+      };
+
+      const onMouseUp = () => {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+        setActiveGuides([]);
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    },
+    [],
+  );
+
   const draggedVp = visible.find((v) => v.id === dragState.draggingId);
   const draggedProf = draggedVp ? st.profileOf(draggedVp) : null;
   const draggedLogical = draggedProf && draggedVp ? effectiveSize(draggedProf, draggedVp.orientation) : null;
@@ -448,30 +512,47 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
             <option key={n} value={n}>{n}</option>
           ))}
         </select>
-        <select value={st.model.layout} onChange={(e) => st.setLayout(e.target.value as LayoutMode)} title={t.layout}>
+        <select
+          value={st.model.layout}
+          onChange={(e) => {
+            const mode = e.target.value as LayoutMode;
+            st.setLayout(mode);
+            if (mode === 'free') {
+              const hasPos = st.model.viewports.some((v) => !!v.position);
+              if (!hasPos) st.autoAlignAll();
+            }
+          }}
+          title={t.layout}
+        >
           <option value="grid">{t.layoutGrid}</option>
           <option value="row">{t.layoutRow}</option>
           <option value="col">{t.layoutCol}</option>
+          <option value="free">{t.layoutFree}</option>
         </select>
-        <select
-          value={st.model.alignItems || 'flex-start'}
-          onChange={(e) => st.setAlignItems(e.target.value as AlignItemsMode)}
-          title={t.alignItemsTitle}
-        >
-          <option value="flex-start">{t.alignTop}</option>
-          <option value="center">{t.alignCenterV}</option>
-          <option value="flex-end">{t.alignBottom}</option>
-        </select>
-        <select
-          value={st.model.justifyContent || 'flex-start'}
-          onChange={(e) => st.setJustifyContent(e.target.value as JustifyContentMode)}
-          title={t.justifyContentTitle}
-        >
-          <option value="flex-start">{t.alignLeft}</option>
-          <option value="center">{t.alignCenterH}</option>
-          <option value="flex-end">{t.alignRight}</option>
-          <option value="space-between">{t.alignSpaceBetween}</option>
-        </select>
+        <button onClick={() => st.autoAlignAll()} title={t.autoAlignGrid}>{t.autoAlignGrid}</button>
+        {st.model.layout !== 'free' && (
+          <>
+            <select
+              value={st.model.alignItems || 'flex-start'}
+              onChange={(e) => st.setAlignItems(e.target.value as AlignItemsMode)}
+              title={t.alignItemsTitle}
+            >
+              <option value="flex-start">{t.alignTop}</option>
+              <option value="center">{t.alignCenterV}</option>
+              <option value="flex-end">{t.alignBottom}</option>
+            </select>
+            <select
+              value={st.model.justifyContent || 'flex-start'}
+              onChange={(e) => st.setJustifyContent(e.target.value as JustifyContentMode)}
+              title={t.justifyContentTitle}
+            >
+              <option value="flex-start">{t.alignLeft}</option>
+              <option value="center">{t.alignCenterH}</option>
+              <option value="flex-end">{t.alignRight}</option>
+              <option value="space-between">{t.alignSpaceBetween}</option>
+            </select>
+          </>
+        )}
         <div className={s.sep} />
         <details style={{ position: 'relative' }}>
           <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 6 }}>
@@ -633,12 +714,39 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
             className={canvasClass}
             style={
               {
+                '--grid-cols': gridColumns(visible.length, st.model.layout),
                 '--align-items': st.model.alignItems || 'flex-start',
                 '--justify-content': st.model.justifyContent || 'flex-start',
               } as React.CSSProperties
             }
           >
+            {st.model.layout === 'free' &&
+              activeGuides.map((g, i) =>
+                g.type === 'v' ? (
+                  <div key={i} className={s.guideLineV} style={{ left: g.pos }} />
+                ) : (
+                  <div key={i} className={s.guideLineH} style={{ top: g.pos }} />
+                ),
+              )}
             {visible.map((v, idx) => {
+              if (st.model.layout === 'free') {
+                const posX = v.position?.x ?? 24;
+                const posY = v.position?.y ?? 24;
+                return (
+                  <div key={v.id} className={s.cardFree} style={{ left: posX, top: posY }}>
+                    <ViewportCard
+                      vp={v}
+                      index={idx}
+                      isFreeLayout
+                      onRegister={registerContent}
+                      onShot={() => void shotOne(v.id)}
+                      onInjected={() => void injectAgents()}
+                      onFreeDrag={handleFreeDrag}
+                    />
+                  </div>
+                );
+              }
+
               const showSkeletonBefore =
                 Boolean(dragState.draggingId) &&
                 dragState.targetIndex === idx &&

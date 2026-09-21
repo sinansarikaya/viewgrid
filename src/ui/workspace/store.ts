@@ -14,10 +14,12 @@ import { BUILTIN_DEVICES, BUILTIN_PRESETS } from '../../core/devices/builtin';
 import { mergeDeviceDb } from '../../core/devices/merge';
 import { makeCustomDevice } from '../../core/devices/schema';
 import {
+  autoAlignPositions,
   canAddViewports,
   clampZoom,
   duplicateViewport,
   effectiveSize,
+  gridColumns,
   moveViewport,
   nextHidden,
   nextMinimized,
@@ -69,6 +71,8 @@ export interface StoreState {
   setLayout(mode: LayoutMode): void;
   setAlignItems(mode: AlignItemsMode): void;
   setJustifyContent(mode: JustifyContentMode): void;
+  setPosition(id: string, pos: { x: number; y: number }): void;
+  autoAlignAll(): void;
   reorder(from: number, to: number): void;
   reorderById(fromId: string, toId: string): void;
   focus(id: string | null): void;
@@ -464,6 +468,44 @@ export const useStore = create<StoreState>((set, get) => ({
 
   setJustifyContent(mode) {
     set((s) => ({ model: { ...s.model, justifyContent: mode } }));
+    schedulePersist(get);
+  },
+
+  setPosition(id, pos) {
+    set((s) => ({
+      model: {
+        ...s.model,
+        viewports: s.model.viewports.map((v) => (v.id === id ? { ...v, position: pos } : v)),
+      },
+    }));
+    schedulePersist(get);
+  },
+
+  autoAlignAll() {
+    const sState = get();
+    const visible = sState.visibleViewports();
+    if (visible.length === 0) return;
+
+    const boundsList = visible.map((v) => {
+      const p = sState.profileOf(v);
+      const { width, height } = effectiveSize(p, v.orientation);
+      const cardW = Math.round(width * v.zoom) + 24;
+      const cardH = Math.round(height * v.zoom) + 60;
+      return { id: v.id, width: cardW, height: cardH };
+    });
+
+    const cols = gridColumns(visible.length, 'grid');
+    const posMap = autoAlignPositions(boundsList, cols, 40, 40, 24, 24);
+
+    set((s) => ({
+      model: {
+        ...s.model,
+        viewports: s.model.viewports.map((v) => {
+          const pos = posMap.get(v.id);
+          return pos ? { ...v, position: pos } : v;
+        }),
+      },
+    }));
     schedulePersist(get);
   },
 

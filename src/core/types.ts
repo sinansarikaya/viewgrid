@@ -33,9 +33,10 @@ export interface ViewportState {
   url: string;
   colorScheme?: 'auto' | 'dark' | 'light';
   frameFinish?: string;
+  position?: { x: number; y: number };
 }
 
-export type LayoutMode = 'grid' | 'row' | 'col';
+export type LayoutMode = 'grid' | 'row' | 'col' | 'free';
 export type AlignItemsMode = 'flex-start' | 'center' | 'flex-end';
 export type JustifyContentMode = 'flex-start' | 'center' | 'flex-end' | 'space-between';
 

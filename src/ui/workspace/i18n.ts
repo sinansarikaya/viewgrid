@@ -109,6 +109,8 @@ export interface Translations {
   alignCenterH: string;
   alignRight: string;
   alignSpaceBetween: string;
+  layoutFree: string;
+  autoAlignGrid: string;
 }
 
 export const TRANSLATIONS: Record<Language, Translations> = {
@@ -221,12 +223,14 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     alignCenterH: '↔️ Center',
     alignRight: '➡️ Right',
     alignSpaceBetween: '⇥⇤ Space Between',
+    layoutFree: 'Freeform',
+    autoAlignGrid: '📐 Auto Align Grid',
   },
   tr: {
     add: '＋ Ekle',
     presets: '☰ Şablonlar',
     layout: 'Yerleşim',
-    layoutGrid: 'Izgara',
+    layoutGrid: 'Izgara (Matris)',
     layoutRow: 'Satır',
     layoutCol: 'Sütun',
     sync: 'Senk',
@@ -331,12 +335,14 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     alignCenterH: '↔️ Ortala (Yatay)',
     alignRight: '➡️ Sağ',
     alignSpaceBetween: '⇥⇤ Eşit Dağıt',
+    layoutFree: 'Serbest Tuval',
+    autoAlignGrid: '📐 Izgaraya Düzgün Hizala',
   },
   no: {
     add: '＋ Legg til',
     presets: '☰ Maler',
     layout: 'Oppsett',
-    layoutGrid: 'Rutenett',
+    layoutGrid: 'Rutenett (Matrise)',
     layoutRow: 'Rad',
     layoutCol: 'Kolonne',
     sync: 'Synk',
@@ -441,6 +447,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     alignCenterH: '↔️ Midtstill',
     alignRight: '➡️ Høyre',
     alignSpaceBetween: '⇥⇤ Jevn avstand',
+    layoutFree: 'Fritt område',
+    autoAlignGrid: '📐 Juster til rutenett',
   },
 };
 

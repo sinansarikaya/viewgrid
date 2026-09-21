@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  autoAlignPositions,
+  calculateSnapGuides,
   canAddViewports,
   clampZoom,
   displayedSize,
@@ -64,5 +66,34 @@ describe('viewport math', () => {
     expect(gridColumns(4, 'grid')).toBe(2);
     expect(gridColumns(4, 'row')).toBe(4);
     expect(gridColumns(4, 'col')).toBe(1);
+  });
+
+  it('calculates auto-aligned matrix grid positions with aligned column edges', () => {
+    const items = [
+      { id: 'v1', width: 400, height: 800 },
+      { id: 'v2', width: 1920, height: 1080 },
+      { id: 'v3', width: 800, height: 1100 },
+      { id: 'v4', width: 1280, height: 800 },
+    ];
+    const posMap = autoAlignPositions(items, 2, 40, 40, 24, 24);
+
+    // Row 0: v1 (col 0), v2 (col 1)
+    // Row 1: v3 (col 0), v4 (col 1)
+    // Row 0 max height = max(800, 1080) = 1080.
+    // Row 1 starts at 24 + 1080 + 40 = 1144.
+    expect(posMap.get('v1')).toEqual({ x: 24, y: 24 });
+    expect(posMap.get('v3')).toEqual({ x: 24, y: 1144 }); // left edge aligned at x=24
+    expect(posMap.get('v2')).toEqual({ x: 864, y: 24 });
+    expect(posMap.get('v4')).toEqual({ x: 864, y: 1144 }); // left edge aligned at x=864
+  });
+
+  it('snaps dragging target magnetically to neighboring viewport edges', () => {
+    const others = [{ id: 'other', x: 100, y: 100, width: 400, height: 600 }];
+
+    // Near left edge (candidate x=105 -> snap to 100)
+    const target = { x: 105, y: 200, width: 300, height: 500 };
+    const res = calculateSnapGuides(target, others, 10);
+    expect(res.x).toBe(100);
+    expect(res.guides.some((g) => g.type === 'v' && g.pos === 100)).toBe(true);
   });
 });
