@@ -87,7 +87,7 @@ const desktopLike = (
 
 export const BUILTIN_DEVICES: DeviceProfile[] = [
   // — Phones —
-  phone('iphone-se', 'iPhone SE', 375, 667, 2, ios('17_0'), 'iphone-notch', 'notch', 20, 0),
+  phone('iphone-se', 'iPhone SE', 375, 667, 2, ios('17_0'), 'iphone-classic', 'none', 0, 0),
   phone('iphone-13', 'iPhone 13 / 14', 390, 844, 3, ios('17_0'), 'iphone-notch', 'notch'),
   phone('iphone-15-pro', 'iPhone 15 Pro', 393, 852, 3, ios('17_0'), 'iphone-15', 'dynamic-island', 59, 34),
   phone('iphone-15-pro-max', 'iPhone 15 Pro Max', 430, 932, 3, ios('17_0'), 'iphone-15', 'dynamic-island', 59, 34),

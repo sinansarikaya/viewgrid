@@ -1,6 +1,19 @@
 node_modules/
 dist/
+website/dist/
 .web-ext-artifacts/
 *.log
 .DS_Store
 coverage/
+.npm/
+release/
+
+# AI Rules yerel dosyaları (GitHub'a gönderilmez - Rule #25)
+/ai-rules.md
+/.ai-rules/
+/rules/
+/AGENTS.md
+/TASKS.md
+/.github/copilot-instructions.md
+/audits/
+/*.md.audit

@@ -85,7 +85,7 @@ export function generateIcons(outDir) {
   const iconsDir = path.join(outDir, 'icons');
   fs.mkdirSync(iconsDir, { recursive: true });
   const names = {};
-  for (const size of [32, 48, 96, 128]) {
+  for (const size of [16, 32, 48, 96, 128]) {
     const file = `icons/icon${size}.png`;
     fs.writeFileSync(path.join(outDir, file), drawIcon(size));
     names[String(size)] = file;

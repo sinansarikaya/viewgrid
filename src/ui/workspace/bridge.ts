@@ -10,19 +10,30 @@ import { cropRectInImage, imageScale, captureFileName } from '../../core/capture
 import type { Rect } from '../../core/types';
 
 export async function workspaceHello() {
-  return b.runtime.sendMessage({ type: 'vg/workspace-hello' });
+  let tabId: number | undefined;
+  try {
+    const tab = await (b.tabs as any)?.getCurrent?.();
+    if (tab?.id && typeof tab.id === 'number') {
+      tabId = tab.id;
+    } else {
+      const tabs = await b.tabs.query({ active: true, currentWindow: true });
+      if (tabs?.[0]?.id) tabId = tabs[0].id;
+    }
+  } catch {}
+  return b.runtime.sendMessage({ type: 'vg/workspace-hello', tabId });
 }
 
 export async function injectAgents() {
-  return b.runtime.sendMessage({ type: 'vg/inject' });
+  // Content agents are already initialized at document_start via manifest content_scripts
+  return Promise.resolve();
 }
 
 export function sendSyncApply(env: SyncEnvelope) {
   return b.runtime.sendMessage({ type: 'vg/sync-apply', env, excludeViewportId: env.sourceViewportId });
 }
 
-export function sendAgentCmd(target: string[] | 'all', cmd: string, url?: string) {
-  return b.runtime.sendMessage({ type: 'vg/agent-cmd', target, cmd, url });
+export function sendAgentCmd(target: string[] | 'all', cmd: string, url?: string, extra?: Record<string, unknown>) {
+  return b.runtime.sendMessage({ type: 'vg/agent-cmd', target, cmd, url, ...extra });
 }
 
 export function requestScan() {

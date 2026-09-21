@@ -16,34 +16,53 @@ import { generateIcons } from './gen-icons.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const target = process.argv.includes('--target=chromium') ? 'chromium' : 'firefox';
-const outDir = path.join(root, 'dist');
+const targetDir = path.join(root, 'dist', target);
+const distRoot = path.join(root, 'dist');
+fs.mkdirSync(distRoot, { recursive: true });
 
-fs.rmSync(outDir, { recursive: true, force: true });
-fs.mkdirSync(outDir, { recursive: true });
+// Clean up any stale files or directories in dist/ that are not browser targets
+for (const entry of fs.readdirSync(distRoot)) {
+  if (entry !== 'firefox' && entry !== 'chromium') {
+    fs.rmSync(path.join(distRoot, entry), { recursive: true, force: true });
+  }
+}
 
-// 1. UI
-await viteBuild({ configFile: path.join(root, 'vite.ui.config.ts'), logLevel: 'warn' });
+fs.rmSync(targetDir, { recursive: true, force: true });
+fs.mkdirSync(targetDir, { recursive: true });
+
+// 1. UI build
+await viteBuild({
+  configFile: path.join(root, 'vite.ui.config.ts'),
+  build: { outDir: targetDir, emptyOutDir: false },
+  logLevel: 'warn',
+});
 
 // 2. background + content scripts (separate IIFE bundles)
 for (const [entry, outfile] of [
   ['src/background/index.ts', 'background.js'],
   ['src/content/agent.ts', 'content/agent.js'],
+  ['src/content/world-inject.ts', 'world-inject.js'],
 ]) {
   await esbuild.build({
     entryPoints: [path.join(root, entry)],
     bundle: true,
     format: 'iife',
     target: ['firefox128', 'chrome120'],
-    outfile: path.join(outDir, outfile),
+    outfile: path.join(targetDir, outfile),
     logLevel: 'warning',
   });
 }
 
 // 3. icons + manifest
-const iconFiles = generateIcons(outDir);
+const iconFiles = generateIcons(targetDir);
 fs.writeFileSync(
-  path.join(outDir, 'manifest.json'),
+  path.join(targetDir, 'manifest.json'),
   JSON.stringify(buildManifest(target, iconFiles), null, 2),
 );
 
-console.log(`[viewgrid] build complete (${target}) → dist/`);
+// NOTE: each browser build lands exclusively in dist/<target>/.
+// Use --source-dir dist/firefox or dist/chromium explicitly.
+// See: npm run lint:web-ext, npm run dev:firefox (already pass --source-dir dist/firefox)
+
+console.log(`[viewgrid] build complete (${target}) → dist/${target}`);
+

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <rect width="128" height="128" rx="28" fill="#021224" />
+  <rect x="2" y="2" width="124" height="124" rx="26" stroke="#1e293b" stroke-width="2" />
+  
+  <!-- 3x3 Grid Cells -->
+  <!-- Row 1 -->
+  <rect x="22" y="22" width="24" height="24" rx="6" fill="#334155" />
+  <rect x="52" y="22" width="24" height="24" rx="6" fill="#334155" />
+  <rect x="82" y="22" width="24" height="24" rx="6" fill="#334155" />
+  
+  <!-- Row 2 -->
+  <rect x="22" y="52" width="24" height="24" rx="6" fill="#334155" />
+  <rect x="52" y="52" width="24" height="24" rx="6" fill="#38bdf8" /> <!-- Accent center cell -->
+  <rect x="82" y="52" width="24" height="24" rx="6" fill="#334155" />
+  
+  <!-- Row 3 -->
+  <rect x="22" y="82" width="24" height="24" rx="6" fill="#334155" />
+  <rect x="52" y="82" width="24" height="24" rx="6" fill="#334155" />
+  <rect x="82" y="82" width="24" height="24" rx="6" fill="#334155" />
+</svg>

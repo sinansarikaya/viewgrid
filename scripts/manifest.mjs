@@ -1,7 +1,7 @@
 /**
- * Per-browser manifest generation (Firefox-first MV3).
- * Chromium variant keeps the same surface minus Firefox-only bits
- * (framing/`webRequestBlocking` is adapter-gated at runtime too).
+ * Per-browser manifest generation (Firefox-first MV3 + Chromium MV3).
+ * Prunes unused permissions (scripting, unlimitedStorage) and handles
+ * browser-specific rules (webRequestBlocking in Firefox, contextMenus in Chromium).
  */
 export function buildManifest(target, iconFiles) {
   const base = {
@@ -11,18 +11,24 @@ export function buildManifest(target, iconFiles) {
     description:
       'Multi-viewport responsive testing workspace: test a site across phone, tablet, laptop and desktop viewports at once.',
     icons: iconFiles,
-    permissions: [
-      'storage',
-      'unlimitedStorage',
-      'activeTab',
-      'scripting',
-      'tabs',
-      'menus',
+    host_permissions: ['<all_urls>'],
+    content_scripts: [
+      {
+        matches: ['<all_urls>'],
+        js: ['content/agent.js'],
+        run_at: 'document_start',
+        all_frames: true,
+        match_about_blank: true,
+      },
     ],
-    optional_host_permissions: ['*://*/*', 'http://localhost/*', 'http://127.0.0.1/*'],
+    web_accessible_resources: [
+      {
+        resources: ['world-inject.js'],
+        matches: ['<all_urls>'],
+      },
+    ],
     action: {
       default_title: 'ViewGrid',
-      default_popup: 'popup.html',
       default_icon: iconFiles,
     },
     options_ui: {
@@ -30,8 +36,8 @@ export function buildManifest(target, iconFiles) {
       open_in_tab: true,
     },
     commands: {
-      'open-workspace': {
-        suggested_key: { default: 'Alt+Shift+V' },
+      _execute_action: {
+        suggested_key: { default: 'Alt+Shift+V', mac: 'Command+Shift+V' },
         description: 'Open ViewGrid workspace',
       },
     },
@@ -40,18 +46,46 @@ export function buildManifest(target, iconFiles) {
   if (target === 'firefox') {
     return {
       ...base,
+      permissions: [
+        'storage',
+        'tabs',
+        'activeTab',
+        'scripting',
+        'menus',
+        'webRequest',
+        'webRequestBlocking',
+        'declarativeNetRequest',
+        'declarativeNetRequestWithHostAccess',
+        'browsingData',
+        'cookies',
+      ],
       browser_specific_settings: {
-        gecko: { id: 'viewgrid@viewgrid.dev', strict_min_version: '128.0' },
+        gecko: {
+          id: 'viewgrid@viewgrid.dev',
+          strict_min_version: '115.0',
+          data_collection_permissions: {
+            required: ['none'],
+          },
+        },
       },
-      // Firefox MV3 still honors webRequest blocking — used ONLY to relax
-      // framing headers for sub_frames of workspace tabs (see SECURITY.md §4).
-      permissions: [...base.permissions, 'webRequest', 'webRequestBlocking'],
       background: { scripts: ['background.js'] },
     };
   }
 
+  // Chromium (Chrome Web Store / Edge Add-ons)
   return {
     ...base,
+    permissions: [
+      'storage',
+      'tabs',
+      'activeTab',
+      'scripting',
+      'contextMenus',
+      'declarativeNetRequest',
+      'declarativeNetRequestWithHostAccess',
+      'browsingData',
+      'cookies',
+    ],
     background: { service_worker: 'background.js' },
   };
 }

@@ -2,9 +2,11 @@ import React from 'react';
 import s from './styles.module.css';
 import { useStore } from './store';
 import { severityRank } from '../../core/issues/detectors';
+import { getTranslation } from './i18n';
 
 export function IssuesDrawer() {
   const st = useStore();
+  const t = getTranslation(st.language);
   const issues = [...st.issues].sort((a, b) => severityRank(a.severity) - severityRank(b.severity));
   const counts = {
     critical: issues.filter((i) => i.severity === 'critical').length,
@@ -15,7 +17,7 @@ export function IssuesDrawer() {
   return (
     <div className={s.drawer}>
       <div className={s.drawerHeader}>
-        <strong>Issues</strong>
+        <strong>{t.issues}</strong>
         <span className={s.badge + ' ' + s.warn}>
           {counts.critical > 0 ? '🔴' : ''} {counts.critical}
           {' '}🟠 {counts.major}
@@ -26,10 +28,10 @@ export function IssuesDrawer() {
         </button>
       </div>
       <div className={s.drawerBody}>
-        {st.scanning && <div style={{ color: 'var(--text-dim)' }}>Scanning…</div>}
+        {st.scanning && <div style={{ color: 'var(--text-dim)' }}>{t.runningAudit}</div>}
         {!st.scanning && issues.length === 0 && (
           <div style={{ color: 'var(--text-dim)', padding: '8px 0' }}>
-            No issues yet — hit “🔍 Issues” to scan all viewports.
+            {t.noIssuesFound}
           </div>
         )}
         {issues.map((i) => {

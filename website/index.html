@@ -1,0 +1,4234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ViewGrid — Multi-Viewport Responsive Testing in Your Browser</title>
+  <meta name="description" content="A browser extension for Chromium and Firefox that opens phone, tablet, and desktop views side by side with synchronized scrolling, split-diff comparison, and 100% local processing." />
+  <link rel="canonical" href="https://viewgrid.sinansarikaya.dev/" />
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/icon128.png" />
+
+  <!-- Typography: Fraunces (Variable Display Serif), Instrument Sans (Humanist Text Sans), JetBrains Mono (Numbers/Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..800,0..100,0..1;1,9..144,400..700,0..100,0..1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* -------------------------------------------------------------
+       DESIGN SYSTEM & DUAL THEMES
+       LIGHT THEME (Warm Pastel Paper & Muted Slate Ink)
+       DARK THEME  (Harmonious Velvet Slate & Pastel Lilac Bone)
+       ------------------------------------------------------------- */
+    :root {
+      --color-scheme: light;
+      --bg: #F8F6F1;
+      --bg-surface: #EFEBE2;
+      --bg-card: #FFFFFF;
+      --text: #2B2825;
+      --text-muted: #6E685F;
+      --text-faint: #9E978C;
+      --border: #DFD8CC;
+      --border-dark: #2B2825;
+      --accent: #D66853;
+      --accent-soft: #FAF0EC;
+      --accent-secondary: #517594;
+      --accent-secondary-soft: #EDF3F8;
+      
+      --font-display: "Fraunces", Georgia, serif;
+      --font-sans: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+      --container: 1220px;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-theme: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    [data-theme="dark"] {
+      --color-scheme: dark;
+      --bg: #18191F;
+      --bg-surface: #20222B;
+      --bg-card: #272A36;
+      --text: #ECE8F2;
+      --text-muted: #A0A5B7;
+      --text-faint: #6B7184;
+      --border: #333847;
+      --border-dark: #ECE8F2;
+      --accent: #E88372;
+      --accent-soft: rgba(232, 131, 114, 0.16);
+      --accent-secondary: #81A8D6;
+      --accent-secondary-soft: rgba(129, 168, 214, 0.16);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: var(--transition-theme);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: clip;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    /* Accessibility: Skip to Content */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 16px;
+      padding: 8px 14px;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 600;
+      z-index: 1000;
+      text-decoration: none;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+      outline: 2px solid var(--accent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--container);
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 28px;
+      padding-right: 28px;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+    }
+
+    /* Typography & Hierarchy */
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      color: var(--text);
+      letter-spacing: -0.025em;
+      line-height: 1.05;
+      text-wrap: balance;
+    }
+
+    .serif-label {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .mono-num {
+      font-family: var(--font-mono);
+      font-feature-settings: "tnum" 1;
+    }
+
+    /* -------------------------------------------------------------
+       HEADER & NAVIGATION
+       ------------------------------------------------------------- */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: var(--bg);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition-theme);
+    }
+
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 72px;
+    }
+
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      margin-right: 28px;
+    }
+
+    .brand-logo-svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .brand-logo-svg circle {
+      fill: var(--text);
+      transition: transform 0.3s var(--ease-out), fill 0.2s ease;
+    }
+    .brand-logo-svg .dot-accent {
+      fill: var(--accent);
+    }
+
+    .brand-link:hover .brand-logo-svg circle:nth-child(even) {
+      transform: scale(1.3);
+      transform-origin: center;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-item {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color 0.15s ease;
+    }
+    .nav-item:hover {
+      color: var(--text);
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Language Switcher */
+    .lang-switcher {
+      display: flex;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      border-radius: 4px;
+      padding: 2px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    .lang-btn {
+      background: none;
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-radius: 2px;
+      transition: all 0.15s ease;
+    }
+    .lang-btn.active {
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 600;
+    }
+
+    /* Theme Toggle Button */
+    .theme-toggle-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text);
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .theme-toggle-btn:hover {
+      transform: scale(1.06);
+    }
+    .theme-toggle-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @media (max-width: 860px) {
+      .nav-links {
+        display: none;
+      }
+    }
+
+    /* -------------------------------------------------------------
+       HERO SECTION WITH CANVAS DOT FIELD MOTIF
+       ------------------------------------------------------------- */
+    .hero-section {
+      padding: 72px 0 60px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Dot grid canvas motif reacting to mouse */
+    #hero-dot-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.45;
+      z-index: 1;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-header {
+      max-width: 980px;
+      margin-bottom: 36px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.8rem, 7.5vw, 6.2rem);
+      font-weight: 800;
+      line-height: 0.96;
+      letter-spacing: -0.035em;
+      margin-bottom: 24px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: clamp(1.15rem, 2vw, 1.45rem);
+      line-height: 1.45;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin-bottom: 32px;
+    }
+
+    /* Redesigned Compact Store Buttons */
+    .hero-store-group {
+      margin-bottom: 40px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .store-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: all 0.2s var(--ease-out);
+      text-align: left;
+    }
+
+    .store-btn:hover {
+      border-color: var(--text);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .store-btn:hover .btn-arrow-icon {
+      transform: translateX(4px);
+    }
+
+    .store-btn-logo {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: block;
+      object-fit: contain;
+    }
+
+    .store-btn-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .store-btn-sup {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      line-height: 1.1;
+    }
+
+    .store-btn-main {
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+
+    .btn-arrow-icon {
+      font-size: 1.1rem;
+      color: var(--text-faint);
+      transition: transform 0.2s ease;
+      margin-left: 4px;
+    }
+
+    /* Small Quiet Store Review Pending Line */
+    .store-pending-note {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* Keyboard Shortcut Badges & Hints */
+    kbd {
+      display: inline-block;
+      padding: 2px 7px;
+      font-family: var(--font-mono);
+      font-size: 0.78em;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      line-height: 1.3;
+      vertical-align: middle;
+    }
+
+    .hero-shortcut-banner {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      padding: 7px 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s var(--ease-out);
+    }
+    .hero-shortcut-banner:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .hero-shortcut-banner .shortcut-keys {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-shortcut-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nav-shortcut-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Interactive Keyboard Shortcuts Cheatsheet Modal */
+    .shortcuts-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(35, 31, 28, 0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    [data-theme="dark"] .shortcuts-modal {
+      background: rgba(12, 13, 17, 0.72);
+    }
+    .shortcuts-modal.active {
+      display: flex;
+    }
+    .shortcuts-modal-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: 0 20px 48px rgba(0,0,0,0.3);
+      position: relative;
+      animation: modalFadeIn 0.2s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .shortcuts-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+    .shortcuts-table {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg-surface);
+      border-radius: 4px;
+      font-size: 0.88rem;
+    }
+    .shortcut-row.group-header {
+      background: transparent;
+      padding: 12px 4px 4px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .shortcuts-footer-note {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      line-height: 1.5;
+    }
+
+    /* Framework & Port Tags */
+    .frameworks-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .framework-chip {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Hero Live Miniature / Screenshot slot */
+    .hero-visual-slot {
+      margin-top: 24px;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      border-radius: 6px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .hero-screenshot-frame {
+      border: 1.5px solid var(--border-dark);
+      background: var(--bg-card);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      cursor: zoom-in;
+      transition: transform 0.2s ease;
+    }
+    .hero-screenshot-frame:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Section Dot Transition Marks Motif */
+    .dot-transition-mark {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 28px 0;
+      user-select: none;
+    }
+    .mark-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--border-dark);
+      transition: all 0.3s ease;
+    }
+    .mark-dot.active {
+      background: var(--accent);
+      transform: scale(1.4);
+    }
+
+    /* How It Works Keyframe Animations */
+    @keyframes frameDraw {
+      0% { stroke-dashoffset: 320; opacity: 0; }
+      30% { opacity: 1; }
+      100% { stroke-dashoffset: 0; opacity: 1; }
+    }
+    @keyframes chipPop {
+      0% { transform: scale(0.6); opacity: 0; }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes rippleWave {
+      0% { transform: translateY(0); opacity: 0.35; }
+      50% { transform: translateY(8px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 0.35; }
+    }
+    @keyframes rippleIndicator {
+      0% { left: 8%; opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { left: 90%; opacity: 0; }
+    }
+    .draw-stroke-1 { animation: frameDraw 1.2s ease forwards; }
+    .draw-stroke-2 { animation: frameDraw 1.2s ease forwards 0.25s; }
+    .draw-stroke-3 { animation: frameDraw 1.2s ease forwards 0.5s; }
+    .chip-pop { animation: chipPop 0.4s var(--ease-out) both; }
+    .ripple-sweep-line {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: rippleIndicator 2.4s infinite ease-in-out;
+    }
+    .ripple-1 .ripple-content { animation: rippleWave 2.4s infinite ease-in-out 0.1s; }
+    .ripple-2 .ripple-content { animation: rippleWave 2.4s infinite ease-in-out 0.5s; }
+    .ripple-3 .ripple-content { animation: rippleWave 2.4s infinite ease-in-out 0.9s; }
+
+    /* -------------------------------------------------------------
+       SECTION: REBUILT SYNCHRONIZED SCROLL DEMO
+       ------------------------------------------------------------- */
+    .sim-slider-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+    }
+
+    .sync-dial-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .sync-slider {
+      flex: 1;
+      height: 5px;
+      background: var(--border);
+      -webkit-appearance: none;
+      appearance: none;
+      outline: none;
+      cursor: ew-resize;
+    }
+    .sync-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border: 2px solid var(--border-dark);
+      cursor: ew-resize;
+    }
+    .sync-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border: 2px solid var(--border-dark);
+      cursor: ew-resize;
+    }
+
+    .sync-stage-grid {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 10px 0;
+      min-height: 380px;
+    }
+
+    /* Live Playground URL Bar */
+    .hero-url-simulator-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 6px;
+      padding: 6px 12px;
+      margin-bottom: 12px;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.05);
+    }
+    .sim-url-badge {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .playground-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-primary);
+    }
+    .playground-test-btn {
+      background: var(--accent);
+      color: #fff;
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+    }
+    .playground-test-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* =============================================================
+       SECTION: BENCHMARK & LOW-MEMORY ARCHITECTURE
+       ============================================================= */
+    .section-benchmark {
+      padding: 72px 0;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition-theme);
+    }
+    .benchmark-header {
+      max-width: 800px;
+      margin-bottom: 36px;
+    }
+    .benchmark-header h2 {
+      font-size: 2.5rem;
+      margin: 10px 0 14px;
+      line-height: 1.1;
+    }
+    .benchmark-sub {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .benchmark-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 960px) {
+      .benchmark-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .bench-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 6px;
+      padding: 28px 24px;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .bench-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 6px 6px 0 rgba(0,0,0,0.08);
+    }
+    .bench-stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 14px;
+    }
+    .bench-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .bench-metric {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .bench-card h4 {
+      font-size: 1.2rem;
+      margin: 0;
+      color: var(--text);
+    }
+    .bench-card p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      flex-grow: 1;
+    }
+    .bench-bar-track {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      height: 24px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .bench-bar-fill {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      white-space: nowrap;
+      border-radius: 3px;
+    }
+    .viewgrid-fill {
+      background: var(--accent);
+      color: #fff;
+    }
+    .electron-fill {
+      background: var(--border-dark);
+      color: var(--bg);
+      opacity: 0.8;
+    }
+    .bench-pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .bench-pill {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    /* =============================================================
+       SECTION: DESIGN HANDOFF & FIGMA PIXEL-DIFF
+       ============================================================= */
+    .section-handoff {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      transition: var(--transition-theme);
+    }
+    .handoff-header-row {
+      max-width: 800px;
+      margin-bottom: 36px;
+    }
+    .handoff-header-row h2 {
+      font-size: 2.6rem;
+      margin: 8px 0 14px;
+    }
+    .handoff-lead {
+      font-size: 1.08rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .handoff-showcase-box {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .handoff-stage {
+      padding: 24px;
+      background: var(--bg-surface);
+      border-bottom: 1.5px solid var(--border-dark);
+    }
+    .handoff-comparison-preview {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: stretch;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      min-height: 260px;
+    }
+    @media (max-width: 768px) {
+      .handoff-comparison-preview {
+        grid-template-columns: 1fr;
+      }
+    }
+    .handoff-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pane-tag {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--accent);
+      padding: 4px 8px;
+      background: var(--accent-soft);
+      border-radius: 4px;
+      align-self: flex-start;
+    }
+    .pane-content-mockup {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg);
+    }
+    .pane-content-mockup.figma-style {
+      border: 1px dashed var(--accent);
+      background: rgba(214, 104, 83, 0.03);
+    }
+    .mock-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .mock-logo {
+      color: var(--text);
+    }
+    .mock-menu-btn {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+    .mock-hero {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+    .mock-title {
+      font-size: 1.15rem;
+      margin: 0;
+      color: var(--text);
+    }
+    .mock-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .mock-btn-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .mock-primary-btn {
+      background: var(--border-dark);
+      color: var(--bg);
+      font-size: 0.76rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .spec-ruler {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px dashed var(--accent);
+      padding: 1px 6px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .spec-match-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid #10b981;
+      padding: 1px 6px;
+      border-radius: 3px;
+      display: inline-block;
+      font-weight: 700;
+    }
+    .handoff-divider-curtain {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .handoff-divider-curtain::before {
+      content: '';
+      position: absolute;
+      width: 2px;
+      top: 0;
+      bottom: 0;
+      background: var(--border);
+    }
+    .curtain-grip {
+      position: relative;
+      z-index: 2;
+      background: var(--accent);
+      color: #fff;
+      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .handoff-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 24px;
+    }
+    @media (max-width: 800px) {
+      .handoff-feature-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .handoff-feature-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .hf-icon {
+      font-size: 1.5rem;
+    }
+    .handoff-feature-card h4 {
+      font-size: 1.05rem;
+      margin: 0;
+      color: var(--text);
+    }
+    .handoff-feature-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Design Handoff Pill in Tour */
+    .design-handoff-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      padding: 6px 14px;
+      margin-top: 14px;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .design-handoff-pill:hover {
+      opacity: 0.9;
+    }
+    .handoff-icon { font-size: 0.95rem; }
+    .handoff-title { font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+    .handoff-text { color: var(--text-muted); }
+
+    .sync-device-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 4px;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: relative;
+      cursor: grab;
+      user-select: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .sync-device-card:active {
+      cursor: grabbing;
+    }
+    .sync-device-card.is-dragging {
+      opacity: 0.4;
+      transform: scale(0.98);
+      border-style: dashed;
+    }
+
+    .sync-drop-skeleton {
+      border: 2px dashed var(--accent);
+      background: var(--accent-soft);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      min-height: 350px;
+      box-sizing: border-box;
+      padding: 16px;
+      animation: pulseSkeleton 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes pulseSkeleton {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+    .sync-drop-skeleton .skeleton-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .sync-drop-skeleton .skeleton-icon {
+      font-size: 1.4rem;
+    }
+
+    .sync-device-card.is-leader {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft), 3px 3px 0 rgba(0,0,0,0.1);
+    }
+
+    .sync-header-tag {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .leader-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: var(--accent);
+      color: #FFFFFF;
+      padding: 2px 5px;
+      border-radius: 2px;
+      display: none;
+    }
+    .sync-device-card.is-leader .leader-pill {
+      display: inline-block;
+    }
+
+    /* Fixed Frame Height with Taller Overflow Hidden Content */
+    .sync-viewport-window {
+      height: 320px;
+      overflow: hidden;
+      position: relative;
+      background: var(--bg-card);
+    }
+
+    .fake-page-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 800px; /* Clearly taller (2.5x) */
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      will-change: transform;
+    }
+
+    /* Believable simulated websites */
+    .sim-nav {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sim-logo {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .sim-hero-banner {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 2px;
+    }
+    .sim-hero-banner h5 {
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+    }
+    .sim-hero-banner p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .sim-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .sim-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .sim-box {
+      border: 1px dashed var(--border);
+      background: var(--bg);
+      padding: 10px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      border-radius: 2px;
+    }
+    .sim-footer-bar {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      font-size: 0.68rem;
+      color: var(--text-faint);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 1: PRODUCT SHOWCASE ("Interface tour")
+       ------------------------------------------------------------- */
+    .section-tour {
+      padding: 90px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tour-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .tour-tabs-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .tour-tab-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tour-tab-btn.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Framed Showcase 16:10 */
+    .tour-frame {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 4px 4px 0px rgba(0,0,0,0.06);
+    }
+
+    .tour-frame-header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tour-dots-icon {
+      display: flex;
+      gap: 5px;
+    }
+    .tour-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .tour-frame-url {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .tour-aspect-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      min-height: 420px;
+      background: var(--bg-surface);
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+
+    .tour-screenshot-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s var(--ease-out), opacity 0.3s ease;
+    }
+
+    /* Fallback Tasteful Placeholder */
+    .tour-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      background: radial-gradient(circle at 50% 50%, var(--bg) 0%, var(--bg-surface) 100%);
+    }
+
+    .placeholder-schematic {
+      width: 80%;
+      max-width: 540px;
+      border: 1px dashed var(--border);
+      background: var(--bg-card);
+      padding: 24px;
+      border-radius: 4px;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+
+    .tour-frame-meta {
+      padding: 20px 24px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .tour-meta-caption {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .tour-meta-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 520px;
+    }
+
+    /* Lightbox Modal */
+    .tour-lightbox {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 14, 13, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      cursor: zoom-out;
+    }
+    .tour-lightbox.active {
+      display: flex;
+    }
+    .lightbox-inner {
+      max-width: 1100px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: default;
+    }
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 4px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .lightbox-close-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 2: "WHY" — HONEST, SINGLE COLUMN PARAGRAPH
+       ------------------------------------------------------------- */
+    .section-why {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .why-content {
+      max-width: 820px;
+    }
+
+    .why-title {
+      font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+      margin-bottom: 28px;
+      line-height: 1.1;
+    }
+
+    .why-text {
+      font-size: 1.25rem;
+      line-height: 1.65;
+      color: var(--text);
+      margin-bottom: 48px;
+    }
+
+    /* Before vs After Comparison */
+    .compare-cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .compare-cards-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .compare-side-card {
+      border: 1px solid var(--border);
+      padding: 24px;
+      background: var(--bg-card);
+      border-radius: 2px;
+    }
+    .card-before {
+      border-left: 3px solid var(--text-faint);
+    }
+    .card-after {
+      border-left: 3px solid var(--accent);
+    }
+
+    .compare-side-card h4 {
+      font-size: 1.15rem;
+      margin-bottom: 10px;
+    }
+
+    .compare-side-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 3: "HOW IT WORKS" — DYNAMIC ANIMATED ILLUSTRATION
+       ------------------------------------------------------------- */
+    .section-how {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .how-grid {
+        grid-template-columns: 1fr;
+      }
+      .how-sticky-col {
+        display: none;
+      }
+    }
+
+    .how-step {
+      padding: 44px 0;
+      border-bottom: 1px solid var(--border);
+      opacity: 0.45;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+    }
+    .how-step.active {
+      opacity: 1;
+    }
+
+    .step-number {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .step-title {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .step-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .how-sticky-col {
+      position: sticky;
+      top: 110px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-dark);
+      padding: 28px;
+      min-height: 380px;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .how-illus-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+    }
+
+    /* Dynamic SVG / Canvas visual for each step */
+    .illus-step-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION: FULL-BLEED STATEMENT BAND (PERSONALITY)
+       ------------------------------------------------------------- */
+    .statement-band {
+      background: var(--text);
+      color: var(--bg);
+      padding: 80px 0;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .statement-band h2 {
+      color: var(--bg);
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      line-height: 1.05;
+      max-width: 1000px;
+      letter-spacing: -0.03em;
+    }
+
+    .statement-band em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 4: FEATURES — HERO CAPABILITY + TYPOGRAPHIC INDEX
+       ------------------------------------------------------------- */
+    .section-features {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-index-list {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    .feature-index-item {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 240px 1fr 1fr;
+      gap: 24px;
+      align-items: baseline;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .feature-index-item:hover {
+      background-color: var(--bg-surface);
+    }
+    @media (max-width: 860px) {
+      .feature-index-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+
+    .item-name {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .item-detail {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .item-diagram {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 5: OPTICAL SPLIT-DIFF COMPARISON
+       ------------------------------------------------------------- */
+    .section-compare {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .diff-stage-wrap {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      border: 1.5px solid var(--border-dark);
+      background: var(--bg-card);
+      overflow: hidden;
+      margin-top: 36px;
+      user-select: none;
+    }
+
+    .diff-pane {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      overflow: hidden;
+    }
+
+    .diff-pane-left {
+      left: 0;
+      background: var(--bg-card);
+      border-right: 1px dashed var(--accent);
+    }
+
+    .diff-pane-right {
+      right: 0;
+      background: var(--bg-surface);
+    }
+
+    .diff-divider-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      transform: translateX(-50%);
+      cursor: ew-resize;
+      z-index: 20;
+    }
+
+    .diff-handle-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      color: #FFFFFF;
+      border: 2px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      box-shadow: 2px 2px 0 var(--border-dark);
+    }
+
+    .diff-mock-page {
+      padding: 32px;
+      min-width: 700px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 6: WORKS ON SITES THAT BLOCK IFRAMES (OFF-GRID HEADER)
+       ------------------------------------------------------------- */
+    .section-iframes {
+      padding: 90px 0;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg-surface);
+    }
+
+    .iframe-asymmetric-wrap {
+      display: flex;
+      gap: 36px;
+      align-items: stretch;
+      position: relative;
+    }
+
+    .sideways-spine-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--border);
+      padding-right: 20px;
+      user-select: none;
+    }
+
+    .sideways-spine-text {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .offgrid-headline {
+      margin-left: -12px;
+    }
+
+    .iframe-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      flex: 1;
+    }
+    @media (max-width: 880px) {
+      .sideways-spine-col {
+        display: none;
+      }
+      .offgrid-headline {
+        margin-left: 0;
+      }
+      .iframe-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .iframe-diagram-box {
+      border: 1.5px solid var(--border-dark);
+      background: var(--bg-card);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    .diagram-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+    }
+    .diagram-row.blocked {
+      border-left: 3px solid #C93B2B;
+    }
+    .diagram-row.passed {
+      border-left: 3px solid #2B8A3E;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 7: USE CASES (HORIZONTAL SCROLL STRIP)
+       ------------------------------------------------------------- */
+    .section-usecases {
+      padding: 90px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .horizontal-strip {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 24px 0 16px;
+      scrollbar-width: thin;
+    }
+
+    .usecase-card {
+      min-width: 300px;
+      max-width: 320px;
+      flex-shrink: 0;
+      border: 1.5px solid var(--border-dark);
+      background: var(--bg-card);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 3px 3px 0 var(--border-dark);
+    }
+
+    .usecase-card h4 {
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+    }
+
+    .usecase-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .usecase-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-top: 20px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 8: INSTALL (LIGHTER PRESENTATION + CHROME/FIREFOX)
+       ------------------------------------------------------------- */
+    .section-install {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .install-layout-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 48px;
+      align-items: center;
+      margin-bottom: 48px;
+    }
+    @media (max-width: 768px) {
+      .install-layout-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .install-lead-col h2 {
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      margin-bottom: 16px;
+    }
+
+    .install-lead-col p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .install-buttons-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .supported-browsers-note {
+      font-size: 0.85rem;
+      color: var(--text-faint);
+      margin-top: 8px;
+    }
+
+    /* Quiet Manual Sideloading */
+    .quiet-manual-box {
+      border: 1px dashed var(--border);
+      background: var(--bg-surface);
+      padding: 24px 28px;
+      max-width: 720px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      border-radius: 4px;
+    }
+
+    .quiet-manual-box h5 {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .quiet-manual-box ol {
+      padding-left: 20px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 9: FAQ (NATIVE DETAILS ACCORDION)
+       ------------------------------------------------------------- */
+    .section-faq {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-wrapper {
+      max-width: 840px;
+      margin-top: 36px;
+    }
+
+    details.faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      cursor: pointer;
+    }
+
+    details.faq-item summary {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    details.faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.faq-item summary::after {
+      content: "+";
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    details.faq-item[open] summary::after {
+      content: "−";
+      color: var(--accent);
+    }
+
+    details.faq-item p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 10: FOOTER WITH PERSONALITY
+       ------------------------------------------------------------- */
+    .site-footer {
+      padding: 80px 0 60px;
+      background: var(--bg);
+    }
+
+    .footer-split {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 48px;
+      margin-bottom: 56px;
+    }
+
+    .maker-note {
+      max-width: 440px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .footer-links-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .footer-links-list a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .footer-base {
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-faint);
+    }
+  </style>
+</head>
+<body>
+
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header Navigation -->
+  <header class="site-nav">
+    <div class="container nav-inner">
+      <a href="/" class="brand-link" id="brand-easter-egg" title="Click to cycle dot pattern">
+        <svg class="brand-logo-svg" viewBox="0 0 28 28" aria-hidden="true">
+          <circle cx="5" cy="5" r="2.5" />
+          <circle cx="14" cy="5" r="2.5" />
+          <circle cx="23" cy="5" r="2.5" />
+          <circle cx="5" cy="14" r="2.5" />
+          <circle cx="14" cy="14" r="3.5" class="dot-accent" />
+          <circle cx="23" cy="14" r="2.5" />
+          <circle cx="5" cy="23" r="2.5" />
+          <circle cx="14" cy="23" r="2.5" />
+          <circle cx="23" cy="23" r="2.5" />
+        </svg>
+        <span class="brand-title">ViewGrid</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="#benchmark" class="nav-item" data-i18n="navBenchmark">Benchmark</a>
+        <a href="#tour" class="nav-item" data-i18n="navTour">Tour</a>
+        <a href="#design-handoff" class="nav-item" data-i18n="navHandoff">Figma Diff</a>
+        <a href="#why" class="nav-item" data-i18n="navWhy">Why</a>
+        <a href="#how" class="nav-item" data-i18n="navHow">How it works</a>
+        <a href="#features" class="nav-item" data-i18n="navFeatures">Features</a>
+        <a href="#compare" class="nav-item" data-i18n="navCompare">Compare</a>
+        <a href="#install" class="nav-item" data-i18n="navInstall">Install</a>
+        <a href="#faq" class="nav-item" data-i18n="navFaq">FAQ</a>
+      </nav>
+
+      <div class="nav-controls">
+        <button type="button" class="nav-shortcut-btn" onclick="openShortcutsModal()" title="View Keyboard Shortcuts">
+          ⌨ <span data-i18n="shortcutNav">Shortcuts</span>
+        </button>
+
+        <div class="lang-switcher" role="group" aria-label="Language">
+          <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+          <button type="button" class="lang-btn" data-lang="tr" onclick="setLang('tr')">TR</button>
+          <button type="button" class="lang-btn" data-lang="no" onclick="setLang('no')">NO</button>
+        </div>
+
+        <button type="button" class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle Theme">
+          <svg id="theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <!-- Interactive subtle dot canvas motif reacting to cursor -->
+      <canvas id="hero-dot-canvas"></canvas>
+
+      <div class="container hero-inner">
+        <div class="hero-header">
+          <h1 class="hero-title" data-i18n="heroTitle">
+            Stop resizing your browser.
+          </h1>
+          <p class="hero-sub" data-i18n="heroSub">
+            ViewGrid opens phone, tablet and desktop views side by side in one tab, scrolling together so you never miss a broken breakpoint.
+          </p>
+
+          <div class="hero-store-group">
+            <div class="hero-actions">
+              <!-- Official Chrome Button -->
+              <a href="#store-chrome" class="store-btn" id="cta-chrome">
+                <img src="/chrome.svg" class="store-btn-logo" width="28" height="28" alt="Google Chrome Logo" />
+                <div class="store-btn-text">
+                  <span class="store-btn-sup">Available on</span>
+                  <span class="store-btn-main">Chrome Web Store</span>
+                </div>
+                <span class="btn-arrow-icon">&rarr;</span>
+              </a>
+
+              <!-- Official Firefox Button -->
+              <a href="#store-firefox" class="store-btn" id="cta-firefox">
+                <img src="/firefox.svg" class="store-btn-logo" width="28" height="28" alt="Mozilla Firefox Logo" />
+                <div class="store-btn-text">
+                  <span class="store-btn-sup">Get it for</span>
+                  <span class="store-btn-main">Firefox Add-ons</span>
+                </div>
+                <span class="btn-arrow-icon">&rarr;</span>
+              </a>
+            </div>
+
+            <!-- Single quiet review pending note -->
+            <p class="store-pending-note" id="store-pending-line">
+              Store review in progress &mdash; manual install below
+            </p>
+
+            <!-- Global Keyboard Shortcut Banner -->
+            <div class="hero-shortcut-banner" onclick="openShortcutsModal()" role="button" tabindex="0" title="Click to view all keyboard shortcuts">
+              <span class="shortcut-keys"><kbd class="kbd-mod">Alt</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></span>
+              <span class="shortcut-text" data-i18n="shortcutHero">Launch instantly on any page &bull; <u>View all shortcuts</u></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Visual Slot: Screenshot slot (/screenshots/hero.png) falling back to Live Miniature -->
+        <div class="hero-visual-slot">
+          <!-- 1. Hero Screenshot Slot (if /screenshots/hero.png exists) -->
+          <div id="hero-screenshot-frame" class="hero-screenshot-frame" style="display: none;" onclick="openHeroLightbox()">
+            <div class="tour-frame-header">
+              <div class="tour-dots-icon">
+                <span class="tour-dot"></span>
+                <span class="tour-dot"></span>
+                <span class="tour-dot"></span>
+              </div>
+              <span class="tour-frame-url">viewgrid://workspace &bull; live view</span>
+            </div>
+            <div class="tour-aspect-stage">
+              <img src="/screenshots/hero.png" alt="ViewGrid Workspace" class="tour-screenshot-img" id="hero-screenshot-img" onerror="onHeroImgError()" onload="onHeroImgLoaded()" />
+            </div>
+            <div class="tour-frame-meta" style="border-top: 1px solid var(--border); padding: 12px 18px; font-size: 0.82rem; color: var(--text-muted);">
+              ViewGrid Workspace &bull; Click to open lightbox
+            </div>
+          </div>
+
+          <!-- 2. Working Miniature: Synchronized Scroll & Resizable Trio (Default Fallback) -->
+          <div id="hero-live-miniature" class="hero-live-miniature">
+            <!-- Playground Interactive Simulator Input Bar -->
+            <div class="hero-url-simulator-bar">
+              <span class="sim-url-badge">⚡ PLAYGROUND</span>
+              <input type="text" id="playground-url-input" class="playground-input" placeholder="Type your website URL (e.g. myportfolio.com)..." value="brand.io/app" oninput="onPlaygroundUrlChange(this.value)" />
+              <button type="button" class="playground-test-btn" onclick="onPlaygroundTestClick()">Simulate</button>
+            </div>
+
+            <div class="sim-slider-row">
+              <span>SYNCHRONIZED SCROLL ENGINE</span>
+              <div class="sync-dial-wrap">
+                <label for="sync-dial" style="color: var(--text-muted);">Drive Scroll Progress:</label>
+                <input type="range" id="sync-dial" class="sync-slider" min="0" max="100" value="0" oninput="onDriveScroll(this.value / 100)" />
+              <span class="mono-num" id="sync-pct-label">0%</span>
+            </div>
+            <span class="mono-num" style="color: var(--accent);">⠿ Drag to Reorder</span>
+          </div>
+
+          <div class="sync-stage-grid" id="sync-stage-grid">
+            <!-- 1. Phone Frame (Taller fake page, overflow hidden) -->
+            <div class="sync-device-card" id="frame-phone" style="width: 220px;" draggable="true">
+              <div class="sync-header-tag" style="cursor: grab;">
+                <span>⠿ Phone (375)</span>
+                <span class="leader-pill" id="leader-phone">Leader</span>
+              </div>
+              <div class="sync-viewport-window" id="window-phone">
+                <div class="fake-page-content" id="page-phone">
+                  <div class="sim-nav">
+                    <span class="sim-logo">BRAND</span>
+                    <svg width="14" height="10" viewBox="0 0 14 10" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                      <line y1="1" x2="14" y2="1"/>
+                      <line y1="5" x2="14" y2="5"/>
+                      <line y1="9" x2="14" y2="9"/>
+                    </svg>
+                  </div>
+                  <div class="sim-hero-banner">
+                    <h5>Mobile Stack</h5>
+                    <p>Fluid full-width column</p>
+                  </div>
+                  <div class="sim-box">Product Item 01</div>
+                  <div class="sim-box">Product Item 02</div>
+                  <div class="sim-box">Customer Testimonial</div>
+                  <div class="sim-box">Newsletter Form</div>
+                  <div class="sim-footer-bar">
+                    <span>&copy; 2026</span>
+                    <span>Mobile View</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Tablet Frame (Taller fake page) -->
+            <div class="sync-device-card" id="frame-tablet" style="width: 320px;" draggable="true">
+              <div class="sync-header-tag" style="cursor: grab;">
+                <span>⠿ Tablet (768)</span>
+                <span class="leader-pill" id="leader-tablet">Leader</span>
+              </div>
+              <div class="sync-viewport-window" id="window-tablet">
+                <div class="fake-page-content" id="page-tablet">
+                  <div class="sim-nav">
+                    <span class="sim-logo">BRAND.IO</span>
+                    <span class="mono-num" style="font-size: 0.68rem;">Catalog &bull; Cart &bull; Sign in</span>
+                  </div>
+                  <div class="sim-hero-banner">
+                    <h5>Tablet Dual-Column Layout</h5>
+                    <p>Expanded horizontal rhythm</p>
+                  </div>
+                  <div class="sim-grid-2">
+                    <div class="sim-box">Feature Card Alpha</div>
+                    <div class="sim-box">Feature Card Beta</div>
+                  </div>
+                  <div class="sim-grid-2">
+                    <div class="sim-box">Feature Card Gamma</div>
+                    <div class="sim-box">Analytics Metrics</div>
+                  </div>
+                  <div class="sim-footer-bar">
+                    <span>&copy; 2026 Brand Inc.</span>
+                    <span>Tablet View</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Desktop Frame (Taller fake page) -->
+            <div class="sync-device-card" id="frame-desktop" style="width: 440px;" draggable="true">
+              <div class="sync-header-tag" style="cursor: grab;">
+                <span>⠿ Desktop (1280)</span>
+                <span class="leader-pill" id="leader-desktop">Leader</span>
+              </div>
+              <div class="sync-viewport-window" id="window-desktop">
+                <div class="fake-page-content" id="page-desktop">
+                  <div class="sim-nav">
+                    <span class="sim-logo">BRAND WORKSPACE</span>
+                    <span class="mono-num" style="font-size: 0.68rem;">Products &bull; Solutions &bull; Docs &bull; Pricing</span>
+                  </div>
+                  <div class="sim-hero-banner">
+                    <h5>Desktop Multi-Column Canvas</h5>
+                    <p>Wide grid with sidebar &amp; live diagnostics</p>
+                  </div>
+                  <div class="sim-grid-3">
+                    <div class="sim-box">Column 1</div>
+                    <div class="sim-box">Column 2</div>
+                    <div class="sim-box">Column 3</div>
+                  </div>
+                  <div class="sim-grid-3">
+                    <div class="sim-box">Data Stream</div>
+                    <div class="sim-box">Audit Log</div>
+                    <div class="sim-box">System Health</div>
+                  </div>
+                  <div class="sim-footer-bar">
+                    <span>&copy; 2026 Brand Global Workspace</span>
+                    <span>Desktop HD View</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> <!-- #hero-live-miniature -->
+        </div> <!-- .hero-visual-slot -->
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE & LOW-MEMORY BENCHMARK SECTION -->
+    <section class="section-benchmark" id="benchmark">
+      <div class="container">
+        <div class="benchmark-header">
+          <span class="serif-label" data-i18n="benchLabel">Performance &amp; Architecture</span>
+          <h2 data-i18n="benchTitle">Native browser performance. Not an 850 MB Electron app.</h2>
+          <p class="benchmark-sub" data-i18n="benchSub">
+            Most multi-screen testing tools are bloated Electron bundles or cloud proxies that swallow your machine's RAM. ViewGrid runs directly inside your browser engine with near-zero overhead.
+          </p>
+        </div>
+
+        <div class="benchmark-cards-grid">
+          <div class="bench-card">
+            <div class="bench-stat-header">
+              <span class="bench-badge" data-i18n="benchBadgeRam">RAM FOOTPRINT</span>
+              <span class="bench-metric">&lt; 15 MB</span>
+            </div>
+            <h4 data-i18n="benchRamHead">Ultra-light memory footprint</h4>
+            <p data-i18n="benchRamDesc">Runs natively inside Chromium and Firefox. While Electron-based tools consume 850 MB to 1.2 GB of RAM, ViewGrid tests multiple breakpoints without slowing down your laptop or battery.</p>
+            <div class="bench-bar-track">
+              <div class="bench-bar-fill viewgrid-fill" style="width: 12%;">
+                <span class="bar-label">ViewGrid: 14 MB</span>
+              </div>
+            </div>
+            <div class="bench-bar-track secondary">
+              <div class="bench-bar-fill electron-fill" style="width: 88%;">
+                <span class="bar-label">Electron Tools: 850 MB+</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bench-card">
+            <div class="bench-stat-header">
+              <span class="bench-badge" data-i18n="benchBadgeSync">SCROLL SYNC</span>
+              <span class="bench-metric">&lt; 15 ms</span>
+            </div>
+            <h4 data-i18n="benchSyncHead">Zero-lag bidirectional sync</h4>
+            <p data-i18n="benchSyncDesc">Local broadcast channel mirrors mouse clicks, touch interactions, input forms, and 60 FPS scrolling instantly without feedback loops or frame hitching.</p>
+            <div class="bench-pill-list">
+              <span class="bench-pill">⚡ 60 FPS Smooth Scroll</span>
+              <span class="bench-pill">🔄 Loop Echo Suppression</span>
+              <span class="bench-pill">👆 Touch Cursor Emulation</span>
+            </div>
+          </div>
+
+          <div class="bench-card">
+            <div class="bench-stat-header">
+              <span class="bench-badge" data-i18n="benchBadgeLocal">100% PRIVATE</span>
+              <span class="bench-metric">100%</span>
+            </div>
+            <h4 data-i18n="benchLocalHead">Local-first &amp; privacy safe</h4>
+            <p data-i18n="benchLocalDesc">No remote proxy servers, no telemetry, no tracking pixels. Test staging servers, localhost, and authenticated sessions behind VPNs with complete peace of mind.</p>
+            <div class="bench-pill-list">
+              <span class="bench-pill">🔒 Zero Cloud Proxying</span>
+              <span class="bench-pill">🛡️ Preserves Local Cookies</span>
+              <span class="bench-pill">🌐 Works Completely Offline</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Motif: Section Transition Dot Mark -->
+    <div class="dot-transition-mark" aria-hidden="true">
+      <span class="mark-dot"></span>
+      <span class="mark-dot active"></span>
+      <span class="mark-dot"></span>
+    </div>
+
+    <!-- 1. PRODUCT SHOWCASE ("Interface tour") -->
+    <section class="section-tour" id="tour">
+      <div class="container">
+        <div class="tour-header-row">
+          <div>
+            <span class="serif-label" data-i18n="tourLabel">Interface tour</span>
+            <h2 style="font-size: 2.8rem;">Explore the workspace modes.</h2>
+            <a href="#design-handoff" class="design-handoff-pill">
+              <span class="handoff-icon">🎯</span>
+              <span class="handoff-title" data-i18n="handoffPillTitle">Design Handoff &amp; Pixel-Diff:</span>
+              <span class="handoff-text" data-i18n="handoffPillText">Compare live breakpoints against Figma mockups with zero pixel drift &rarr;</span>
+            </a>
+          </div>
+
+          <!-- 4 Data-Driven Tabs -->
+          <div class="tour-tabs-bar" role="tablist">
+            <button type="button" class="tour-tab-btn active" id="tab-workspace" onclick="selectShowcaseTab(0)">Workspace</button>
+            <button type="button" class="tour-tab-btn" id="tab-compare" onclick="selectShowcaseTab(1)">Compare Diff</button>
+            <button type="button" class="tour-tab-btn" id="tab-device-frames" onclick="selectShowcaseTab(2)">Device Frames</button>
+            <button type="button" class="tour-tab-btn" id="tab-inspector" onclick="selectShowcaseTab(3)">Inspector</button>
+          </div>
+        </div>
+
+        <!-- 16:10 Framed Showcase -->
+        <div class="tour-frame" onmouseenter="pauseShowcase()" onmouseleave="resumeShowcase()">
+          <div class="tour-frame-header">
+            <div class="tour-dots-icon">
+              <span class="tour-dot"></span>
+              <span class="tour-dot"></span>
+              <span class="tour-dot"></span>
+            </div>
+            <span class="tour-frame-url" id="showcase-url-text">viewgrid://workspace</span>
+          </div>
+
+          <div class="tour-aspect-stage" id="showcase-stage" onclick="openLightbox()">
+            <!-- Real image with automatic graceful placeholder fallback -->
+            <img src="/screenshots/workspace.png" alt="ViewGrid Workspace" class="tour-screenshot-img" id="showcase-img" onerror="onShowcaseImgError(this)" />
+            
+            <div class="tour-placeholder" id="showcase-fallback" style="display: none;">
+              <div class="placeholder-schematic">
+                <span class="mono-num" style="color: var(--accent); font-size: 0.85rem;" id="fallback-badge">WORKSPACE VIEWPORT MATRIX</span>
+                <h4 style="font-size: 1.4rem; margin: 12px 0 8px;" id="fallback-title">Screenshot: Workspace</h4>
+                <p style="font-size: 0.95rem; color: var(--text-muted);">
+                  Drop <code>/screenshots/workspace.png</code> in <code>website/public/screenshots/</code> to showcase real capture.
+                </p>
+              </div>
+              <span class="mono-num" style="color: var(--text-faint); font-size: 0.78rem;">Click to expand lightbox</span>
+            </div>
+          </div>
+
+          <div class="tour-frame-meta">
+            <div class="tour-meta-caption" id="showcase-caption">
+              Multi-device responsive workspace with synchronized scrolling
+            </div>
+            <div class="tour-meta-desc" id="showcase-desc">
+              View phone, tablet, and desktop side by side in one tab. Zoom, pan, and rearrange frames freely.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lightbox Modal for Full-Size Screenshot View -->
+    <div class="tour-lightbox" id="tour-lightbox" onclick="closeLightbox(event)">
+      <button type="button" class="lightbox-close-btn" onclick="closeLightbox()">&times;</button>
+      <div class="lightbox-inner">
+        <img src="/screenshots/workspace.png" alt="Full size preview" class="lightbox-img" id="lightbox-img" />
+        <p style="color: #FFFFFF; margin-top: 14px; font-family: var(--font-mono); font-size: 0.85rem;" id="lightbox-caption">
+          ViewGrid Workspace
+        </p>
+      </div>
+    </div>
+
+    <!-- DESIGN HANDOFF & FIGMA PIXEL-DIFF SECTION -->
+    <section class="section-handoff" id="design-handoff">
+      <div class="container">
+        <div class="handoff-header-row">
+          <div>
+            <span class="serif-label" data-i18n="handoffLabel">Design Handoff &amp; Pixel-Diff</span>
+            <h2 data-i18n="handoffTitle">Zero pixel drift between Figma and production.</h2>
+            <p class="handoff-lead" data-i18n="handoffLead">
+              Stop eyeballing padding and font weights. Overlay your Figma mockups directly over live responsive breakpoints to inspect sub-pixel alignment, typography baselines, and element sizing.
+            </p>
+          </div>
+        </div>
+
+        <div class="handoff-showcase-box">
+          <div class="handoff-stage">
+            <div class="handoff-comparison-preview">
+              <div class="handoff-pane left-pane">
+                <div class="pane-tag" data-i18n="handoffFigmaTag">🎨 Figma Design Spec (375px)</div>
+                <div class="pane-content-mockup figma-style">
+                  <div class="mock-nav">
+                    <span class="mock-logo">✦ StudioBrand</span>
+                    <span class="mock-menu-btn">Menu</span>
+                  </div>
+                  <div class="mock-hero">
+                    <span class="spec-ruler top-ruler">48px padding</span>
+                    <h3 class="mock-title">Minimalist Architecture</h3>
+                    <p class="mock-text">Crafting spatial structures with timeless natural materials.</p>
+                    <div class="mock-btn-row">
+                      <span class="mock-primary-btn">View Projects</span>
+                      <span class="spec-ruler side-ruler">16px gap</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="handoff-divider-curtain">
+                <span class="curtain-grip" title="Optical Split Curtain">⇄</span>
+              </div>
+
+              <div class="handoff-pane right-pane">
+                <div class="pane-tag" data-i18n="handoffDomTag">💻 Live Rendered DOM (375px)</div>
+                <div class="pane-content-mockup dom-style">
+                  <div class="mock-nav">
+                    <span class="mock-logo">✦ StudioBrand</span>
+                    <span class="mock-menu-btn">Menu</span>
+                  </div>
+                  <div class="mock-hero">
+                    <span class="spec-match-tag">✓ 48px Match</span>
+                    <h3 class="mock-title">Minimalist Architecture</h3>
+                    <p class="mock-text">Crafting spatial structures with timeless natural materials.</p>
+                    <div class="mock-btn-row">
+                      <span class="mock-primary-btn">View Projects</span>
+                      <span class="spec-match-tag">✓ 0px Drift</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="handoff-feature-grid">
+            <div class="handoff-feature-card">
+              <div class="hf-icon">📐</div>
+              <h4 data-i18n="hfCard1Title">Pixel-Diff Curtain &amp; Opacity</h4>
+              <p data-i18n="hfCard1Desc">Drag the split handle or adjust overlay opacity from 0% to 100% to catch minute kerning differences, line-height discrepancies, or 1px margin misalignments.</p>
+            </div>
+            <div class="handoff-feature-card">
+              <div class="hf-icon">🎨</div>
+              <h4 data-i18n="hfCard2Title">Figma Frame Import &amp; Overlays</h4>
+              <p data-i18n="hfCard2Desc">Load PNG or SVG design mockups directly into any viewport frame as a translucent guide layer while interacting with your live code.</p>
+            </div>
+            <div class="handoff-feature-card">
+              <div class="hf-icon">🤝</div>
+              <h4 data-i18n="hfCard3Title">Faster Design QA Cycles</h4>
+              <p data-i18n="hfCard3Desc">Take screenshot comparisons that designers can verify in seconds. Eliminate endless back-and-forth Slack messages about button alignment and font sizes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Motif: Section Transition Dot Mark -->
+    <div class="dot-transition-mark" aria-hidden="true">
+      <span class="mark-dot"></span>
+      <span class="mark-dot active"></span>
+      <span class="mark-dot"></span>
+    </div>
+
+    <!-- 2. "Why" Section: Honest, Single Column Story -->
+    <section class="section-why" id="why">
+      <div class="container why-content">
+        <span class="serif-label" data-i18n="whyLabel">Why</span>
+        <h2 class="why-title" data-i18n="whyTitle">
+          Testing one screen at a time is why responsive bugs make it to production.
+        </h2>
+        <p class="why-text" data-i18n="whyBody">
+          You open browser DevTools, switch to device mode, drag the window handle, and squint at 375 pixels. You fix a broken header on mobile, push your commit, and only later realize that your fix pushed the navigation off-screen at 840 pixels. Nobody has the patience to manually click through eight presets for every CSS change. When you test screens one by one, you miss the transitions where layouts actually break.
+        </p>
+
+        <div class="compare-cards-row">
+          <div class="compare-side-card card-before">
+            <h4 data-i18n="beforeTitle">DevTools Device Mode</h4>
+            <p data-i18n="beforeText">One screen at a time. Dragging the window border breaks your focus. You check phone, forget tablet, and miss the mid-tier breakpoint bugs.</p>
+          </div>
+          <div class="compare-side-card card-after">
+            <h4 data-i18n="afterTitle">ViewGrid Workspace</h4>
+            <p data-i18n="afterText">Phone, tablet and desktop stay side by side. Scroll once, and all three follow. Layout shifts and alignment bugs are impossible to miss.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Motif: Section Transition Dot Mark -->
+    <div class="dot-transition-mark" aria-hidden="true">
+      <span class="mark-dot"></span>
+      <span class="mark-dot active"></span>
+      <span class="mark-dot"></span>
+    </div>
+
+    <!-- 3. "How it works": Sticky Scroll Story with Dynamic Visuals -->
+    <section class="section-how" id="how">
+      <div class="container how-grid">
+        <div class="how-steps-col">
+          <span class="serif-label" data-i18n="howLabel">How it works</span>
+
+          <div class="how-step active" id="step-1" data-step="1" onmouseenter="activateStep(1)" onclick="activateStep(1)">
+            <span class="step-number">01</span>
+            <h3 class="step-title" data-i18n="step1Title">Open the workspace</h3>
+            <p class="step-desc" data-i18n="step1Desc">Click ViewGrid in your browser toolbar from any tab you want to inspect. A dedicated, distraction-free workspace opens immediately.</p>
+          </div>
+
+          <div class="how-step" id="step-2" data-step="2" onmouseenter="activateStep(2)" onclick="activateStep(2)">
+            <span class="step-number">02</span>
+            <h3 class="step-title" data-i18n="step2Title">Type any URL or localhost</h3>
+            <p class="step-desc" data-i18n="step2Desc">Test live production websites, staging links, or your local dev server at localhost:3000. No tunnels, cloud proxies, or server setup required.</p>
+          </div>
+
+          <div class="how-step" id="step-3" data-step="3" onmouseenter="activateStep(3)" onclick="activateStep(3)">
+            <span class="step-number">03</span>
+            <h3 class="step-title" data-i18n="step3Title">Pick device presets</h3>
+            <p class="step-desc" data-i18n="step3Desc">Choose standard phones, tablets, and laptops, or specify custom pixel bounds. Flip orientations between portrait and landscape with one click.</p>
+          </div>
+
+          <div class="how-step" id="step-4" data-step="4" onmouseenter="activateStep(4)" onclick="activateStep(4)">
+            <span class="step-number">04</span>
+            <h3 class="step-title" data-i18n="step4DescHead">Scroll and click once</h3>
+            <p class="step-desc" data-i18n="step4Desc">Interact with any device. Every other viewport replicates your scroll and click coordinates in real time without feedback loops or echo lag.</p>
+          </div>
+        </div>
+
+        <div class="how-sticky-col">
+          <div class="how-illus-stage" id="how-illus-stage">
+            <!-- Dynamic SVG Visual based on active step -->
+            <div class="illus-step-container" id="illus-container">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+          <div style="border-top: 1px solid var(--border); padding-top: 14px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);" id="how-step-caption">
+            STEP 01 &bull; WORKSPACE INVOCATION
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FULL-BLEED STATEMENT BAND (Varying Rhythm) -->
+    <div class="statement-band">
+      <div class="container">
+        <h2>
+          Websites don’t exist at one screen size. <em>Why test them like they do?</em>
+        </h2>
+      </div>
+    </div>
+
+    <!-- 4. Features: Large Capability + Typographic Index -->
+    <section class="section-features" id="features">
+      <div class="container">
+        <span class="serif-label" data-i18n="featLabel">Features</span>
+        <h2 style="font-size: 2.8rem; margin-bottom: 24px;">Everything needed to inspect responsive craft.</h2>
+
+        <div class="feature-index-list">
+          <div class="feature-index-item" tabindex="0">
+            <div class="item-name" data-i18n="idxPresets">Device presets</div>
+            <div class="item-detail" data-i18n="idxPresetsDesc">Curated dimensions for popular phones, tablets, and laptops, plus freeform custom pixel inputs.</div>
+            <div><span class="item-diagram">375 × 812 &bull; 768 × 1024 &bull; 1280 × 800</span></div>
+          </div>
+
+          <div class="feature-index-item" tabindex="0">
+            <div class="item-name" data-i18n="idxCurtain">Split-diff curtain</div>
+            <div class="item-detail" data-i18n="idxCurtainDesc">Superimpose two viewports and drag an optical divider to detect 1-pixel font jumps or wrapping shifts.</div>
+            <div><span class="item-diagram">&harr; Draggable Optical Divider</span></div>
+          </div>
+
+          <div class="feature-index-item" tabindex="0">
+            <div class="item-name" data-i18n="idxUA">Per-viewport user-agent</div>
+            <div class="item-detail" data-i18n="idxUADesc">Spoof mobile and tablet User-Agent strings per frame so server-rendered mobile HTML and assets load correctly.</div>
+            <div><span class="item-diagram">Mobile UA / Touch Emulation</span></div>
+          </div>
+
+          <div class="feature-index-item" tabindex="0">
+            <div class="item-name" data-i18n="idxIframes">Works on protected sites</div>
+            <div class="item-detail" data-i18n="idxIframesDesc">Safely strips X-Frame-Options and CSP headers solely for sub-frames inside the ViewGrid tab.</div>
+            <div><span class="item-diagram">DNR &bull; webRequest Sub-Frame Filter</span></div>
+          </div>
+
+          <div class="feature-index-item" tabindex="0">
+            <div class="item-name" data-i18n="idxScreenshots">Full-canvas screenshots</div>
+            <div class="item-detail" data-i18n="idxScreenshotsDesc">Capture individual viewports or the entire multi-device workspace into full-resolution PNG files.</div>
+            <div><span class="item-diagram">One-Click PNG Export</span></div>
+          </div>
+
+          <div class="feature-index-item" tabindex="0">
+            <div class="item-name" data-i18n="idxLocal">100% Local processing</div>
+            <div class="item-detail" data-i18n="idxLocalDesc">Zero analytical tracking, zero external beacons, zero remote servers. Works offline and on private VPNs.</div>
+            <div><span class="item-diagram">Localhost &bull; VPN Safe &bull; Zero Telemetry</span></div>
+          </div>
+
+          <div class="feature-index-item" tabindex="0" onclick="openShortcutsModal()" style="cursor: pointer;">
+            <div class="item-name" data-i18n="idxShortcuts">Keyboard-first workflow</div>
+            <div class="item-detail" data-i18n="idxShortcutsDesc">Launch workspace with Alt+Shift+V / ⌥⇧V, toggle compare diff with D, show cheatsheet with ?</div>
+            <div><span class="item-diagram"><kbd class="kbd-mod">Alt</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> &bull; <kbd>D</kbd> &bull; <kbd>?</kbd></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Motif: Section Transition Dot Mark -->
+    <div class="dot-transition-mark" aria-hidden="true">
+      <span class="mark-dot"></span>
+      <span class="mark-dot active"></span>
+      <span class="mark-dot"></span>
+    </div>
+
+    <!-- 5. Compare Section: Full-Width Split-Diff Demo -->
+    <section class="section-compare" id="compare">
+      <div class="container">
+        <span class="serif-label" data-i18n="compareLabel">Compare</span>
+        <h2 style="font-size: 2.8rem; margin-bottom: 12px;" data-i18n="compareTitle">Catch layout bugs between breakpoints.</h2>
+        <p style="color: var(--text-muted); max-width: 680px;" data-i18n="compareSub">
+          Drag the curtain handle below to compare how the layout renders at 375px versus 1280px. Notice where text drops awkwardly or buttons misalign.
+        </p>
+
+        <div class="diff-stage-wrap" id="diff-stage">
+          <div class="diff-pane diff-pane-left" id="diff-left" style="width: 50%;">
+            <div class="diff-mock-page">
+              <span class="mono-num" style="color: var(--accent); font-size: 0.8rem;">[375px MOBILE BREAKPOINT]</span>
+              <h3 style="font-size: 1.6rem; margin: 12px 0 8px;">Single-Column Header</h3>
+              <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 320px;">
+                Hamburger menu triggered. Navigation collapsed into drawer. Action button full width.
+              </p>
+              <div style="margin-top: 20px; padding: 12px; background: var(--bg-surface); border: 1px solid var(--border); width: 280px;">
+                Button: Full Width Mobile CTA
+              </div>
+            </div>
+          </div>
+
+          <div class="diff-pane diff-pane-right" id="diff-right" style="width: 50%;">
+            <div class="diff-mock-page">
+              <span class="mono-num" style="color: var(--accent-secondary); font-size: 0.8rem;">[1280px DESKTOP BREAKPOINT]</span>
+              <h3 style="font-size: 1.6rem; margin: 12px 0 8px;">Expanded Horizontal Nav</h3>
+              <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 500px;">
+                Full horizontal links displayed: Products &bull; Docs &bull; Pricing &bull; Changelog. Sidebar pinned to the right.
+              </p>
+              <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <div style="padding: 10px 16px; background: var(--bg-card); border: 1px solid var(--border);">Action Primary</div>
+                <div style="padding: 10px 16px; background: var(--bg-card); border: 1px solid var(--border);">Secondary Link</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="diff-divider-line" id="diff-line" style="left: 50%;" onmousedown="onStartDiff(event)" ontouchstart="onStartDiff(event)">
+            <div class="diff-handle-knob">&harr;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Works on Sites that Block Iframes (Asymmetric Side-Aligned) -->
+    <!-- 6. Works on Sites that Block Iframes (Sideways Off-Grid Header) -->
+    <section class="section-iframes">
+      <div class="container iframe-asymmetric-wrap">
+        <div class="sideways-spine-col" aria-hidden="true">
+          <span class="sideways-spine-text">HEADER ARCHITECTURE</span>
+        </div>
+        <div class="iframe-grid">
+          <div>
+            <span class="serif-label" data-i18n="iframeLabel">Header handling</span>
+            <h2 class="offgrid-headline" style="font-size: 2.3rem; margin-bottom: 16px;" data-i18n="iframeTitle">Works on sites that block iframes.</h2>
+            <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.6;" data-i18n="iframeText">
+              Production websites usually send <code>X-Frame-Options: DENY</code> headers to prevent clickjacking. Standard iframe testing tools fail completely and show blank boxes. ViewGrid runs as an audited browser extension, safely stripping these blocking headers strictly for the sub-frames inside your active ViewGrid workspace tab. Your other browsing tabs remain fully protected.
+            </p>
+          </div>
+
+          <div class="iframe-diagram-box">
+            <div class="diagram-row blocked">
+              <span>Standard iframe tool:</span>
+              <span style="color: #C93B2B;">Blocked by X-Frame-Options</span>
+            </div>
+            <div class="diagram-row passed">
+              <span>ViewGrid workspace:</span>
+              <span style="color: #2B8A3E;">Allowed (Scoped Sub-Frame Rule)</span>
+            </div>
+            <p style="color: var(--text-faint); font-size: 0.76rem; margin-top: 4px;">
+              Zero cloud proxy servers. Network rules execute locally in Chromium DNR and Firefox webRequest.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Motif: Section Transition Dot Mark -->
+    <div class="dot-transition-mark" aria-hidden="true">
+      <span class="mark-dot"></span>
+      <span class="mark-dot active"></span>
+      <span class="mark-dot"></span>
+    </div>
+
+    <!-- 7. Use Cases: Horizontal Scroll Strip -->
+    <section class="section-usecases">
+      <div class="container">
+        <span class="serif-label" data-i18n="usecaseLabel">Use cases</span>
+        <h2 style="font-size: 2.4rem; margin-bottom: 8px;" data-i18n="usecaseTitle">Built for daily frontend rhythm.</h2>
+        <p style="color: var(--text-muted); margin-bottom: 24px;" data-i18n="usecaseSub">Scroll through the scenarios where ViewGrid replaces manual browser gymnastics.</p>
+
+        <div class="horizontal-strip">
+          <div class="usecase-card">
+            <h4>Checking a breakpoint</h4>
+            <p>Write a CSS media query, hit save, and see mobile, tablet, and desktop redraw instantly without touching DevTools.</p>
+            <span class="usecase-tag">CSS &bull; Layout Tuning</span>
+          </div>
+
+          <div class="usecase-card">
+            <h4>QA before release</h4>
+            <p>Run through a checkout flow or registration form once. Verify input styling across three screen widths simultaneously.</p>
+            <span class="usecase-tag">Pre-Flight &bull; Forms</span>
+          </div>
+
+          <div class="usecase-card">
+            <h4>Designer &amp; Dev handoff</h4>
+            <p>Compare Figma breakpoint specifications against live production implementation using the optical split-diff slider.</p>
+            <span class="usecase-tag">Figma &bull; Spec Verification</span>
+          </div>
+
+          <div class="usecase-card">
+            <h4>Testing a localhost app</h4>
+            <p>Works right out of the box with localhost:3000, Vite dev servers, Next.js, Rails, or Docker containers.</p>
+            <span class="usecase-tag">Localhost &bull; Dev Server</span>
+          </div>
+
+          <div class="usecase-card">
+            <h4>Client review &amp; demo</h4>
+            <p>Take one comprehensive full-canvas screenshot showing your client how their new site responds across all screen sizes.</p>
+            <span class="usecase-tag">Exports &bull; Client Delivery</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Motif: Section Transition Dot Mark -->
+    <div class="dot-transition-mark" aria-hidden="true">
+      <span class="mark-dot"></span>
+      <span class="mark-dot active"></span>
+      <span class="mark-dot"></span>
+    </div>
+
+    <!-- 8. Install: Lighter Presentation -->
+    <section class="section-install" id="install">
+      <div class="container">
+        <div class="install-layout-row">
+          <div class="install-lead-col">
+            <span class="serif-label" data-i18n="installLabel">Install</span>
+            <h2 data-i18n="installTitle">Add ViewGrid to your browser.</h2>
+            
+            <!-- PRICING / LICENCE PLACEHOLDER: Edit text below to adjust commercial or freemium terms -->
+            <p class="pricing-note" data-i18n="pricingNote">
+              ViewGrid is free to install. Everything executes locally in your browser sandbox.
+            </p>
+            <p class="supported-browsers-note">
+              Works in Chrome, Edge, Brave, Arc, Opera, and Mozilla Firefox.
+            </p>
+            <div class="frameworks-badge-row">
+              <span class="framework-chip">Next.js</span>
+              <span class="framework-chip">Vite</span>
+              <span class="framework-chip">Remix</span>
+              <span class="framework-chip">SvelteKit</span>
+              <span class="framework-chip">Astro</span>
+              <span class="framework-chip">Nuxt</span>
+              <span class="framework-chip">Rails</span>
+              <span class="framework-chip">Docker</span>
+              <span class="framework-chip">localhost:3000</span>
+              <span class="framework-chip">127.0.0.1</span>
+            </div>
+          </div>
+
+          <div class="install-buttons-col">
+            <!-- Chrome Store Button -->
+            <a href="#store-chrome" class="store-btn" id="install-btn-chrome" style="width: 100%;">
+              <img src="/chrome.svg" class="store-btn-logo" width="28" height="28" alt="Google Chrome Logo" />
+              <div class="store-btn-text">
+                <span class="store-btn-sup">Available on</span>
+                <span class="store-btn-main">Chrome Web Store</span>
+              </div>
+              <span class="btn-arrow-icon">&rarr;</span>
+            </a>
+
+            <!-- Firefox Store Button -->
+            <a href="#store-firefox" class="store-btn" id="install-btn-firefox" style="width: 100%;">
+              <img src="/firefox.svg" class="store-btn-logo" width="28" height="28" alt="Mozilla Firefox Logo" />
+              <div class="store-btn-text">
+                <span class="store-btn-sup">Get it for</span>
+                <span class="store-btn-main">Firefox Add-ons</span>
+              </div>
+              <span class="btn-arrow-icon">&rarr;</span>
+            </a>
+
+            <p class="store-pending-note" id="install-pending-line">
+              Store review in progress &mdash; manual install below
+            </p>
+          </div>
+        </div>
+
+        <!-- Visually quiet manual install section (easy to delete or update) -->
+        <div class="quiet-manual-box">
+          <h5>Install manually (Chromium ZIP)</h5>
+          <p>If you prefer not to wait for store registry approval, you can sideload the extension archive directly:</p>
+          <ol>
+            <li>Download and unzip <code>viewgrid-0.1.0-chromium.zip</code>.</li>
+            <li>Open <code>chrome://extensions</code> in your browser and enable Developer Mode.</li>
+            <li>Click <em>"Load unpacked"</em> and select the unzipped directory.</li>
+          </ol>
+          <p style="margin-top: 8px; font-size: 0.8rem; color: var(--text-faint);">
+            Firefox users: store installation via AMO is the supported route.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Motif: Section Transition Dot Mark -->
+    <div class="dot-transition-mark" aria-hidden="true">
+      <span class="mark-dot"></span>
+      <span class="mark-dot active"></span>
+      <span class="mark-dot"></span>
+    </div>
+
+    <!-- 9. FAQ: Native <details> Accordion -->
+    <section class="section-faq" id="faq">
+      <div class="container">
+        <span class="serif-label" data-i18n="faqLabel">FAQ</span>
+        <h2 style="font-size: 2.8rem; margin-bottom: 12px;" data-i18n="faqTitle">Frequently asked questions.</h2>
+
+        <div class="faq-wrapper">
+          <details class="faq-item">
+            <summary data-i18n="faqQ1">Does ViewGrid collect any personal data?</summary>
+            <p data-i18n="faqA1">ViewGrid doesn't collect, transmit or store your data. Everything runs in your browser. We have zero servers, zero analytics trackers, and zero telemetry.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faqQ2">Can I test local development servers?</summary>
+            <p data-i18n="faqA2">Yes. ViewGrid works directly with localhost:3000, 127.0.0.1, internal VPN addresses, and staging environments without requiring reverse proxies or tunnels.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faqQ3">Why doesn't synchronized scrolling get stuck in loops?</summary>
+            <p data-i18n="faqA3">ViewGrid stamps scroll events with sequence identifiers and an active suppression window. When frame A broadcasts a scroll offset, frames B and C apply it without echoing the event back.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faqQ4">Which browsers are supported?</summary>
+            <p data-i18n="faqA4">Google Chrome, Microsoft Edge, Brave, Arc, Opera, and Mozilla Firefox / Firefox Developer Edition.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary data-i18n="faqQ5">Can I take screenshots of my viewports?</summary>
+            <p data-i18n="faqA5">Yes. You can capture individual viewports or the entire multi-device canvas into full-resolution PNG files with a single click.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 10. Footer with Personality -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-split">
+        <div>
+          <div style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; margin-bottom: 8px;">ViewGrid.</div>
+          <p class="maker-note" data-i18n="footerNote">
+            Built by Sinan Sarıkaya for developers who care about pixel precision and clean workflows. No corporate venture backing, no tracking scripts.
+          </p>
+        </div>
+
+        <div>
+          <ul class="footer-links-list">
+            <li><a href="#tour" data-i18n="navTour">Tour</a></li>
+            <li><a href="#why" data-i18n="navWhy">Why</a></li>
+            <li><a href="#how" data-i18n="navHow">How it works</a></li>
+            <li><a href="#features" data-i18n="navFeatures">Features</a></li>
+            <li><a href="#install" data-i18n="navInstall">Install</a></li>
+            <li><a href="/privacy/" data-i18n="navPrivacy">Privacy Policy</a></li>
+            <li><a href="mailto:contact@sinansarikaya.dev">Contact Maker</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-base">
+        <span>&copy; 2026 Sinan Sarıkaya &bull; ViewGrid Extension</span>
+        <span>NO TELEMETRY &bull; LOCAL CLIENT EXECUTION</span>
+        <span>PRODUCTION CANONICAL: viewgrid.sinansarikaya.dev</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Keyboard Shortcuts Cheatsheet Modal -->
+  <div class="shortcuts-modal" id="shortcuts-modal" onclick="closeShortcutsModal(event)" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
+    <div class="shortcuts-modal-card" onclick="event.stopPropagation()">
+      <div class="shortcuts-modal-header">
+        <div>
+          <span class="mono-num" style="color: var(--accent); font-size: 0.76rem; letter-spacing: 0.06em;">KEYBOARD CHEATSHEET</span>
+          <h3 id="shortcuts-modal-title" style="font-size: 1.4rem; margin: 4px 0 0;">ViewGrid Shortcuts</h3>
+        </div>
+        <button type="button" class="lightbox-close-btn" onclick="closeShortcutsModal()" aria-label="Close shortcuts">&times;</button>
+      </div>
+
+      <div class="shortcuts-table">
+        <div class="shortcut-row group-header">GLOBAL BROWSER LAUNCH</div>
+        <div class="shortcut-row">
+          <span>Open current tab in ViewGrid workspace</span>
+          <span><kbd class="kbd-mod">Alt</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Linux friendly alternatives</span>
+          <span><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> &bull; <kbd>Alt</kbd> + <kbd>V</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Alternative Mac command</span>
+          <span><kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></span>
+        </div>
+
+        <div class="shortcut-row group-header">WORKSPACE WORKFLOW</div>
+        <div class="shortcut-row">
+          <span>Toggle Split-Diff comparison mode</span>
+          <span><kbd>D</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Toggle scroll & click synchronization</span>
+          <span><kbd>S</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Add new custom viewport frame</span>
+          <span><kbd>A</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Rotate viewport orientation (Portrait / Landscape)</span>
+          <span><kbd>O</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Cycle alignment grid / snap layout</span>
+          <span><kbd>G</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Capture workspace full-canvas screenshot</span>
+          <span><kbd>C</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Fit all viewports to screen (Zoom to fit)</span>
+          <span><kbd>F</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Inspect breakpoint media queries</span>
+          <span><kbd>I</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Focus device viewport (1 to 9)</span>
+          <span><kbd>1</kbd> &hellip; <kbd>9</kbd></span>
+        </div>
+
+        <div class="shortcut-row group-header">DIALOGS & NAVIGATION</div>
+        <div class="shortcut-row">
+          <span>Show keyboard shortcuts toast</span>
+          <span><kbd>?</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Close modal / reset active inspection</span>
+          <span><kbd>Esc</kbd></span>
+        </div>
+      </div>
+
+      <div class="shortcuts-footer-note">
+        <strong>Pro-tip:</strong> In Chrome or Firefox, visit <code>chrome://extensions/shortcuts</code> or <code>about:addons</code> to customize your global workspace activation key combination at any time.
+      </div>
+    </div>
+  </div>
+
+  <!-- Central JavaScript Engine -->
+  <script>
+    /* -------------------------------------------------------------
+       1. STORE STATUS & CONFIGURATION
+       Toggle STORES_PENDING to false when store reviews approve.
+       ------------------------------------------------------------- */
+    const STORES_PENDING = true;
+
+    function applyStoreStatus() {
+      document.querySelectorAll('.store-pending-note').forEach(line => {
+        line.style.display = STORES_PENDING ? 'block' : 'none';
+      });
+    }
+
+    /* -------------------------------------------------------------
+       2. MULTILINGUAL DICTIONARY (EN, TR, NO)
+       ------------------------------------------------------------- */
+    const translations = {
+      en: {
+        navTour: "Tour",
+        navWhy: "Why",
+        navHow: "How it works",
+        navFeatures: "Features",
+        navCompare: "Compare",
+        navInstall: "Install",
+        navFaq: "FAQ",
+        navPrivacy: "Privacy Policy",
+        shortcutNav: "Shortcuts",
+        heroTitle: "Stop resizing your browser.",
+        heroSub: "ViewGrid opens phone, tablet and desktop views side by side in one tab, scrolling together so you never miss a broken breakpoint.",
+        shortcutHero: "Launch instantly on any page &bull; <u>View all shortcuts</u>",
+        tourLabel: "Interface tour",
+        whyLabel: "Why",
+        whyTitle: "Testing one screen at a time is why responsive bugs make it to production.",
+        whyBody: "You open browser DevTools, switch to device mode, drag the window handle, and squint at 375 pixels. You fix a broken header on mobile, push your commit, and only later realize that your fix pushed the navigation off-screen at 840 pixels. Nobody has the patience to manually click through eight presets for every CSS change. When you test screens one by one, you miss the transitions where layouts actually break.",
+        beforeTitle: "DevTools Device Mode",
+        beforeText: "One screen at a time. Dragging the window border breaks your focus. You check phone, forget tablet, and miss the mid-tier breakpoint bugs.",
+        afterTitle: "ViewGrid Workspace",
+        afterText: "Phone, tablet and desktop stay side by side. Scroll once, and all three follow. Layout shifts and alignment bugs are impossible to miss.",
+        howLabel: "How it works",
+        step1Title: "Open the workspace",
+        step1Desc: "Click ViewGrid in your browser toolbar from any tab you want to inspect. A dedicated, distraction-free workspace opens immediately.",
+        step2Title: "Type any URL or localhost",
+        step2Desc: "Test live production websites, staging links, or your local dev server at localhost:3000. No tunnels, cloud proxies, or server setup required.",
+        step3Title: "Pick device presets",
+        step3Desc: "Choose standard phones, tablets, and laptops, or specify custom pixel bounds. Flip orientations between portrait and landscape with one click.",
+        step4DescHead: "Scroll and click once",
+        step4Desc: "Interact with any device. Every other viewport replicates your scroll and click coordinates in real time without feedback loops or echo lag.",
+        featLabel: "Features",
+        idxPresets: "Device presets",
+        idxPresetsDesc: "Curated dimensions for popular phones, tablets, and laptops, plus freeform custom pixel inputs.",
+        idxCurtain: "Split-diff curtain",
+        idxCurtainDesc: "Superimpose two viewports and drag an optical divider to detect 1-pixel font jumps or wrapping shifts.",
+        idxUA: "Per-viewport user-agent",
+        idxUADesc: "Spoof mobile and tablet User-Agent strings per frame so server-rendered mobile HTML and assets load correctly.",
+        idxIframes: "Works on protected sites",
+        idxIframesDesc: "Safely strips X-Frame-Options and CSP headers solely for sub-frames inside the ViewGrid tab.",
+        idxScreenshots: "Full-canvas screenshots",
+        idxScreenshotsDesc: "Capture individual viewports or the entire multi-device workspace into full-resolution PNG files.",
+        idxLocal: "100% Local processing",
+        idxLocalDesc: "Zero analytical tracking, zero external beacons, zero remote servers. Works offline and on private VPNs.",
+        idxShortcuts: "Keyboard-first workflow",
+        idxShortcutsDesc: "Open workspace with Alt+Shift+V / ⌥⇧V, toggle compare diff with D, show cheatsheet with ?",
+        compareLabel: "Compare",
+        compareTitle: "Catch layout bugs between breakpoints.",
+        compareSub: "Drag the curtain handle below to compare how the layout renders at 375px versus 1280px. Notice where text drops awkwardly or buttons misalign.",
+        iframeLabel: "Header handling",
+        iframeTitle: "Works on sites that block iframes.",
+        iframeText: "Production websites usually send X-Frame-Options: DENY headers to prevent clickjacking. Standard iframe testing tools fail completely and show blank boxes. ViewGrid runs as an audited browser extension, safely stripping these blocking headers strictly for the sub-frames inside your active ViewGrid workspace tab. Your other browsing tabs remain fully protected.",
+        usecaseLabel: "Use cases",
+        usecaseTitle: "Built for daily frontend rhythm.",
+        usecaseSub: "Scroll through the scenarios where ViewGrid replaces manual browser gymnastics.",
+        installLabel: "Install",
+        installTitle: "Add ViewGrid to your browser.",
+        pricingNote: "ViewGrid is free to install. Everything executes locally in your browser sandbox.",
+        faqLabel: "FAQ",
+        faqTitle: "Frequently asked questions.",
+        faqQ1: "Does ViewGrid collect any personal data?",
+        faqA1: "ViewGrid doesn't collect, transmit or store your data. Everything runs in your browser. We have zero servers, zero analytics trackers, and zero telemetry.",
+        faqQ2: "Can I test local development servers?",
+        faqA2: "Yes. ViewGrid works directly with localhost:3000, 127.0.0.1, internal VPN addresses, and staging environments without requiring reverse proxies or tunnels.",
+        faqQ3: "Why doesn't synchronized scrolling get stuck in loops?",
+        faqA3: "ViewGrid stamps scroll events with sequence identifiers and an active suppression window. When frame A broadcasts a scroll offset, frames B and C apply it without echoing the event back.",
+        faqQ4: "Which browsers are supported?",
+        faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera, and Mozilla Firefox / Firefox Developer Edition.",
+        faqQ5: "Can I take screenshots of my viewports?",
+        faqA5: "Yes. You can capture individual viewports or the entire multi-device canvas into full-resolution PNG files with a single click.",
+        navBenchmark: "Benchmark",
+        navHandoff: "Figma Diff",
+        benchLabel: "Architecture & Memory",
+        benchTitle: "Native browser performance. Not an 850 MB Electron app.",
+        benchSub: "Most multi-screen testing tools are bloated Electron bundles or cloud proxies that swallow your machine's RAM. ViewGrid runs directly inside your browser engine with near-zero overhead.",
+        benchBadgeRam: "RAM FOOTPRINT",
+        benchRamHead: "Ultra-light memory footprint",
+        benchRamDesc: "Runs natively inside Chromium and Firefox. While Electron-based tools consume 850 MB to 1.2 GB of RAM, ViewGrid tests multiple breakpoints without slowing down your laptop or battery.",
+        benchBadgeSync: "SCROLL SYNC",
+        benchSyncHead: "Zero-lag bidirectional sync",
+        benchSyncDesc: "Local broadcast channel mirrors mouse clicks, touch interactions, input forms, and 60 FPS scrolling instantly without feedback loops or frame hitching.",
+        benchBadgeLocal: "100% PRIVATE",
+        benchLocalHead: "Local-first & privacy safe",
+        benchLocalDesc: "No remote proxy servers, no telemetry, no tracking pixels. Test staging servers, localhost, and authenticated sessions behind VPNs with complete peace of mind.",
+        handoffPillTitle: "Design Handoff & Pixel-Diff:",
+        handoffPillText: "Compare live breakpoints against Figma mockups with zero pixel drift →",
+        handoffLabel: "Design Handoff & Pixel-Diff",
+        handoffTitle: "Zero pixel drift between Figma and production.",
+        handoffLead: "Stop eyeballing padding and font weights. Overlay your Figma mockups directly over live responsive breakpoints to inspect sub-pixel alignment, typography baselines, and element sizing.",
+        handoffFigmaTag: "🎨 Figma Design Spec (375px)",
+        handoffDomTag: "💻 Live Rendered DOM (375px)",
+        hfCard1Title: "Pixel-Diff Curtain & Opacity",
+        hfCard1Desc: "Drag the split handle or adjust overlay opacity from 0% to 100% to catch minute kerning differences, line-height discrepancies, or 1px margin misalignments.",
+        hfCard2Title: "Figma Frame Import & Overlays",
+        hfCard2Desc: "Load PNG or SVG design mockups directly into any viewport frame as a translucent guide layer while interacting with your live code.",
+        hfCard3Title: "Faster Design QA Cycles",
+        hfCard3Desc: "Take screenshot comparisons that designers can verify in seconds. Eliminate endless back-and-forth Slack messages about button alignment and font sizes.",
+        footerNote: "Built by Sinan Sarıkaya for developers who care about pixel precision and clean workflows. No corporate venture backing, no tracking scripts."
+      },
+      tr: {
+        navBenchmark: "Performans",
+        navHandoff: "Figma Karşılaştırma",
+        benchLabel: "Mimari & Düşük Bellek",
+        benchTitle: "Yerel tarayıcı performansı. 850 MB Electron canavarı değil.",
+        benchSub: "Birçok çoklu ekran aracı, bilgisayarınızın RAM'ini tüketen hantal Electron paketleri veya bulut sunucularıdır. ViewGrid doğrudan tarayıcı çekirdeğinde sıfıra yakın yükle çalışır.",
+        benchBadgeRam: "RAM TÜKETİMİ",
+        benchRamHead: "Ultra hafif bellek ayak izi",
+        benchRamDesc: "Chromium ve Firefox içinde yerel olarak çalışır. Electron tabanlı araçlar 850 MB - 1.2 GB RAM tüketirken, ViewGrid bilgisayarınızı ve pilinizi yormadan birden fazla ekranı test eder.",
+        benchBadgeSync: "KAYDIRMA SENKRONU",
+        benchSyncHead: "Sıfır gecikmeli çift yönlü senkronizasyon",
+        benchSyncDesc: "Yerel yayın kanalı; tıklamaları, dokunmatik hareketleri, form girişlerini ve 60 FPS kaydırmayı döngüye girmeden veya takılmadan tüm ekranlara anında yansıtır.",
+        benchBadgeLocal: "%100 GİZLİ",
+        benchLocalHead: "Yerel öncelikli & tam gizlilik",
+        benchLocalDesc: "Harici bulut ve proxy sunucusu yok, telemetri yok, takip kodu yok. Şirket içi VPN ve localhost üzerindeki korumalı oturumlarınızı güvenle test edin.",
+        handoffPillTitle: "Tasarım Handoff & Figma Pixel-Diff:",
+        handoffPillText: "Figma mockupları ile canlı kırılma noktalarını sıfır sapmayla karşılaştırın →",
+        handoffLabel: "Tasarım Handoff & Figma Pixel-Diff",
+        handoffTitle: "Figma tasarımı ile canlı kod arasında sıfır piksel sapma.",
+        handoffLead: "Padding ve font kalınlıklarını göz kararı tahmin etmeyi bırakın. Figma mockuplarınızı doğrudan responsive kırılma noktalarının üzerine katmanlayarak alt-piksel hizalamaları ve tipografi çizgilerini anında denetleyin.",
+        handoffFigmaTag: "🎨 Figma Tasarım Özellikleri (375px)",
+        handoffDomTag: "💻 Canlı DOM Render (375px)",
+        hfCard1Title: "Optik Perde & Opaklık Ayarı",
+        hfCard1Desc: "Bölücü perdeyi sürükleyin veya %0 - %100 arasında opaklığı ayarlayarak en küçük harf aralığı, satır yüksekliği veya 1 piksellik kenar boşluğu kaymalarını yakalayın.",
+        hfCard2Title: "Figma Katmanı İçe Aktarma",
+        hfCard2Desc: "Figma'dan aldığınız PNG veya SVG tasarımları doğrudan herhangi bir cihaz çerçevesine yarı saydam rehber katman olarak yerleştirin ve canlı kodunuzla etkileşime girin.",
+        hfCard3Title: "Hızlı Tasarım QA Süreçleri",
+        hfCard3Desc: "Tasarımcıların saniyeler içinde doğrulayabileceği karşılaştırmalı ekran görüntüleri alın. Hizalama ve boyutlandırma konusundaki bitmek bilmeyen mesajlaşmaları sonlandırın.",
+        navTour: "Tur",
+        navWhy: "Neden",
+        navHow: "Nasıl Çalışır",
+        navFeatures: "Özellikler",
+        navCompare: "Karşılaştırma",
+        navInstall: "Yükle",
+        navFaq: "SSS",
+        navPrivacy: "Gizlilik Politikası",
+        shortcutNav: "Kısayollar",
+        heroTitle: "Tarayıcınızı çekiştirmeyi bırakın.",
+        heroSub: "ViewGrid; telefon, tablet ve masaüstü görünümlerini tek bir sekmede yan yana açar, eşzamanlı kaydırır ve kırılma noktalarını kaçırmanızı engeller.",
+        shortcutHero: "Herhangi bir sayfada anında başlatın &bull; <u>Tüm kısayolları gör</u>",
+        tourLabel: "Arayüz turu",
+        whyLabel: "Neden",
+        whyTitle: "Ekranları tek tek test etmek, arayüz hatalarının canlıya çıkmasının asıl nedenidir.",
+        whyBody: "Geliştirici konsolunu açar, cihaz moduna geçer, pencere kenarını sürükler ve 375 piksele bakarsınız. Mobildeki başlığı düzeltip kodunuzu gönderir, ancak sonradan bu değişikliğin 840 pikselde menüyü ekran dışına ittiğini fark edersiniz. Kimse her CSS satırında 8 farklı çözünürlüğe tek tek tıklayacak sabra sahip değildir.",
+        beforeTitle: "Konsol Cihaz Modu",
+        beforeText: "Tek seferde tek ekran. Pencere kenarını çekiştirmek dikkatinizi dağıtır. Mobili kontrol edip tableti unutursunuz.",
+        afterTitle: "ViewGrid Çalışma Alanı",
+        afterText: "Telefon, tablet ve masaüstü yan yana kalır. Birini kaydırın, hepsi takip etsin. Düzen kaymaları asla gözden kaçmaz.",
+        howLabel: "Nasıl Çalışır",
+        step1Title: "Çalışma alanını açın",
+        step1Desc: "İncelemek istediğiniz herhangi bir sekmeden araç çubuğundaki ViewGrid simgesine tıklayın. Temiz çalışma alanı hemen açılır.",
+        step2Title: "Herhangi bir URL veya localhost girin",
+        step2Desc: "Canlı web sitelerini veya localhost:3000 yerel geliştirme sunucunuzu test edin. Tünel veya bulut sunucusu gerekmez.",
+        step3Title: "Cihaz kalıplarını seçin",
+        step3Desc: "Standart telefon, tablet ve masaüstü boyutlarını seçin veya özel piksel değerleri girin. Tek tıkla yatay/dikey çevirin.",
+        step4DescHead: "Bir kez kaydırın veya tıklayın",
+        step4Desc: "Herhangi bir ekranda işlem yapın. Diğer tüm pencereler kaydırma ve tıklama koordinatlarınızı anında ve döngüsüz tekrarlar.",
+        featLabel: "Özellikler",
+        idxPresets: "Cihaz hazır kalıpları",
+        idxPresetsDesc: "Popüler telefon, tablet ve dizüstü bilgisayarlar için optimize edilmiş boyutlar ve özel piksel girişi.",
+        idxCurtain: "Optik perde karşılaştırması",
+        idxCurtainDesc: "İki pencereyi üst üste bindirin ve aradaki perdeyi sürükleyerek 1 piksellik kaymaları anında tespit edin.",
+        idxUA: "Pencere başına User-Agent",
+        idxUADesc: "Her ekranda farklı mobil veya tablet User-Agent başlığı göndererek sunucu taraflı mobil HTML çıktılarını doğru test edin.",
+        idxIframes: "Korumalı sitelerde çalışır",
+        idxIframesDesc: "X-Frame-Options ve CSP başlıklarını yalnızca ViewGrid sekmesi içindeki alt çerçeveler için güvenle temizler.",
+        idxScreenshots: "Tam tuval ekran görüntüsü",
+        idxScreenshotsDesc: "İster tek bir cihazı, ister tüm cihaz tuvalini tek tıkla tam çözünürlüklü PNG olarak kaydedin.",
+        idxLocal: "%100 Yerel işleme",
+        idxLocalDesc: "Sıfır analitik takip, sıfır dış sunucu. Çevrimdışı ve şirket içi özel VPN'lerde tam güvenlik sağlar.",
+        idxShortcuts: "Klavye odaklı iş akışı",
+        idxShortcutsDesc: "Alt+Shift+V / ⌥⇧V ile çalışma alanını açın, D ile optik karşılaştırmayı açıp kapatın, ? ile kısayolları listeleyin",
+        compareLabel: "Karşılaştırma",
+        compareTitle: "Kırılma noktaları arasındaki hataları yakalayın.",
+        compareSub: "Aşağıdaki perde tutamacını sürükleyerek 375px ve 1280px arasındaki tasarım farklarını karşılaştırın.",
+        iframeLabel: "Başlık filtreleme",
+        iframeTitle: "İframe engelleyen sitelerde çalışır.",
+        iframeText: "Modern siteler clickjacking engellemek için X-Frame-Options başlığı gönderir ve normal önizleme araçlarında açılmaz. ViewGrid tarayıcı izinlerini kullanarak bu engelleri yalnızca kendi sekmesi içindeki alt çerçeveler için güvenle filtreler.",
+        usecaseLabel: "Kullanım alanları",
+        usecaseTitle: "Günlük frontend ritmi için tasarlandı.",
+        usecaseSub: "ViewGrid'in gereksiz pencere çekiştirmelerini ortadan kaldırdığı durumları inceleyin.",
+        installLabel: "Yükle",
+        installTitle: "ViewGrid'i tarayıcınıza ekleyin.",
+        pricingNote: "ViewGrid tamamen ücretsizdir. Her şey yerel tarayıcı ortamınızda çalışır.",
+        faqLabel: "SSS",
+        faqTitle: "Sıkça sorulan sorular.",
+        faqQ1: "ViewGrid kişisel veri toplar mı?",
+        faqA1: "ViewGrid verilerinizi toplamaz, iletmez ve saklamaz. Her şey tarayıcınızda çalışır. Sıfır sunucu, sıfır analitik, sıfır telemetri.",
+        faqQ2: "Yerel geliştirme sunucularını test edebilir miyim?",
+        faqA2: "Evet. ViewGrid doğrudan localhost:3000, 127.0.0.1, şirket içi VPN ve test adresleriyle doğrudan çalışır.",
+        faqQ3: "Eşzamanlı kaydırma neden kilitlenip döngüye girmez?",
+        faqA3: "ViewGrid olaylara sıralı zaman kimlikleri uygular. A ekranından gelen kaydırma B ve C'ye uygulanırken geri bildirim yankısı filtrelenir.",
+        faqQ4: "Hangi tarayıcılar desteklenir?",
+        faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera ve Mozilla Firefox.",
+        faqQ5: "Pencerelerin ekran görüntüsünü alabilir miyim?",
+        faqA5: "Evet. Tek bir cihazın veya tüm cihaz tuvalinin tam çözünürlüklü PNG görüntüsünü tek tıkla alabilirsiniz.",
+        footerNote: "Sinan Sarıkaya tarafından piksel hassasiyetine önem veren geliştiriciler için geliştirilmiştir. Şirket fonu veya takip kodu içermez."
+      },
+      no: {
+        navBenchmark: "Ytelse",
+        navHandoff: "Figma Diff",
+        benchLabel: "Arkitektur & Lavt Minnebruk",
+        benchTitle: "Ekte nettleserytelse. Ingen 850 MB Electron-app.",
+        benchSub: "Mange verktøy er tunge Electron-pakker som sluker maskinens RAM. ViewGrid kjører direkte i nettlesermotoren med minimal belastning.",
+        benchBadgeRam: "RAM-BRUK",
+        benchRamHead: "Ekstremt lavt minneforbruk",
+        benchRamDesc: "Kjører integrert i Chromium og Firefox. Mens Electron-apper krever 850 MB+, lar ViewGrid deg teste uten å tappe batteriet.",
+        benchBadgeSync: "RULLE-SYNKRONISERING",
+        benchSyncHead: "Null forsinkelse i synkronisering",
+        benchSyncDesc: "Lokal broadcast-kanal speiler klikk, berøring og 60 FPS rulling uten ekkolooper eller etterslep.",
+        benchBadgeLocal: "100% PRIVAT",
+        benchLocalHead: "Lokalt og personvernvennlig",
+        benchLocalDesc: "Ingen eksterne proxy-tjenere, ingen sporing. Test localhost og interne VPN-sider trygt.",
+        handoffPillTitle: "Design Handoff & Figma Diff:",
+        handoffPillText: "Sammenlign levende skjermer med Figma-skisser uten pikselavvik →",
+        handoffLabel: "Design Handoff & Figma Pixel-Diff",
+        handoffTitle: "Null pikselavvik mellom Figma og produksjon.",
+        handoffLead: "Slutt å gjette på avstander og fonter. Legg Figma-skisser direkte over responsive skjermer for å kontrollere pikseljustering.",
+        handoffFigmaTag: "🎨 Figma Design (375px)",
+        handoffDomTag: "💻 Live DOM (375px)",
+        hfCard1Title: "Optisk Skillevegg & Gjennomsiktighet",
+        hfCard1Desc: "Dra skillelinjen eller juster gjennomsiktigheten fra 0% til 100% for å oppdage selv 1-piksels skjevheter.",
+        hfCard2Title: "Figma-lag Import",
+        hfCard2Desc: "Last opp PNG/SVG fra Figma direkte over visningsvinduet som en gjennomsiktig mal.",
+        hfCard3Title: "Raskere Design-QA",
+        hfCard3Desc: "Ta sammenligningsbilder som designere godkjenner på sekunder.",
+        navTour: "Tur",
+        navWhy: "Hvorfor",
+        navHow: "Hvordan det fungerer",
+        navFeatures: "Egenskaper",
+        navCompare: "Sammenlign",
+        navInstall: "Installer",
+        navFaq: "FAQ",
+        navPrivacy: "Personvern",
+        shortcutNav: "Snarveier",
+        heroTitle: "Slutt å endre størrelse på nettleseren.",
+        heroSub: "ViewGrid åpner mobil, nettbrett og desktop side om side i én fane, rullende sammen så du aldri overser en layoutfeil.",
+        shortcutHero: "Start umiddelbart på hvilken som helst side &bull; <u>Vis alle snarveier</u>",
+        tourLabel: "Grensesnitt-tur",
+        whyLabel: "Hvorfor",
+        whyTitle: "Å teste én skjerm av gangen er grunnen til at responsive feil når produksjon.",
+        whyBody: "Du åpner DevTools, drar i vinduskanten og stirrer på 375 piksler. Du fikser mobildesignet, committer, og innser senere at endringen ødela navigasjonen på 840 piksler. Ingen har tålmodighet til å klikke gjennom åtte forhåndsinnstillinger for hver eneste CSS-endring.",
+        beforeTitle: "DevTools Enhetsmodus",
+        beforeText: "Én skjerm om gangen. Å dra i kanten bryter flyten din. Du sjekker telefon, glemmer nettbrett og overser feil.",
+        afterTitle: "ViewGrid Arbeidsflate",
+        afterText: "Mobil, nettbrett og desktop står side om side. Rull én gang, og alle tre følger etter.",
+        howLabel: "Hvordan det fungerer",
+        step1Title: "Åpne arbeidsområdet",
+        step1Desc: "Klikk på ViewGrid i verktøylinjen fra hvilken som helst fane du vil inspisere. Arbeidsflaten åpnes umiddelbart.",
+        step2Title: "Skriv inn URL eller localhost",
+        step2Desc: "Test produksjonssider, testmiljøer eller localhost:3000 uten behov for tunneler eller skyservere.",
+        step3Title: "Velg enhetsstørrelser",
+        step3Desc: "Velg standardtelefoner og nettbrett, eller angi egne pikselmål. Vri mellom stående og liggende format.",
+        step4DescHead: "Rull og klikk én gang",
+        step4Desc: "Bruk én enhet; alle de andre gjenspeiler rulling og klikk i sanntid uten forsinkelse eller ekkoløkker.",
+        featLabel: "Egenskaper",
+        idxPresets: "Enhetsinnstillinger",
+        idxPresetsDesc: "Optimaliserte mål for vanlige telefoner, nettbrett og bærbare datamaskiner.",
+        idxCurtain: "Optisk skille-gardin",
+        idxCurtainDesc: "Legg to skjermer over hverandre og dra gardinen for å oppdage 1-piksel forskyvninger.",
+        idxUA: "Brukeragent per skjerm",
+        idxUADesc: "Send ekte mobile User-Agent headere per ramme slik at mobil HTML lastes riktig.",
+        idxIframes: "Fungerer på beskyttede sider",
+        idxIframesDesc: "Fjerner X-Frame-Options og CSP-headere trygt kun inne i ViewGrid-fanen.",
+        idxScreenshots: "Full-lerret skjermbilder",
+        idxScreenshotsDesc: "Ta høyoppløselige PNG-skjermbilder av enkeltvisninger eller hele enhetslerretet.",
+        idxLocal: "100% Lokal behandling",
+        idxLocalDesc: "Null sporing, null eksterne servere. Fungerer helt trygt på interne VPN-nettverk.",
+        idxShortcuts: "Tastatur-først arbeidsflyt",
+        idxShortcutsDesc: "Åpne arbeidsområdet med Alt+Shift+V / ⌥⇧V, veksle diff med D, vis hurtigtaster med ?",
+        compareLabel: "Sammenlign",
+        compareTitle: "Oppdag layoutfeil mellom skjermstørrelser.",
+        compareSub: "Dra gardinen under for å sammenligne hvordan designet oppfører seg på 375px kontra 1280px.",
+        iframeLabel: "Header-håndtering",
+        iframeTitle: "Fungerer på sider som blokkerer iframes.",
+        iframeText: "Mange nettsteder blokkerer iframes for å hindre clickjacking. ViewGrid fjerner disse headerne sikkert utelukkende for sine egne underrammer.",
+        usecaseLabel: "Bruksområder",
+        usecaseTitle: "Bygget for den daglige frontend-flyten.",
+        usecaseSub: "Se hvordan ViewGrid forenkler hverdagen for designere og utviklere.",
+        installLabel: "Installer",
+        installTitle: "Legg til ViewGrid i nettleseren.",
+        pricingNote: "ViewGrid er gratis å installere. Alt kjører lokalt i nettleseren din.",
+        faqLabel: "FAQ",
+        faqTitle: "Ofte stilte spørsmål.",
+        faqQ1: "Samler ViewGrid inn personopplysninger?",
+        faqA1: "ViewGrid samler ikke inn, overfører ikke og lagrer ikke dataene dine. Alt kjører lokalt i nettleseren din.",
+        faqQ2: "Kan jeg teste lokale servere?",
+        faqA2: "Ja. ViewGrid fungerer sømløst med localhost:3000, 127.0.0.1 og interne bedriftsnettverk.",
+        faqQ3: "Hvorfor låser ikke synkronisert rulling seg?",
+        faqA3: "ViewGrid stempler rullehendelser med sekvens-IDer slik at ekkosignaler filtreres bort.",
+        faqQ4: "Hvilke nettlesere støttes?",
+        faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera og Mozilla Firefox.",
+        faqQ5: "Kan jeg ta skjermbilder av visningene?",
+        faqA5: "Ja. Du kan ta PNG-skjermbilde av enkeltrammer eller hele lerretet med ett klikk.",
+        footerNote: "Utviklet av Sinan Sarıkaya for utviklere som bryr seg om pikselpresisjon. Ingen sporing, ingen selskapsstøtte."
+      }
+    };
+
+    /* -------------------------------------------------------------
+       3. LANGUAGE MANAGER (Browser Detection & LocalStorage)
+       ------------------------------------------------------------- */
+    function detectLanguage() {
+      try {
+        const stored = localStorage.getItem('viewgrid_lang');
+        if (stored && ['en', 'tr', 'no'].includes(stored)) return stored;
+      } catch (e) {}
+
+      const navLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+      if (navLang.startsWith('tr')) return 'tr';
+      if (navLang.startsWith('no') || navLang.startsWith('nb') || navLang.startsWith('nn')) return 'no';
+      return 'en';
+    }
+
+    let currentLang = detectLanguage();
+
+    function setLang(lang) {
+      if (!['en', 'tr', 'no'].includes(lang)) lang = 'en';
+      currentLang = lang;
+      try {
+        localStorage.setItem('viewgrid_lang', lang);
+      } catch (e) {}
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+      });
+
+      const dict = translations[lang] || translations.en;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerHTML = dict[key];
+      });
+    }
+
+    /* -------------------------------------------------------------
+       4. THEME MANAGER (Light / Dark with Sun/Moon Icon)
+       ------------------------------------------------------------- */
+    function detectTheme() {
+      try {
+        const stored = localStorage.getItem('viewgrid_theme');
+        if (stored && ['light', 'dark'].includes(stored)) return stored;
+      } catch (e) {}
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    let currentTheme = detectTheme();
+
+    function applyTheme(theme) {
+      currentTheme = theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      try {
+        localStorage.setItem('viewgrid_theme', theme);
+      } catch (e) {}
+
+      const icon = document.getElementById('theme-icon');
+      if (icon) {
+        if (theme === 'dark') {
+          icon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+        } else {
+          icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+        }
+      }
+    }
+
+    function toggleTheme() {
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    }
+
+    /* -------------------------------------------------------------
+       5. INTERACTION: REBUILT SYNCHRONIZED SCROLL ENGINE
+       Slider drives progress 0..1; user scroll on any frame
+       makes that frame the leader, with spring-like followers.
+       ------------------------------------------------------------- */
+    let targetScrollProgress = 0;
+    let activeLeader = 'slider';
+    let leaderHighlightTimer = null;
+    const MAX_PAGE_SCROLL = 800 - 320; // 480px
+
+    const frameOffsets = {
+      phone: 0,
+      tablet: 0,
+      desktop: 0
+    };
+
+    const pagePhone = document.getElementById('page-phone');
+    const pageTablet = document.getElementById('page-tablet');
+    const pageDesktop = document.getElementById('page-desktop');
+    const syncDial = document.getElementById('sync-dial');
+    const syncPctLabel = document.getElementById('sync-pct-label');
+
+    function highlightLeaderBriefly(sourceLeader) {
+      ['phone', 'tablet', 'desktop'].forEach(id => {
+        const card = document.getElementById(`frame-${id}`);
+        if (card) {
+          card.classList.toggle('is-leader', id === sourceLeader);
+        }
+      });
+      if (leaderHighlightTimer) clearTimeout(leaderHighlightTimer);
+      if (sourceLeader && sourceLeader !== 'slider') {
+        leaderHighlightTimer = setTimeout(() => {
+          ['phone', 'tablet', 'desktop'].forEach(id => {
+            const card = document.getElementById(`frame-${id}`);
+            if (card) card.classList.remove('is-leader');
+          });
+        }, 1200);
+      }
+    }
+
+    function setScrollProgress(progress, sourceLeader) {
+      targetScrollProgress = Math.max(0, Math.min(1, progress));
+      activeLeader = sourceLeader;
+
+      if (syncDial && sourceLeader !== 'slider') {
+        syncDial.value = Math.round(targetScrollProgress * 100);
+      }
+      if (syncPctLabel) {
+        syncPctLabel.innerText = Math.round(targetScrollProgress * 100) + '%';
+      }
+
+      highlightLeaderBriefly(sourceLeader);
+    }
+
+    function onDriveScroll(prog) {
+      setScrollProgress(prog, 'slider');
+    }
+
+    // Interactive URL Playground Simulator in Hero
+    function onPlaygroundUrlChange(val) {
+      const clean = (val || '').trim().replace(/^https?:\/\//i, '').replace(/\/$/, '') || 'brand.io';
+      const logoElPhone = document.querySelector('#page-phone .sim-logo');
+      const logoElTablet = document.querySelector('#page-tablet .sim-logo');
+      const logoElDesktop = document.querySelector('#page-desktop .sim-logo');
+
+      if (logoElPhone) logoElPhone.textContent = clean.toUpperCase();
+      if (logoElTablet) logoElTablet.textContent = clean.toUpperCase();
+      if (logoElDesktop) logoElDesktop.textContent = clean.toUpperCase() + ' WORKSPACE';
+    }
+
+    function onPlaygroundTestClick() {
+      const inp = document.getElementById('playground-url-input');
+      if (inp) {
+        onPlaygroundUrlChange(inp.value);
+        // Animate a quick pulse on the miniature frames
+        const stage = document.getElementById('sync-stage-grid');
+        if (stage) {
+          stage.style.transition = 'transform 0.25s ease';
+          stage.style.transform = 'scale(1.02)';
+          setTimeout(() => { stage.style.transform = 'scale(1)'; }, 250);
+        }
+      }
+    }
+
+    // Physics update loop in requestAnimationFrame: leader tracks immediately, followers ease
+    function scrollEngineLoop() {
+      const targetPx = targetScrollProgress * MAX_PAGE_SCROLL;
+
+      ['phone', 'tablet', 'desktop'].forEach(id => {
+        if (id === activeLeader) {
+          frameOffsets[id] = targetPx;
+        } else {
+          const easing = (activeLeader === 'slider') ? 0.22 : 0.16;
+          frameOffsets[id] += (targetPx - frameOffsets[id]) * easing;
+        }
+      });
+
+      if (pagePhone) pagePhone.style.transform = `translateY(-${Math.round(frameOffsets.phone)}px)`;
+      if (pageTablet) pageTablet.style.transform = `translateY(-${Math.round(frameOffsets.tablet)}px)`;
+      if (pageDesktop) pageDesktop.style.transform = `translateY(-${Math.round(frameOffsets.desktop)}px)`;
+
+      requestAnimationFrame(scrollEngineLoop);
+    }
+    requestAnimationFrame(scrollEngineLoop);
+
+    // Attach wheel and touch/drag listeners to each frame so it becomes the leader
+    function setupFrameLeaderScroll(frameId) {
+      const win = document.getElementById(`window-${frameId}`);
+      if (!win) return;
+
+      // Mouse wheel listener
+      win.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY;
+        const newProgress = Math.max(0, Math.min(1, targetScrollProgress + (delta / (MAX_PAGE_SCROLL * 2))));
+        setScrollProgress(newProgress, frameId);
+      }, { passive: false });
+
+      // Pointer drag listener
+      let startY = 0;
+      let startProgress = 0;
+      let isDragging = false;
+
+      win.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        startY = e.clientY;
+        startProgress = targetScrollProgress;
+        setScrollProgress(targetScrollProgress, frameId);
+        win.setPointerCapture(e.pointerId);
+      });
+
+      win.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const deltaY = startY - e.clientY;
+        const newProgress = Math.max(0, Math.min(1, startProgress + (deltaY / MAX_PAGE_SCROLL)));
+        setScrollProgress(newProgress, frameId);
+      });
+
+      win.addEventListener('pointerup', () => { isDragging = false; });
+      win.addEventListener('pointercancel', () => { isDragging = false; });
+    }
+
+    // Setup Drag-and-Drop Reordering for Synchronized Scroll Engine Frames with preview skeleton
+    function setupSyncFramesDragAndDrop() {
+      const stage = document.getElementById('sync-stage-grid');
+      if (!stage) return;
+
+      let draggedCard = null;
+      let skeletonEl = null;
+
+      function getOrCreateSkeleton(width) {
+        if (!skeletonEl) {
+          skeletonEl = document.createElement('div');
+          skeletonEl.className = 'sync-drop-skeleton';
+          skeletonEl.innerHTML = `
+            <div class="skeleton-inner">
+              <span class="skeleton-icon">📥</span>
+              <span>DROP HERE</span>
+            </div>
+          `;
+          skeletonEl.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+          });
+          skeletonEl.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (draggedCard && skeletonEl && skeletonEl.parentNode) {
+              skeletonEl.replaceWith(draggedCard);
+            }
+          });
+        }
+        skeletonEl.style.width = width ? width + 'px' : '280px';
+        return skeletonEl;
+      }
+
+      const cards = stage.querySelectorAll('.sync-device-card');
+      cards.forEach((card) => {
+        card.setAttribute('draggable', 'true');
+
+        card.addEventListener('dragstart', (e) => {
+          draggedCard = card;
+          card.classList.add('is-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', card.id);
+          getOrCreateSkeleton(card.offsetWidth);
+        });
+
+        card.addEventListener('dragend', () => {
+          card.classList.remove('is-dragging');
+          draggedCard = null;
+          if (skeletonEl && skeletonEl.parentNode) {
+            skeletonEl.remove();
+          }
+        });
+
+        card.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (!draggedCard || draggedCard === card) return;
+
+          const rect = card.getBoundingClientRect();
+          const isAfter = (e.clientX - rect.left) > rect.width / 2;
+          const skeleton = getOrCreateSkeleton(draggedCard.offsetWidth);
+
+          if (isAfter) {
+            if (card.nextElementSibling !== skeleton) {
+              card.after(skeleton);
+            }
+          } else {
+            if (card.previousElementSibling !== skeleton) {
+              card.before(skeleton);
+            }
+          }
+        });
+
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (draggedCard && skeletonEl && skeletonEl.parentNode) {
+            skeletonEl.replaceWith(draggedCard);
+            draggedCard.classList.remove('is-dragging');
+          }
+        });
+      });
+
+      stage.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+
+      stage.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (draggedCard && skeletonEl && skeletonEl.parentNode) {
+          skeletonEl.replaceWith(draggedCard);
+          draggedCard.classList.remove('is-dragging');
+        }
+      });
+    }
+
+    setupSyncFramesDragAndDrop();
+
+    /* -------------------------------------------------------------
+       6. SHOWCASE: DATA-DRIVEN 4 TABS + AUTO-ADVANCE + LIGHTBOX
+       ------------------------------------------------------------- */
+    const showcaseData = [
+      {
+        id: 'workspace',
+        title: 'Workspace',
+        caption: 'Multi-device responsive workspace with synchronized scrolling',
+        desc: 'View phone, tablet, and desktop side by side in one tab. Zoom, pan, and rearrange frames freely.',
+        src: '/screenshots/workspace.png'
+      },
+      {
+        id: 'compare',
+        title: 'Compare Diff',
+        caption: 'Optical split-curtain comparison engine',
+        desc: 'Drag a split divider across two breakpoints to instantly reveal misaligned buttons and text wrapping bugs.',
+        src: '/screenshots/compare.png'
+      },
+      {
+        id: 'device-frames',
+        title: 'Device Frames',
+        caption: 'Realistic hardware bezels and user-agent emulation',
+        desc: 'Render with real device bezels and mobile touch characteristics so server-rendered mobile HTML loads properly.',
+        src: '/screenshots/device-frames.png'
+      },
+      {
+        id: 'inspector',
+        title: 'Inspector',
+        caption: 'Responsive breakpoint analysis and quick-switch presets',
+        desc: 'Audit active CSS @media queries across viewports simultaneously without inspecting each element individually.',
+        src: '/screenshots/inspector.png'
+      }
+    ];
+
+    let currentShowcaseIndex = 0;
+    let showcaseAutoTimer = null;
+    let showcasePaused = false;
+    let showcaseUserInteracted = false;
+
+    function selectShowcaseTab(idx) {
+      currentShowcaseIndex = idx;
+      showcaseUserInteracted = true;
+      renderShowcase();
+    }
+
+    function renderShowcase() {
+      const item = showcaseData[currentShowcaseIndex];
+      if (!item) return;
+
+      // Update Tab active states
+      document.querySelectorAll('.tour-tab-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx === currentShowcaseIndex);
+      });
+
+      const img = document.getElementById('showcase-img');
+      const fallback = document.getElementById('showcase-fallback');
+      const caption = document.getElementById('showcase-caption');
+      const desc = document.getElementById('showcase-desc');
+      const urlText = document.getElementById('showcase-url-text');
+      const fallbackTitle = document.getElementById('fallback-title');
+      const fallbackBadge = document.getElementById('fallback-badge');
+
+      if (caption) caption.innerText = item.caption;
+      if (desc) desc.innerText = item.desc;
+      if (urlText) urlText.innerText = `viewgrid://${item.id}`;
+      if (fallbackTitle) fallbackTitle.innerText = `Screenshot: ${item.title}`;
+      if (fallbackBadge) fallbackBadge.innerText = item.title.toUpperCase();
+
+      if (img) {
+        img.style.opacity = '0';
+        img.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+          img.src = item.src;
+          img.alt = item.title;
+          img.style.display = 'block';
+          if (fallback) fallback.style.display = 'none';
+          img.onload = () => {
+            img.style.opacity = '1';
+            img.style.transform = 'scale(1)';
+          };
+        }, 150);
+      }
+    }
+
+    function onShowcaseImgError(imgEl) {
+      imgEl.style.display = 'none';
+      const fallback = document.getElementById('showcase-fallback');
+      if (fallback) fallback.style.display = 'flex';
+    }
+
+    function startShowcaseTimer() {
+      if (showcaseAutoTimer) clearInterval(showcaseAutoTimer);
+      showcaseAutoTimer = setInterval(() => {
+        if (!showcasePaused && !showcaseUserInteracted) {
+          currentShowcaseIndex = (currentShowcaseIndex + 1) % showcaseData.length;
+          renderShowcase();
+        }
+      }, 6000);
+    }
+
+    function pauseShowcase() { showcasePaused = true; }
+    function resumeShowcase() { showcasePaused = false; }
+
+    function openLightbox() {
+      const item = showcaseData[currentShowcaseIndex];
+      const modal = document.getElementById('tour-lightbox');
+      const lbImg = document.getElementById('lightbox-img');
+      const lbCap = document.getElementById('lightbox-caption');
+
+      if (modal && lbImg && item) {
+        lbImg.src = item.src;
+        if (lbCap) lbCap.innerText = `${item.title} — ${item.caption}`;
+        modal.classList.add('active');
+      }
+    }
+
+    function closeLightbox(e) {
+      if (e && e.target && e.target.tagName === 'IMG') return;
+      const modal = document.getElementById('tour-lightbox');
+      if (modal) modal.classList.remove('active');
+    }
+
+    /* Keyboard Shortcuts Modal Controls */
+    function openShortcutsModal() {
+      const modal = document.getElementById('shortcuts-modal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeShortcutsModal(e) {
+      if (e && e.target && e.target.closest && e.target.closest('.shortcuts-modal-card') && !e.target.classList.contains('lightbox-close-btn')) return;
+      const modal = document.getElementById('shortcuts-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function updatePlatformKeys() {
+      const isMac = (navigator.platform && navigator.platform.toUpperCase().indexOf('MAC') >= 0) ||
+                    (navigator.userAgentData && navigator.userAgentData.platform === 'macOS') ||
+                    (navigator.userAgent && navigator.userAgent.indexOf('Mac') >= 0);
+      if (isMac) {
+        document.querySelectorAll('.kbd-mod').forEach(k => {
+          k.textContent = '⌥';
+        });
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+        closeShortcutsModal();
+      }
+      if (e.key === '?' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        openShortcutsModal();
+      }
+      if (e.altKey && e.shiftKey && (e.key === 'v' || e.key === 'V' || e.code === 'KeyV')) {
+        e.preventDefault();
+        openShortcutsModal();
+      }
+    });
+
+    /* -------------------------------------------------------------
+       7. DYNAMIC "HOW IT WORKS" ILLUSTRATION GENERATOR
+       Renders animated illustrations: drawn frames, typing URL,
+       preset chips popping in, and scroll ripple across three frames.
+       ------------------------------------------------------------- */
+    let typingTimer = null;
+    let currentActiveStep = 1;
+
+    function runTypingLoop() {
+      if (typingTimer) clearInterval(typingTimer);
+      const target = "http://localhost:3000";
+      const el = document.getElementById('typing-url-text');
+      if (!el) return;
+      el.innerHTML = '<span style="color: var(--text-faint);">http://</span><span style="color: var(--accent); animation: blink 0.8s infinite;">|</span>';
+      let i = 7; // start after http://
+      typingTimer = setInterval(() => {
+        i++;
+        if (i <= target.length) {
+          el.innerHTML = target.slice(0, i) + '<span style="color: var(--accent); font-weight: 700; animation: blink 0.8s infinite;">|</span>';
+        } else {
+          clearInterval(typingTimer);
+          setTimeout(() => {
+            if (currentActiveStep === 2) runTypingLoop();
+          }, 3200);
+        }
+      }, 70);
+    }
+
+    function activateStep(stepNum) {
+      currentActiveStep = stepNum;
+      document.querySelectorAll('.how-step').forEach((el, idx) => {
+        el.classList.toggle('active', (idx + 1) === stepNum);
+      });
+
+      const container = document.getElementById('illus-container');
+      const caption = document.getElementById('how-step-caption');
+
+      const visuals = {
+        1: {
+          cap: 'STEP 01 • WORKSPACE INVOCATION',
+          html: `
+            <div style="border: 1.5px solid var(--border-dark); background: var(--bg-card); padding: 18px; border-radius: 4px; width: 88%; box-shadow: 2px 2px 0 var(--border-dark);">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px;">
+                <span class="mono-num" style="font-size: 0.75rem;">Toolbar Action &bull; Launch</span>
+                <span style="background: var(--accent); color: #FFF; font-size: 0.65rem; padding: 2px 6px; border-radius: 2px; font-weight: 700;">ACTIVE</span>
+              </div>
+              <div style="display: flex; justify-content: center;">
+                <svg width="240" height="120" viewBox="0 0 240 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Toolbar miniature -->
+                  <rect x="10" y="8" width="220" height="20" rx="3" stroke="var(--border-dark)" stroke-width="1.5" fill="var(--bg-surface)"/>
+                  <circle cx="22" cy="18" r="3.5" fill="var(--accent)"/>
+                  <line x1="32" y1="18" x2="160" y2="18" stroke="var(--border)" stroke-width="2"/>
+                  <rect x="195" y="12" width="22" height="12" rx="2" fill="var(--accent)"/>
+                  <!-- Drawn device outlines -->
+                  <rect x="15" y="38" width="38" height="74" rx="3" stroke="var(--accent)" stroke-width="2" stroke-dasharray="230" class="draw-stroke-1"/>
+                  <rect x="62" y="44" width="62" height="68" rx="3" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="270" class="draw-stroke-2"/>
+                  <rect x="134" y="48" width="92" height="58" rx="3" stroke="var(--accent-secondary)" stroke-width="1.5" stroke-dasharray="310" class="draw-stroke-3"/>
+                  <line x1="164" y1="106" x2="196" y2="106" stroke="var(--text)" stroke-width="2"/>
+                </svg>
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-faint); margin-top: 4px; text-align: center;">Drawn frames render concurrently</div>
+            </div>`
+        },
+        2: {
+          cap: 'STEP 02 • ADDRESS RESOLUTION',
+          html: `
+            <div style="border: 1.5px solid var(--border-dark); background: var(--bg-card); padding: 18px; border-radius: 4px; width: 88%; box-shadow: 2px 2px 0 var(--border-dark);">
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; font-family: var(--font-mono);">LOCAL DEV OR REMOTE URL:</div>
+              <div style="background: var(--bg-surface); border: 1.5px solid var(--border-dark); padding: 10px 14px; font-family: var(--font-mono); font-size: 0.88rem; display: flex; align-items: center; justify-content: space-between; border-radius: 3px;">
+                <span id="typing-url-text" style="color: var(--text); font-weight: 500;">http://localhost:3000</span>
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #2B8A3E; box-shadow: 0 0 6px rgba(43,138,62,0.6);"></span>
+              </div>
+              <p style="font-size: 0.74rem; color: var(--text-faint); margin-top: 10px; font-family: var(--font-mono);">
+                Direct socket connection &bull; No cloud tunnels &bull; Local offline safe
+              </p>
+            </div>`
+        },
+        3: {
+          cap: 'STEP 03 • PRESET MATRICES',
+          html: `
+            <div style="border: 1.5px solid var(--border-dark); background: var(--bg-card); padding: 18px; border-radius: 4px; width: 88%; box-shadow: 2px 2px 0 var(--border-dark);">
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px; font-family: var(--font-mono);">PRESET SELECTION CHIPS:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <span class="chip-pop" style="animation-delay: 0.05s; border: 1.5px solid var(--accent); background: var(--accent-soft); color: var(--accent); font-family: var(--font-mono); font-size: 0.74rem; padding: 5px 9px; border-radius: 3px; font-weight: 600;">iPhone 15 Pro &bull; 375</span>
+                <span class="chip-pop" style="animation-delay: 0.20s; border: 1px solid var(--border-dark); background: var(--bg-surface); font-family: var(--font-mono); font-size: 0.74rem; padding: 5px 9px; border-radius: 3px;">iPad Air &bull; 768</span>
+                <span class="chip-pop" style="animation-delay: 0.35s; border: 1px solid var(--border-dark); background: var(--bg-surface); font-family: var(--font-mono); font-size: 0.74rem; padding: 5px 9px; border-radius: 3px;">MacBook 14" &bull; 1280</span>
+                <span class="chip-pop" style="animation-delay: 0.50s; border: 1px solid var(--border); background: var(--bg-surface); font-family: var(--font-mono); font-size: 0.74rem; padding: 5px 9px; border-radius: 3px; color: var(--text-muted);">Custom 1440px</span>
+              </div>
+              <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-faint);">
+                Quick rotation: 90° portrait / landscape instant flip
+              </div>
+            </div>`
+        },
+        4: {
+          cap: 'STEP 04 • MONOTONIC SCROLL RELAY',
+          html: `
+            <div style="border: 1.5px solid var(--border-dark); background: var(--bg-card); padding: 18px; border-radius: 4px; width: 88%; box-shadow: 2px 2px 0 var(--border-dark);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent);">
+                <span>SYNCHRONIZED RIPPLE RELAY</span>
+                <span class="mono-num" style="font-size: 0.68rem; color: var(--text-muted);">0 Loop Echoes</span>
+              </div>
+              <div class="ripple-track" style="display: flex; gap: 10px; align-items: flex-end; justify-content: center; height: 86px; position: relative; padding: 4px 0;">
+                <div class="mini-frame-box ripple-1" style="width: 42px; height: 74px; border: 1.5px solid var(--accent); background: var(--bg-surface); border-radius: 3px; display: flex; flex-direction: column; padding: 3px; gap: 3px;">
+                  <div style="height: 4px; background: var(--accent); border-radius: 1px;"></div>
+                  <div style="height: 12px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                  <div style="height: 10px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                  <div style="height: 10px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                </div>
+                <div class="mini-frame-box ripple-2" style="width: 62px; height: 82px; border: 1.5px solid var(--text); background: var(--bg-surface); border-radius: 3px; display: flex; flex-direction: column; padding: 3px; gap: 3px;">
+                  <div style="height: 4px; background: var(--text); border-radius: 1px;"></div>
+                  <div style="height: 16px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                  <div style="height: 12px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                  <div style="height: 12px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                </div>
+                <div class="mini-frame-box ripple-3" style="width: 88px; height: 66px; border: 1.5px solid var(--accent-secondary); background: var(--bg-surface); border-radius: 3px; display: flex; flex-direction: column; padding: 3px; gap: 3px;">
+                  <div style="height: 4px; background: var(--accent-secondary); border-radius: 1px;"></div>
+                  <div style="height: 12px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                  <div style="height: 10px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                  <div style="height: 10px; background: var(--border); border-radius: 1px;" class="ripple-content"></div>
+                </div>
+                <div class="ripple-sweep-line"></div>
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-faint); margin-top: 8px; text-align: center;">
+                Scroll ripple propagates across viewports in real time
+              </div>
+            </div>`
+        }
+      };
+
+      if (visuals[stepNum] && container) {
+        container.innerHTML = visuals[stepNum].html;
+        if (caption) caption.innerText = visuals[stepNum].cap;
+        if (stepNum === 2) {
+          runTypingLoop();
+        } else if (typingTimer) {
+          clearInterval(typingTimer);
+        }
+      }
+    }
+
+    // Scroll trigger for How It Works steps
+    function initHowItWorksObserver() {
+      if (!('IntersectionObserver' in window)) return;
+      const steps = document.querySelectorAll('.how-step');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const stepNum = parseInt(entry.target.getAttribute('data-step') || '1', 10);
+            activateStep(stepNum);
+          }
+        });
+      }, { rootMargin: '-20% 0px -40% 0px', threshold: 0.3 });
+      steps.forEach(step => observer.observe(step));
+    }
+
+    /* -------------------------------------------------------------
+       8. FULL-WIDTH OPTICAL SPLIT-DIFF SLIDER
+       ------------------------------------------------------------- */
+    let isDraggingDiff = false;
+
+    function onStartDiff(e) {
+      isDraggingDiff = true;
+      window.addEventListener('mousemove', onMoveDiff);
+      window.addEventListener('mouseup', onStopDiff);
+      window.addEventListener('touchmove', onTouchMoveDiff);
+      window.addEventListener('touchend', onStopDiff);
+    }
+
+    function onMoveDiff(e) {
+      if (!isDraggingDiff) return;
+      const stage = document.getElementById('diff-stage');
+      if (!stage) return;
+      const rect = stage.getBoundingClientRect();
+      const pct = Math.max(10, Math.min(90, ((e.clientX - rect.left) / rect.width) * 100));
+      updateDiffVisuals(pct);
+    }
+
+    function onTouchMoveDiff(e) {
+      if (!isDraggingDiff || !e.touches[0]) return;
+      const stage = document.getElementById('diff-stage');
+      if (!stage) return;
+      const rect = stage.getBoundingClientRect();
+      const pct = Math.max(10, Math.min(90, ((e.touches[0].clientX - rect.left) / rect.width) * 100));
+      updateDiffVisuals(pct);
+    }
+
+    function updateDiffVisuals(pct) {
+      const left = document.getElementById('diff-left');
+      const right = document.getElementById('diff-right');
+      const line = document.getElementById('diff-line');
+
+      if (left) left.style.width = pct + '%';
+      if (right) right.style.width = (100 - pct) + '%';
+      if (line) line.style.left = pct + '%';
+    }
+
+    function onStopDiff() {
+      isDraggingDiff = false;
+      window.removeEventListener('mousemove', onMoveDiff);
+      window.removeEventListener('mouseup', onStopDiff);
+      window.removeEventListener('touchmove', onTouchMoveDiff);
+      window.removeEventListener('touchend', onStopDiff);
+    }
+
+    /* -------------------------------------------------------------
+       9. EASTER EGG: LOGO DOT CYCLE ON CLICK
+       ------------------------------------------------------------- */
+    let eggIndex = 0;
+    const easterEggBtn = document.getElementById('brand-easter-egg');
+    if (easterEggBtn) {
+      easterEggBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        eggIndex = (eggIndex + 1) % 3;
+        const svg = easterEggBtn.querySelector('.brand-logo-svg');
+        if (svg) {
+          const circles = svg.querySelectorAll('circle');
+          circles.forEach((c, i) => {
+            if (eggIndex === 1) {
+              c.classList.toggle('dot-accent', (i % 2 === 0));
+            } else if (eggIndex === 2) {
+              c.classList.toggle('dot-accent', (i % 3 === 0));
+            } else {
+              c.classList.toggle('dot-accent', (i === 4));
+            }
+          });
+        }
+      });
+    }
+
+    /* -------------------------------------------------------------
+       10. HERO INTERACTIVE DOT MOTIF CANVAS
+       ------------------------------------------------------------- */
+    function initHeroDotCanvas() {
+      const canvas = document.getElementById('hero-dot-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = canvas.offsetWidth;
+      let height = canvas.height = canvas.offsetHeight;
+      let mouseX = -1000;
+      let mouseY = -1000;
+
+      window.addEventListener('resize', () => {
+        if (!canvas) return;
+        width = canvas.width = canvas.offsetWidth;
+        height = canvas.height = canvas.offsetHeight;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+      });
+
+      function drawDots() {
+        ctx.clearRect(0, 0, width, height);
+        const gap = 34;
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const baseColor = isDark ? 'rgba(243, 240, 232, 0.12)' : 'rgba(24, 23, 21, 0.12)';
+        const activeColor = isDark ? 'rgba(229, 89, 64, 0.7)' : 'rgba(217, 75, 52, 0.7)';
+
+        for (let x = 16; x < width; x += gap) {
+          for (let y = 16; y < height; y += gap) {
+            const dx = mouseX - x;
+            const dy = mouseY - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            let radius = 1.6;
+
+            if (dist < 100) {
+              ctx.fillStyle = activeColor;
+              radius = 2.4;
+            } else {
+              ctx.fillStyle = baseColor;
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        requestAnimationFrame(drawDots);
+      }
+      requestAnimationFrame(drawDots);
+    }
+
+    /* -------------------------------------------------------------
+       11. HERO SCREENSHOT SLOT CHECK & LIGHTBOX
+       Checks if /screenshots/hero.png exists; falls back to live miniature.
+       ------------------------------------------------------------- */
+    function initHeroVisual() {
+      const heroImg = new Image();
+      heroImg.onload = () => {
+        const slot = document.getElementById('hero-screenshot-frame');
+        const mini = document.getElementById('hero-live-miniature');
+        const img = document.getElementById('hero-screenshot-img');
+        if (slot && mini && img) {
+          img.src = '/screenshots/hero.png';
+          slot.style.display = 'block';
+          mini.style.display = 'none';
+        }
+      };
+      heroImg.onerror = () => {
+        // Keeps default live miniature visible
+        const slot = document.getElementById('hero-screenshot-frame');
+        const mini = document.getElementById('hero-live-miniature');
+        if (slot && mini) {
+          slot.style.display = 'none';
+          mini.style.display = 'block';
+        }
+      };
+      heroImg.src = '/screenshots/hero.png';
+    }
+
+    function onHeroImgLoaded() {
+      const slot = document.getElementById('hero-screenshot-frame');
+      const mini = document.getElementById('hero-live-miniature');
+      if (slot && mini) {
+        slot.style.display = 'block';
+        mini.style.display = 'none';
+      }
+    }
+
+    function onHeroImgError() {
+      const slot = document.getElementById('hero-screenshot-frame');
+      const mini = document.getElementById('hero-live-miniature');
+      if (slot && mini) {
+        slot.style.display = 'none';
+        mini.style.display = 'block';
+      }
+    }
+
+    function openHeroLightbox() {
+      const modal = document.getElementById('tour-lightbox');
+      const lbImg = document.getElementById('lightbox-img');
+      const lbCap = document.getElementById('lightbox-caption');
+      if (modal && lbImg) {
+        lbImg.src = '/screenshots/hero.png';
+        if (lbCap) lbCap.innerText = 'ViewGrid Workspace — Live Preview';
+        modal.classList.add('active');
+      }
+    }
+
+    /* -------------------------------------------------------------
+       INITIALIZATION
+       ------------------------------------------------------------- */
+    document.addEventListener('DOMContentLoaded', () => {
+      applyTheme(currentTheme);
+      setLang(currentLang);
+      applyStoreStatus();
+      updatePlatformKeys();
+      initHeroVisual();
+      setupFrameLeaderScroll('phone');
+      setupFrameLeaderScroll('tablet');
+      setupFrameLeaderScroll('desktop');
+      renderShowcase();
+      startShowcaseTimer();
+      activateStep(1);
+      initHowItWorksObserver();
+      initHeroDotCanvas();
+    });
+  </script>
+</body>
+</html>

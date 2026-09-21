@@ -27,16 +27,23 @@ function parseViewport(v: unknown, errors: string[], i: number): ViewportState |
     }
     custom = v.custom as unknown as DeviceProfile;
   }
-  return {
+  const out: ViewportState = {
     id: v.id,
     deviceId: typeof v.deviceId === 'string' ? v.deviceId : 'custom',
-    custom,
     orientation: v.orientation === 'landscape' ? 'landscape' : 'portrait',
     zoom: clampZoom(typeof v.zoom === 'number' ? v.zoom : 1),
     minimized: !!v.minimized,
     hidden: !!v.hidden,
     url: typeof v.url === 'string' ? v.url : '',
   };
+  if (custom !== undefined) out.custom = custom;
+  if (typeof (v as any).colorScheme === 'string' && ['auto', 'dark', 'light'].includes((v as any).colorScheme)) {
+    out.colorScheme = (v as any).colorScheme;
+  }
+  if (typeof (v as any).frameFinish === 'string') {
+    out.frameFinish = (v as any).frameFinish;
+  }
+  return out;
 }
 
 /** Validates + normalizes an untrusted object (import / storage). */
@@ -69,6 +76,7 @@ export function parseWorkspace(input: unknown): ParseResult {
     sync,
     theme: input.theme === 'light' ? 'light' : 'dark',
     frames: input.frames !== false,
+    touchCursor: !!input.touchCursor,
   };
   return { ok: errors.length === 0, model, errors };
 }
@@ -95,6 +103,7 @@ export function defaultWorkspace(url = ''): WorkspaceModel {
     sync: { ...DEFAULT_SYNC },
     theme: 'dark',
     frames: true,
+    touchCursor: true,
   };
 }
 

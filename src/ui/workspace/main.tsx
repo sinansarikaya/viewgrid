@@ -11,7 +11,11 @@ const hub = new LoopGuard();
 
 async function boot() {
   await useStore.getState().hydrate();
-  await workspaceHello();
+  try {
+    await workspaceHello();
+  } catch (err) {
+    console.warn('[viewgrid] workspaceHello deferred:', err);
+  }
   listenAgents({
     onEvent: (env: SyncEnvelope) => {
       const s = useStore.getState();

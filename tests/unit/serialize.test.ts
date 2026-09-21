@@ -53,6 +53,20 @@ describe('workspace serialization', () => {
     expect(res.model?.sync.click).toBe(true);
   });
 
+  it('preserves colorScheme and frameFinish when provided', () => {
+    const res = parseWorkspace({
+      schemaVersion: 1,
+      touchCursor: true,
+      viewports: [
+        { id: 'v1', colorScheme: 'dark', frameFinish: 'silver' },
+      ],
+    });
+    expect(res.ok).toBe(true);
+    expect(res.model?.viewports[0]?.colorScheme).toBe('dark');
+    expect(res.model?.viewports[0]?.frameFinish).toBe('silver');
+    expect(res.model?.touchCursor).toBe(true);
+  });
+
   it('fails soft on invalid JSON', () => {
     const res = deserializeWorkspace('{oops');
     expect(res.ok).toBe(false);

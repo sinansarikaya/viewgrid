@@ -3,22 +3,24 @@ import s from './styles.module.css';
 import { useStore } from './store';
 import { BUILTIN_DEVICES } from '../../core/devices/builtin';
 import type { DeviceCategory } from '../../core/types';
-
-const TABS: { id: DeviceCategory | 'all' | 'fav'; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'phone', label: 'Mobile' },
-  { id: 'tablet', label: 'Tablet' },
-  { id: 'laptop', label: 'Laptop' },
-  { id: 'desktop', label: 'Desktop' },
-  { id: 'custom', label: 'Custom' },
-  { id: 'fav', label: '★' },
-];
+import { getTranslation } from './i18n';
 
 export function DevicePicker() {
   const st = useStore();
-  const [tab, setTab] = useState<(typeof TABS)[number]['id']>('phone');
+  const t = getTranslation(st.language);
+  const [tab, setTab] = useState<DeviceCategory | 'all' | 'fav'>('phone');
   const [query, setQuery] = useState('');
   const [draft, setDraft] = useState({ name: '', width: 390, height: 844, dpr: 3 });
+
+  const tabs: { id: DeviceCategory | 'all' | 'fav'; label: string }[] = [
+    { id: 'all', label: t.all },
+    { id: 'phone', label: t.phones },
+    { id: 'tablet', label: t.tablets },
+    { id: 'laptop', label: t.laptops },
+    { id: 'desktop', label: t.desktops },
+    { id: 'custom', label: t.customDevice },
+    { id: 'fav', label: '★' },
+  ];
 
   const all = useMemo(() => [...BUILTIN_DEVICES, ...st.customDevices], [st.customDevices]);
   const list = all.filter((d) => {
@@ -32,16 +34,16 @@ export function DevicePicker() {
   return (
     <div className={s.overlay} onClick={() => st.setPickerOpen(false)}>
       <div className={s.modal} onClick={(e) => e.stopPropagation()}>
-        <h2>Add viewport</h2>
+        <h2>{t.addDeviceBtn}</h2>
         <div className={s.formRow} style={{ marginTop: 0 }}>
-          {TABS.map((t) => (
-            <button key={t.id} className={tab === t.id ? 'primary' : ''} onClick={() => setTab(t.id)}>
-              {t.label}
+          {tabs.map((tabItem) => (
+            <button key={tabItem.id} className={tab === tabItem.id ? 'primary' : ''} onClick={() => setTab(tabItem.id)}>
+              {tabItem.label}
             </button>
           ))}
           <input
             className={s.name}
-            placeholder="Search name or width…"
+            placeholder={t.searchDevices}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{ marginLeft: 'auto', width: 180 }}
@@ -64,31 +66,31 @@ export function DevicePicker() {
               </small>
             </button>
           ))}
-          {list.length === 0 && <div style={{ color: 'var(--text-dim)' }}>No devices match.</div>}
+          {list.length === 0 && <div style={{ color: 'var(--text-dim)' }}>{t.noIssuesFound}</div>}
         </div>
 
-        <h2 style={{ marginTop: 18, fontSize: 13 }}>Custom device (W × H × DPR)</h2>
+        <h2 style={{ marginTop: 18, fontSize: 13 }}>{t.customDevice} (W × H × DPR)</h2>
         <div className={s.formRow} style={{ marginTop: 0 }}>
           <input
             className={s.name}
-            placeholder="Name"
+            placeholder={t.deviceName}
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           />
           <input
             type="number" min={100} max={10000} value={draft.width}
             onChange={(e) => setDraft({ ...draft, width: Number(e.target.value) })}
-            title="Width"
+            title={t.width}
           />
           <input
             type="number" min={100} max={10000} value={draft.height}
             onChange={(e) => setDraft({ ...draft, height: Number(e.target.value) })}
-            title="Height"
+            title={t.height}
           />
           <input
             type="number" min={0.5} max={6} step={0.25} value={draft.dpr}
             onChange={(e) => setDraft({ ...draft, dpr: Number(e.target.value) })}
-            title="DPR (metadata)"
+            title={t.dpr}
           />
           <button
             className="primary"
@@ -97,7 +99,7 @@ export function DevicePicker() {
               st.setPickerOpen(false);
             }}
           >
-            Save & add
+            {t.addCustom}
           </button>
         </div>
       </div>

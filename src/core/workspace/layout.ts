@@ -3,7 +3,9 @@ import { MAX_VIEWPORTS, VIEWPORT_WARN } from '../types';
 
 /** Logical (CSS px) size for a device in a given orientation. */
 export function effectiveSize(p: DeviceProfile, o: Orientation): { width: number; height: number } {
-  return o === 'portrait' ? { width: p.width, height: p.height } : { width: p.height, height: p.width };
+  const min = Math.min(p.width, p.height);
+  const max = Math.max(p.width, p.height);
+  return o === 'landscape' ? { width: max, height: min } : { width: min, height: max };
 }
 
 export function swapOrientation(o: Orientation): Orientation {

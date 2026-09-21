@@ -28,8 +28,12 @@
   --text: #0f172a;
   --text-dim: #64748b;
 }
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
 body {
   font: 13px/1.45 var(--font);
   background: var(--bg);

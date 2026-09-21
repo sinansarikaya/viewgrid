@@ -31,6 +31,8 @@ export interface ViewportState {
   minimized: boolean;
   hidden: boolean;
   url: string;
+  colorScheme?: 'auto' | 'dark' | 'light';
+  frameFinish?: string;
 }
 
 export type LayoutMode = 'grid' | 'row' | 'col';
@@ -56,6 +58,7 @@ export interface WorkspaceModel {
   sync: SyncFlags;
   theme: 'dark' | 'light';
   frames: boolean;
+  touchCursor?: boolean;
 }
 
 export interface SyncEnvelope {

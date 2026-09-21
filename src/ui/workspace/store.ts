@@ -39,12 +39,17 @@ export interface StoreState {
   toast: string | null;
   granted: boolean;
   urlDraft: string;
+  language: 'tr' | 'en' | 'no';
+  languageExplicitlySet?: boolean;
 
   // derived helpers
   profileOf(v: ViewportState): DeviceProfile;
   visibleViewports(): ViewportState[];
 
   // actions
+  setLanguage(lang: 'tr' | 'en' | 'no'): void;
+  fitToScreen(): void;
+  setAllZoom(zoom: number): void;
   hydrate(): Promise<void>;
   persist(): Promise<void>;
   setGranted(v: boolean): void;
@@ -61,6 +66,7 @@ export interface StoreState {
   setZoom(id: string, zoom: number): void;
   setLayout(mode: LayoutMode): void;
   reorder(from: number, to: number): void;
+  reorderById(fromId: string, toId: string): void;
   focus(id: string | null): void;
   toggleFocusMode(): void;
   setSync(channel: keyof WorkspaceModel['sync'], value: boolean): void;
@@ -73,6 +79,22 @@ export interface StoreState {
   setScanning(v: boolean): void;
   setPickerOpen(v: boolean): void;
   setDrawerOpen(v: boolean): void;
+  compareOpen: boolean;
+  compareMode?: 'split' | 'curtain' | 'side-by-side' | 'figma';
+  setCompareOpen(v: boolean, mode?: 'split' | 'curtain' | 'side-by-side' | 'figma'): void;
+  setCompareMode(mode: 'split' | 'curtain' | 'side-by-side' | 'figma'): void;
+  benchmarkOpen: boolean;
+  setBenchmarkOpen(v: boolean): void;
+  settingsOpen: boolean;
+  setSettingsOpen(v: boolean): void;
+  shortcuts: Record<string, string>;
+  setShortcut(action: string, keyCombo: string): void;
+  resetShortcuts(): void;
+  bypassCacheOnLoad: boolean;
+  setBypassCacheOnLoad(v: boolean): void;
+  setColorScheme(id: string, scheme: 'auto' | 'dark' | 'light'): void;
+  setFrameFinish(id: string, finish: string): void;
+  toggleTouchCursor(): void;
   showToast(msg: string): void;
   saveAs(name: string): void;
   loadSaved(name: string): void;
@@ -80,13 +102,60 @@ export interface StoreState {
   setViewportUrl(id: string, url: string): void;
 }
 
+export const DEFAULT_SHORTCUTS: Record<string, string> = {
+  openWorkspace: 'Alt+Shift+V',
+  reloadAll: 'Shift+R',
+  hardReload: 'Shift+B',
+  addDevice: 'a',
+  focusMode: 'f',
+  toggleFrames: 'Shift+F',
+  shotFocused: 'c',
+  shotAll: 'Shift+C',
+  compare: 'Shift+D',
+};
+
 const KEY = 'viewgrid.store.v1';
+
+export function detectBrowserLanguage(navLang?: string, navLangs?: readonly string[]): 'tr' | 'en' | 'no' {
+  const candidates: string[] = [];
+
+  if (navLang) {
+    candidates.push(navLang);
+  }
+  if (navLangs && Array.isArray(navLangs)) {
+    candidates.push(...navLangs);
+  }
+
+  // If no arguments were provided, read from environment navigator
+  if (candidates.length === 0 && typeof navigator !== 'undefined') {
+    if (navigator.language) candidates.push(navigator.language);
+    if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
+  }
+
+  for (const raw of candidates) {
+    const l = (raw || '').toLowerCase().trim();
+    if (l.startsWith('tr')) return 'tr';
+    if (l.startsWith('no') || l.startsWith('nb') || l.startsWith('nn')) return 'no';
+    if (l.startsWith('en')) return 'en';
+  }
+
+  // Default fallback if browser is in any other language (de, fr, es, etc.)
+  return 'en';
+}
+
+function defaultLanguage(): 'tr' | 'en' | 'no' {
+  return detectBrowserLanguage();
+}
 
 function persistPayload(s: StoreState) {
   return {
     model: s.model,
     customDevices: s.customDevices,
     savedWorkspaces: s.savedWorkspaces,
+    language: s.language,
+    languageExplicitlySet: s.languageExplicitlySet,
+    shortcuts: s.shortcuts,
+    bypassCacheOnLoad: s.bypassCacheOnLoad,
     granted: undefined, // permission state is queried, not persisted
   };
 }
@@ -107,9 +176,32 @@ export const useStore = create<StoreState>((set, get) => ({
   scanning: false,
   pickerOpen: false,
   drawerOpen: false,
+  compareOpen: false,
+  compareMode: 'split',
+  benchmarkOpen: false,
+  settingsOpen: false,
+  shortcuts: { ...DEFAULT_SHORTCUTS },
+  bypassCacheOnLoad: false,
   toast: null,
-  granted: false,
+  granted: true,
   urlDraft: '',
+  language: defaultLanguage(),
+
+  setSettingsOpen(v) {
+    set({ settingsOpen: v });
+  },
+  setShortcut(action, keyCombo) {
+    set((s) => ({ shortcuts: { ...s.shortcuts, [action]: keyCombo } }));
+    schedulePersist(get);
+  },
+  resetShortcuts() {
+    set({ shortcuts: { ...DEFAULT_SHORTCUTS } });
+    schedulePersist(get);
+  },
+  setBypassCacheOnLoad(v) {
+    set({ bypassCacheOnLoad: v });
+    schedulePersist(get);
+  },
 
   profileOf(v) {
     if (v.custom) return v.custom;
@@ -127,6 +219,10 @@ export const useStore = create<StoreState>((set, get) => ({
     let model = defaultWorkspace();
     let customDevices: DeviceProfile[] = [];
     let savedWorkspaces: Record<string, WorkspaceModel> = {};
+    let language: 'tr' | 'en' | 'no' = defaultLanguage();
+    let languageExplicitlySet = false;
+    let shortcuts: Record<string, string> = { ...DEFAULT_SHORTCUTS };
+    let bypassCacheOnLoad = false;
     try {
       const raw = await b.storage!.local.get(KEY);
       const data = raw[KEY] as any;
@@ -135,6 +231,18 @@ export const useStore = create<StoreState>((set, get) => ({
         if (parsed.ok && parsed.model) model = parsed.model;
         if (Array.isArray(data.customDevices)) customDevices = data.customDevices;
         if (data.savedWorkspaces && typeof data.savedWorkspaces === 'object') savedWorkspaces = data.savedWorkspaces;
+        if (data.languageExplicitlySet && data.language && ['tr', 'en', 'no'].includes(data.language)) {
+          language = data.language;
+          languageExplicitlySet = true;
+        } else {
+          language = defaultLanguage();
+        }
+        if (data.shortcuts && typeof data.shortcuts === 'object') {
+          shortcuts = { ...DEFAULT_SHORTCUTS, ...data.shortcuts };
+        }
+        if (typeof data.bypassCacheOnLoad === 'boolean') {
+          bypassCacheOnLoad = data.bypassCacheOnLoad;
+        }
       }
     } catch {
       /* first run */
@@ -157,13 +265,24 @@ export const useStore = create<StoreState>((set, get) => ({
         }));
       }
     }
-    let granted = false;
+    let granted = true;
     try {
-      granted = await b.permissions.contains({ origins: ['*://*/*'] });
+      const check = await b.permissions.contains({ origins: ['<all_urls>'] });
+      if (typeof check === 'boolean') granted = check;
     } catch {
-      /* ignore */
+      granted = true;
     }
-    set({ model, customDevices, savedWorkspaces, granted, urlDraft: model.url });
+    set({
+      model,
+      customDevices,
+      savedWorkspaces,
+      granted,
+      urlDraft: model.url,
+      language,
+      languageExplicitlySet,
+      shortcuts,
+      bypassCacheOnLoad,
+    });
     document.documentElement.dataset.theme = model.theme;
   },
 
@@ -178,6 +297,42 @@ export const useStore = create<StoreState>((set, get) => ({
   setGranted(v) {
     set({ granted: v });
     void get().persist();
+  },
+  setLanguage(lang) {
+    set({ language: lang, languageExplicitlySet: true });
+    schedulePersist(get);
+  },
+  setAllZoom(zoom) {
+    const z = clampZoom(zoom);
+    set((s) => ({
+      model: {
+        ...s.model,
+        viewports: s.model.viewports.map((v) => ({ ...v, zoom: z })),
+      },
+    }));
+    schedulePersist(get);
+  },
+  fitToScreen() {
+    const { visibleViewports, profileOf } = get();
+    const visible = visibleViewports();
+    if (visible.length === 0) return;
+    const availW = Math.max(320, window.innerWidth - 64);
+    const availH = Math.max(300, window.innerHeight - 130);
+    const cols = Math.max(1, Math.min(visible.length, Math.ceil(Math.sqrt(visible.length))));
+    const rows = Math.ceil(visible.length / cols);
+    let maxCardW = 0;
+    let maxCardH = 0;
+    for (const v of visible) {
+      const p = profileOf(v);
+      const size = effectiveSize(p, v.orientation);
+      maxCardW = Math.max(maxCardW, size.width);
+      maxCardH = Math.max(maxCardH, size.height);
+    }
+    const scaleW = availW / (cols * (maxCardW + 40));
+    const scaleH = availH / (rows * (maxCardH + 80));
+    let bestZoom = Math.min(scaleW, scaleH);
+    bestZoom = Math.max(0.2, Math.min(1.2, Math.round(bestZoom * 20) / 20));
+    get().setAllZoom(bestZoom);
   },
   setUrlDraft(u) {
     set({ urlDraft: u });
@@ -251,11 +406,16 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   duplicate(id) {
-    const v = get().model.viewports.find((x) => x.id === id);
-    if (!v) return;
-    const check = canAddViewports(get().model.viewports.length, 1);
+    const list = get().model.viewports;
+    const idx = list.findIndex((x) => x.id === id);
+    if (idx === -1) return;
+    const v = list[idx]!;
+    const check = canAddViewports(list.length, 1);
     if (!check.ok) return get().showToast(check.reason!);
-    set((s) => ({ model: { ...s.model, viewports: [...s.model.viewports, duplicateViewport(v, uid('vp'))] } }));
+    const copy = duplicateViewport(v, uid('vp'));
+    const nextList = [...list];
+    nextList.splice(idx + 1, 0, copy);
+    set((s) => ({ model: { ...s.model, viewports: nextList }, focusedId: copy.id }));
     schedulePersist(get);
   },
 
@@ -296,6 +456,16 @@ export const useStore = create<StoreState>((set, get) => ({
   reorder(from, to) {
     set((s) => ({ model: { ...s.model, viewports: moveViewport(s.model.viewports, from, to) } }));
     schedulePersist(get);
+  },
+
+  reorderById(fromId, toId) {
+    const list = get().model.viewports;
+    const from = list.findIndex((v) => v.id === fromId);
+    const to = list.findIndex((v) => v.id === toId);
+    if (from !== -1 && to !== -1 && from !== to) {
+      set((s) => ({ model: { ...s.model, viewports: moveViewport(s.model.viewports, from, to) } }));
+      schedulePersist(get);
+    }
   },
 
   focus(id) {
@@ -355,12 +525,42 @@ export const useStore = create<StoreState>((set, get) => ({
   setDrawerOpen(v) {
     set({ drawerOpen: v });
   },
+  setCompareOpen(v, mode) {
+    set((s) => ({ compareOpen: v, compareMode: mode || s.compareMode || 'split' }));
+  },
+  setCompareMode(mode) {
+    set({ compareMode: mode });
+  },
+  setBenchmarkOpen(v) {
+    set({ benchmarkOpen: v });
+  },
+  setColorScheme(id, scheme) {
+    set((s) => ({
+      model: {
+        ...s.model,
+        viewports: s.model.viewports.map((v) => (v.id === id ? { ...v, colorScheme: scheme } : v)),
+      },
+    }));
+    schedulePersist(get);
+  },
+  setFrameFinish(id, finish) {
+    set((s) => ({
+      model: {
+        ...s.model,
+        viewports: s.model.viewports.map((v) => (v.id === id ? { ...v, frameFinish: finish } : v)),
+      },
+    }));
+    schedulePersist(get);
+  },
+  toggleTouchCursor() {
+    set((s) => ({
+      model: { ...s.model, touchCursor: !s.model.touchCursor },
+    }));
+    schedulePersist(get);
+  },
 
   showToast(msg) {
-    set({ toast: msg });
-    window.setTimeout(() => {
-      if (get().toast === msg) set({ toast: null });
-    }, 3500);
+    set({ toast: msg || null });
   },
 
   saveAs(name) {

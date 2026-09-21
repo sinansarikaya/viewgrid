@@ -30,6 +30,9 @@ describe('viewport math', () => {
     const p = dev(390, 844);
     expect(effectiveSize(p, 'portrait')).toEqual({ width: 390, height: 844 });
     expect(effectiveSize(p, 'landscape')).toEqual({ width: 844, height: 390 });
+    const laptop = dev(1280, 800);
+    expect(effectiveSize(laptop, 'landscape')).toEqual({ width: 1280, height: 800 });
+    expect(effectiveSize(laptop, 'portrait')).toEqual({ width: 800, height: 1280 });
     expect(swapOrientation('portrait')).toBe('landscape');
     expect(swapOrientation('landscape')).toBe('portrait');
   });
