@@ -14,6 +14,9 @@ export function Hero() {
           <span className="badge badge-emerald">
             100% LOCAL & PRIVATE · ZERO TELEMETRY
           </span>
+          <a href="https://github.com/sinansarikaya/viewgrid" target="_blank" rel="noopener noreferrer" className="badge badge-purple" style={{ textDecoration: 'none' }}>
+            💖 100% FREE & OPEN SOURCE · GITHUB
+          </a>
         </div>
 
         {/* Direct, Honest Headline */}

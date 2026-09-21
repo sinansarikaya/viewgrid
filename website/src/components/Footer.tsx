@@ -64,6 +64,11 @@ export function Footer() {
                   Releases & Downloads ↗
                 </a>
               </li>
+              <li>
+                <a href={product.sponsorUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#f472b6', fontWeight: 600 }}>
+                  💖 Sponsor ViewGrid on GitHub ↗
+                </a>
+              </li>
             </ul>
           </div>
 

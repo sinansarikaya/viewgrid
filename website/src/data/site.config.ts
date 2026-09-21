@@ -42,6 +42,7 @@ export const siteConfig = {
     repositoryUrl: 'https://github.com/sinansarikaya/viewgrid',
     issuesUrl: 'https://github.com/sinansarikaya/viewgrid/issues',
     releasesUrl: 'https://github.com/sinansarikaya/viewgrid/releases',
+    sponsorUrl: 'https://github.com/sponsors/sinansarikaya',
     license: 'MIT',
     author: 'Sinan Sarıkaya',
     copyrightYear: 2026,
@@ -54,7 +55,7 @@ export const siteConfig = {
    */
   storeLinks: {
     chrome: '',   // Example: 'https://chromewebstore.google.com/detail/...'
-    firefox: '',  // Example: 'https://addons.mozilla.org/firefox/addon/viewgrid/'
+    firefox: 'https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/',
   } as StoreLinks,
 
   navigation: [
