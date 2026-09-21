@@ -17,7 +17,8 @@ export function Toast({ message, onClose }: Props) {
         className={s.toast}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        role="alert"
+        role="status"
+        aria-live="polite"
       >
         <div className={s.toastContent}>
           <span className={s.toastIcon}>

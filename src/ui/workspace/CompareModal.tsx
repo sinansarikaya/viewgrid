@@ -245,7 +245,7 @@ export function CompareModal() {
             {/* Select Device A */}
             <div className={s.selectGroup}>
               <span>A:</span>
-              <select value={idA} onChange={(e) => setIdA(e.target.value)}>
+              <select value={idA} onChange={(e) => setIdA(e.target.value)} aria-label="Cihaz A">
                 {viewports.map((v) => (
                   <option key={v.id} value={v.id}>
                     {st.profileOf(v).name}
@@ -257,7 +257,7 @@ export function CompareModal() {
             {/* Select Device B */}
             <div className={s.selectGroup}>
               <span>B:</span>
-              <select value={idB} onChange={(e) => setIdB(e.target.value)}>
+              <select value={idB} onChange={(e) => setIdB(e.target.value)} aria-label="Cihaz B">
                 {viewports.map((v) => (
                   <option key={v.id} value={v.id}>
                     {st.profileOf(v).name}
