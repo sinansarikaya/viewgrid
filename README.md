@@ -157,6 +157,20 @@ pnpm run build:all
 
 ---
 
+## 💖 Support & Sponsorship
+
+If ViewGrid saves you time and helps you build better responsive websites, consider supporting its open-source development!
+
+[![Sponsor ViewGrid](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?style=for-the-badge&logo=github)](https://github.com/sponsors/sinansarikaya)
+
+- ☕ **Buy a coffee ($5/mo):** Support ongoing maintenance, bug fixes, and feature updates.
+- ⚡ **Pro Developer ($10/mo):** Get priority response for feature requests and issue reports.
+- 🏢 **Sponsor ($25/mo+):** Showcase your logo on the ViewGrid website and repository.
+
+👉 [**Become a Sponsor on GitHub**](https://github.com/sponsors/sinansarikaya)
+
+---
+
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
