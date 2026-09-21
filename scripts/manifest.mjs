@@ -7,7 +7,7 @@ export function buildManifest(target, iconFiles) {
   const base = {
     manifest_version: 3,
     name: 'ViewGrid',
-    version: '0.1.0',
+    version: '1.0.0',
     description:
       'Multi-viewport responsive testing workspace: test a site across phone, tablet, laptop and desktop viewports at once.',
     icons: iconFiles,
