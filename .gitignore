@@ -6,14 +6,28 @@ website/dist/
 .DS_Store
 coverage/
 .npm/
+.config/
 release/
+scratch/
+.agents/
 
-# AI Rules yerel dosyaları (GitHub'a gönderilmez - Rule #25)
-/ai-rules.md
-/.ai-rules/
-/rules/
-/AGENTS.md
-/TASKS.md
-/.github/copilot-instructions.md
-/audits/
-/*.md.audit
+# AI Rules, Task & Audit Files (GitHub'a kesinlikle gönderilmez)
+ai-rules.md
+.ai-rules/
+rules/
+AGENTS.md
+TASKS.md
+TASK.md
+*.md.audit
+audits/
+prompts/
+*-AUDIT.md
+OPTIMIZATIONS.md
+DEPENDENCY-AUDIT.md
+SECURITY-AUDIT.md
+QA-AUDIT.md
+ACCESSIBILITY-AUDIT.md
+SEO-AUDIT.md
+DEPLOYMENT-AUDIT.md
+STRIX-AUDIT.md
+.github/copilot-instructions.md
