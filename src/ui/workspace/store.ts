@@ -163,7 +163,7 @@ function persistPayload(s: StoreState) {
 let saveTimer: number | undefined;
 function schedulePersist(get: () => StoreState) {
   window.clearTimeout(saveTimer);
-  saveTimer = window.setTimeout(() => void get().persist(), 400);
+  saveTimer = window.setTimeout(() => void get().persist(), 800);
 }
 
 export const useStore = create<StoreState>((set, get) => ({

@@ -116,14 +116,23 @@ function initAgent(viewportId: string) {
     }
   }, { passive: true, capture: true });
 
+  let lastScrollX = window.scrollX;
+  let lastScrollY = window.scrollY;
+
   window.addEventListener(
     'scroll',
     () => {
       // Ignore automated / programmatic scroll on initial page load (e.g. anchor #hash jumps)
       if (!userInteracted || scrollPending || suppressed()) return;
+      const dx = Math.abs(window.scrollX - lastScrollX);
+      const dy = Math.abs(window.scrollY - lastScrollY);
+      if (dx < 2 && dy < 2) return;
+
       scrollPending = true;
       requestAnimationFrame(() => {
         scrollPending = false;
+        lastScrollX = window.scrollX;
+        lastScrollY = window.scrollY;
         emit('scroll', scrollRatios(window.scrollX, window.scrollY, maxScrollX(), maxScrollY()));
       });
     },
