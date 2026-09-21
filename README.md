@@ -115,6 +115,10 @@ with loop-proof protocol, screenshots (single/batch/workspace, HiDPI crop), issu
 scanning (overflow, text clip, out-of-viewport, tap targets) + panel, workspace
 save/load/autosave, dark/light, keyboard map, 31 unit tests, `web-ext lint` 0 errors.
 
+**How to try it (on your machine):** `npm install && npm run dev:firefox` — or
+`npm run build:firefox` and load `dist/manifest.json` via `about:debugging`. Click the
+ViewGrid toolbar icon → *Enable site access* → *Open workspace*.
+
 **Next (live list in TASK.md):** real-Firefox smoke, remaining sync channels, simulation
 (UA/env/network), device frames, dev tools + measurement, annotation, design overlay,
 full-page capture, video, presentation mode, regression diffs, reports, a11y framework,
