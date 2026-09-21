@@ -125,8 +125,10 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     const el = contentRefs.current.get(viewportId);
     if (!v || !el) return;
     try {
-      el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
-      await new Promise((r) => setTimeout(r, 60));
+      userInteracted.current = true;
+      const cardEl = (el.closest(`.${s.card}`) as HTMLElement) || el;
+      cardEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
+      await new Promise((r) => setTimeout(r, 100));
 
       const dataUrl = await requestCapture('png');
       const p = sState.profileOf(v);
@@ -146,6 +148,8 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     const origTop = canvas?.scrollTop ?? 0;
     const origLeft = canvas?.scrollLeft ?? 0;
 
+    userInteracted.current = true;
+
     try {
       let n = 0;
       const vps = sState.visibleViewports();
@@ -155,8 +159,9 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         const p = sState.profileOf(v);
         const { width, height } = effectiveSize(p, v.orientation);
         try {
-          el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
-          await new Promise((r) => setTimeout(r, 80));
+          const cardEl = (el.closest(`.${s.card}`) as HTMLElement) || el;
+          cardEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
+          await new Promise((r) => setTimeout(r, 120));
 
           const dataUrl = await requestCapture('png');
           const blob = await cropToBlob(dataUrl, rectOf(el), 'png');

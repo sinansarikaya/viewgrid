@@ -5,6 +5,10 @@
   --bg-soft: #0f172a;
   --panel: #111c33;
   --panel-2: #16233f;
+  --bg-panel: #0f172a;
+  --bg-header: #1e293b;
+  --chip-bg: rgba(255, 255, 255, 0.08);
+  --chip-border: rgba(255, 255, 255, 0.16);
   --border: #24344f;
   --text: #e2e8f0;
   --text-dim: #94a3b8;
@@ -20,13 +24,19 @@
 }
 :root[data-theme='light'] {
   color-scheme: light;
-  --bg: #f1f5f9;
+  --bg: #f8fafc;
   --bg-soft: #ffffff;
   --panel: #ffffff;
-  --panel-2: #f8fafc;
-  --border: #d8e0ea;
+  --panel-2: #f1f5f9;
+  --bg-panel: #ffffff;
+  --bg-header: #f8fafc;
+  --chip-bg: rgba(0, 0, 0, 0.06);
+  --chip-border: rgba(0, 0, 0, 0.15);
+  --border: #cbd5e1;
   --text: #0f172a;
   --text-dim: #64748b;
+  --accent: #0284c7;
+  --accent-2: #0369a1;
 }
 html, body, #root {
   height: 100%;

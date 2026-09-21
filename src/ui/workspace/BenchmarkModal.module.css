@@ -12,17 +12,17 @@
 }
 
 .modal {
-  background: var(--bg-panel, #12141a);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--bg-panel, var(--panel));
+  border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
   width: 90vw;
   max-width: 720px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  color: var(--text, #e2e8f0);
+  color: var(--text);
 }
 
 .header {
@@ -30,8 +30,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 22px;
-  background: var(--bg-header, #181b24);
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  background: var(--bg-header, var(--panel-2));
+  border-bottom: 1px solid var(--border);
 }
 
 .headerTitle {
@@ -40,7 +40,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--accent, #38bdf8);
+  color: var(--accent);
 }
 
 .closeBtn {
@@ -87,8 +87,8 @@
 }
 
 .metricCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-2);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
   display: flex;
@@ -101,13 +101,13 @@
   font-family: monospace;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--accent, #38bdf8);
+  color: var(--accent);
 }
 
 .cardNumber {
   font-size: 26px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text);
   line-height: 1.1;
 }
 
