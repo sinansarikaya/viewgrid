@@ -9,6 +9,7 @@ import {
   MAX_VIEWPORTS,
 } from '../../core/types';
 import { BUILTIN_DEVICES, BUILTIN_PRESETS } from '../../core/devices/builtin';
+import { mergeDeviceDb } from '../../core/devices/merge';
 import { makeCustomDevice } from '../../core/devices/schema';
 import {
   canAddViewports,
@@ -204,8 +205,8 @@ export const useStore = create<StoreState>((set, get) => ({
 
   profileOf(v) {
     if (v.custom) return v.custom;
-    const all = [...BUILTIN_DEVICES, ...get().customDevices];
-    return all.find((d) => d.id === v.deviceId) ?? BUILTIN_DEVICES[0]!;
+    const { devices } = mergeDeviceDb(get().customDevices);
+    return devices.find((d) => d.id === v.deviceId) ?? BUILTIN_DEVICES[0]!;
   },
 
   visibleViewports() {

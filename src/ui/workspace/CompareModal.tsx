@@ -11,6 +11,7 @@ import {
   requestCapture,
 } from './bridge';
 import s from './CompareModal.module.css';
+import { getDeviceCategoryIcon } from './utils';
 
 export function CompareModal() {
   const st = useStore();
@@ -155,16 +156,6 @@ export function CompareModal() {
   const snapFocusA = () => setSplitPercent(75);
   const snapFocusB = () => setSplitPercent(25);
   const snapToNatural = () => setSplitPercent(naturalRatioA);
-
-  const getDeviceIcon = (cat?: string) => {
-    switch (cat) {
-      case 'phone': return '📱';
-      case 'tablet': return '📟';
-      case 'laptop': return '💻';
-      case 'desktop': return '🖥️';
-      default: return '📐';
-    }
-  };
 
   // 3. Side-by-Side Mode (Two distinct device cards filling the stage comfortably)
   const sideUsableW = Math.max(100, (availStageW - 48) / 2 - 24);
@@ -440,7 +431,7 @@ export function CompareModal() {
               >
                 <div className={s.paneHeader}>
                   <div className={s.paneTitle}>
-                    <span>{getDeviceIcon(profA?.category)}</span>
+                    <span>{getDeviceCategoryIcon(profA?.category)}</span>
                     <span>A: {profA?.name}</span>
                   </div>
                   <div className={s.paneMeta}>
@@ -491,7 +482,7 @@ export function CompareModal() {
               >
                 <div className={s.paneHeader}>
                   <div className={s.paneTitle}>
-                    <span>{getDeviceIcon(profB?.category)}</span>
+                    <span>{getDeviceCategoryIcon(profB?.category)}</span>
                     <span>B: {profB?.name}</span>
                   </div>
                   <div className={s.paneMeta}>
@@ -613,7 +604,7 @@ export function CompareModal() {
               >
                 <div className={s.curtainHeaderA}>
                   <div className={s.curtainTitle}>
-                    {getDeviceIcon(profA?.category)} A: {profA?.name}
+                    {getDeviceCategoryIcon(profA?.category)} A: {profA?.name}
                   </div>
                   <span className={s.curtainBadgeDims}>
                     {sizeA.width}×{sizeA.height}
@@ -644,7 +635,7 @@ export function CompareModal() {
               >
                 <div className={s.curtainHeaderB}>
                   <div className={s.curtainTitle}>
-                    {getDeviceIcon(profB?.category)} B: {profB?.name}
+                    {getDeviceCategoryIcon(profB?.category)} B: {profB?.name}
                   </div>
                   <span className={s.curtainBadgeDims}>
                     {sizeB.width}×{sizeB.height}
@@ -763,7 +754,7 @@ export function CompareModal() {
               <div className={s.sideCard}>
                 <div className={s.sideCardHeader}>
                   <span>
-                    {getDeviceIcon(profA?.category)} A: {profA?.name}
+                    {getDeviceCategoryIcon(profA?.category)} A: {profA?.name}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>
@@ -806,7 +797,7 @@ export function CompareModal() {
               <div className={s.sideCard}>
                 <div className={s.sideCardHeader}>
                   <span>
-                    {getDeviceIcon(profB?.category)} B: {profB?.name}
+                    {getDeviceCategoryIcon(profB?.category)} B: {profB?.name}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>

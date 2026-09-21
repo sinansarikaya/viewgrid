@@ -8,6 +8,7 @@ import { DeviceFrame } from './DeviceFrame';
 import { getTranslation } from './i18n';
 import { b } from '../../platform/browser';
 
+import { getDeviceCategoryIcon } from './utils';
 import { sendAgentCmd } from './bridge';
 
 interface Props {
@@ -104,16 +105,6 @@ export function ViewportCard({
     return () => el.removeEventListener('load', onLoad);
   }, [onInjected, vp.colorScheme, st.model.touchCursor, profile.touchSupport]);
 
-  const getDeviceIcon = () => {
-    switch (profile.category) {
-      case 'phone': return '📱';
-      case 'tablet': return '📟';
-      case 'laptop': return '💻';
-      case 'desktop': return '🖥️';
-      default: return '📐';
-    }
-  };
-
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!st.model.touchCursor || !profile.touchSupport) return;
     const rect = contentRef.current?.getBoundingClientRect();
@@ -165,7 +156,7 @@ export function ViewportCard({
           onDragEndCard?.();
         }}
       >
-        <span className={s.deviceIcon} style={{ cursor: 'grab' }} title="Sürükleyip sıralayın">⠿ {getDeviceIcon()}</span>
+        <span className={s.deviceIcon} style={{ cursor: 'grab' }} title="Sürükleyip sıralayın">⠿ {getDeviceCategoryIcon(profile.category)}</span>
         <strong>{profile.name}</strong>
         <span className={s.dim}>
           {logical.width}×{logical.height}
