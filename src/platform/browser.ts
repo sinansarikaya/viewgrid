@@ -55,6 +55,9 @@ export interface VgBrowser {
     contains(p: { origins?: string[]; permissions?: string[] }): Promise<boolean>;
     request(p: { origins?: string[]; permissions?: string[] }): Promise<boolean>;
   };
+  downloads?: {
+    download(options: { url: string; filename?: string; saveAs?: boolean }): Promise<number>;
+  };
   storage?: {
     local: {
       get(keys: string[] | string): Promise<Record<string, unknown>>;
@@ -297,6 +300,14 @@ export const b: VgBrowser = {
       }
     : undefined,
   webRequest: raw.webRequest,
+  downloads: raw.downloads
+    ? {
+        download(options: { url: string; filename?: string; saveAs?: boolean }): Promise<number> {
+          if (!raw.downloads?.download) return Promise.reject(new Error('downloads API unavailable'));
+          return promisify(raw.downloads.download, raw.downloads, options);
+        },
+      }
+    : undefined,
   declarativeNetRequest: raw.declarativeNetRequest
     ? {
         updateSessionRules(options: { addRules?: any[]; removeRuleIds?: number[] }): Promise<void> {

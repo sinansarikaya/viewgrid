@@ -123,11 +123,23 @@ export async function fullCaptureBlob(format: 'png' | 'jpeg' = 'png'): Promise<B
 
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
+  if (b.downloads?.download) {
+    b.downloads
+      .download({ url, filename, saveAs: false })
+      .catch(() => {
+        triggerDomDownload(url, filename);
+      });
+  } else {
+    triggerDomDownload(url, filename);
+  }
+}
+
+function triggerDomDownload(url: string, filename: string) {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 export function rectOf(el: HTMLElement): Rect {
