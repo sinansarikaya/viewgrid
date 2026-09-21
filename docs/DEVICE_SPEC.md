@@ -106,6 +106,11 @@ Rules: every preset carries a `source` provenance tag; PR updates to the DB are
 data-only PRs with a values table; disputed/unknown values → do not ship the preset
 (honesty rule extends to data).
 
+**Current state (v0.1):** shipped presets carry tag `approx-public-specs` (common,
+widely-published CSS viewport sizes — e.g. iPhone 13/14 390×844, iPad Air 820×1180,
+laptop widths per product spec). Per-model source verification table lands in v0.2
+(TASK §7); values are data-only and updatable without code changes.
+
 ## 6. Import / Export & Versioning
 
 - Device DB ships with the bundle (`schemaVersion` field).

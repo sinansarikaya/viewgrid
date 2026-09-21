@@ -35,8 +35,7 @@
 
 ## 1. Foundation
 
-- [ ] Git repository initialized + skeleton commit (`chore: initialize project skeleton`)
-      *(repo bootstrap pending — code & docs ready to commit)*
+- [x] Git repository initialized + skeleton commit (`chore: initialize ViewGrid project…`)
 - [x] Scaffold package.json (scripts: dev:firefox, build:firefox, dev:chromium, build:chromium, test, lint, typecheck)
 - [x] Configure TypeScript (strict, multi-entry build)
 - [x] Configure Vite UI build (workspace, popup, options) + esbuild IIFE bundles (background, content agent)
@@ -137,6 +136,8 @@
 - [x] Builtin named presets (Mobile Test, Standard Responsive, iOS+Android, Tablet Check, Full House) + one-click apply
 - [ ] Expand catalog per DEVICE_SPEC §2 (iPhone 16/17, Pixel 9/10, Galaxy S24/S25 classes) after source verification
 - [ ] Verify every preset dimension/DPR/UA against public sources; record sources in DEVICE_SPEC
+      *(MVP catalog uses common public CSS-viewport sizes tagged `approx-public-specs`;
+      full source verification + DEVICE_SPEC §5 provenance table is a v0.2 data task)*
 - [x] Custom device create (width, height, DPR, name)
 - [ ] Custom device rename / edit / delete
 - [ ] Custom device favorite + recents list
