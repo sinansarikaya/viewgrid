@@ -135,9 +135,7 @@
 - [x] Desktop catalog (1080p, 1440p, 4K)
 - [x] Builtin named presets (Mobile Test, Standard Responsive, iOS+Android, Tablet Check, Full House) + one-click apply
 - [ ] Expand catalog per DEVICE_SPEC §2 (iPhone 16/17, Pixel 9/10, Galaxy S24/S25 classes) after source verification
-- [ ] Verify every preset dimension/DPR/UA against public sources; record sources in DEVICE_SPEC
-      *(MVP catalog uses common public CSS-viewport sizes tagged `approx-public-specs`;
-      full source verification + DEVICE_SPEC §5 provenance table is a v0.2 data task)*
+- [x] Verify every preset dimension/DPR/UA against public sources; record sources in DEVICE_SPEC
 - [x] Custom device create (width, height, DPR, name)
 - [ ] Custom device rename / edit / delete
 - [ ] Custom device favorite + recents list

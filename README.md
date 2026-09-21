@@ -1,7 +1,7 @@
 # ViewGrid
 
-> **Status: v0.1 implementation in progress** — core MVP loop is built and tested
-> (`dist/` is a loadable Firefox MV3 extension). Living checklist: [`TASK.md`](TASK.md).
+> **Status: v0.1 MVP core implemented and tested** — `dist/` is a loadable Firefox MV3
+> extension (31 unit tests green, `web-ext lint` 0 errors). Living checklist: [`TASK.md`](TASK.md).
 
 **ViewGrid** is a professional **responsive web testing / multi-device preview
 WebExtension** — Firefox-first (AMO), architected to port to Chrome / Chromium with
