@@ -4,6 +4,8 @@ import {
   type DeviceProfile,
   type Issue,
   type LayoutMode,
+  type AlignItemsMode,
+  type JustifyContentMode,
   type ViewportState,
   type WorkspaceModel,
   MAX_VIEWPORTS,
@@ -65,6 +67,8 @@ export interface StoreState {
   toggleOrientation(id: string): void;
   setZoom(id: string, zoom: number): void;
   setLayout(mode: LayoutMode): void;
+  setAlignItems(mode: AlignItemsMode): void;
+  setJustifyContent(mode: JustifyContentMode): void;
   reorder(from: number, to: number): void;
   reorderById(fromId: string, toId: string): void;
   focus(id: string | null): void;
@@ -450,6 +454,16 @@ export const useStore = create<StoreState>((set, get) => ({
 
   setLayout(mode) {
     set((s) => ({ model: { ...s.model, layout: mode } }));
+    schedulePersist(get);
+  },
+
+  setAlignItems(mode) {
+    set((s) => ({ model: { ...s.model, alignItems: mode } }));
+    schedulePersist(get);
+  },
+
+  setJustifyContent(mode) {
+    set((s) => ({ model: { ...s.model, justifyContent: mode } }));
     schedulePersist(get);
   },
 

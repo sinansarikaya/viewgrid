@@ -1,4 +1,4 @@
-import type { WorkspaceModel, ViewportState, SyncFlags, LayoutMode, Orientation, DeviceProfile } from '../types';
+import type { WorkspaceModel, ViewportState, SyncFlags, LayoutMode, AlignItemsMode, JustifyContentMode, Orientation, DeviceProfile } from '../types';
 import { DEFAULT_SYNC, MAX_VIEWPORTS } from '../types';
 import { clampZoom } from './layout';
 
@@ -73,6 +73,12 @@ export function parseWorkspace(input: unknown): ParseResult {
     layout: (['grid', 'row', 'col'] as LayoutMode[]).includes(input.layout as LayoutMode)
       ? (input.layout as LayoutMode)
       : 'grid',
+    alignItems: (['flex-start', 'center', 'flex-end'] as AlignItemsMode[]).includes(input.alignItems as AlignItemsMode)
+      ? (input.alignItems as AlignItemsMode)
+      : 'flex-start',
+    justifyContent: (['flex-start', 'center', 'flex-end', 'space-between'] as JustifyContentMode[]).includes(input.justifyContent as JustifyContentMode)
+      ? (input.justifyContent as JustifyContentMode)
+      : 'flex-start',
     sync,
     theme: input.theme === 'light' ? 'light' : 'dark',
     frames: input.frames !== false,
@@ -100,6 +106,8 @@ export function defaultWorkspace(url = ''): WorkspaceModel {
     url,
     viewports: [],
     layout: 'grid',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
     sync: { ...DEFAULT_SYNC },
     theme: 'dark',
     frames: true,

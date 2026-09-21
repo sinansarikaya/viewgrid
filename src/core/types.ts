@@ -36,6 +36,8 @@ export interface ViewportState {
 }
 
 export type LayoutMode = 'grid' | 'row' | 'col';
+export type AlignItemsMode = 'flex-start' | 'center' | 'flex-end';
+export type JustifyContentMode = 'flex-start' | 'center' | 'flex-end' | 'space-between';
 
 export interface SyncFlags {
   scroll: boolean;
@@ -55,6 +57,8 @@ export interface WorkspaceModel {
   url: string;
   viewports: ViewportState[];
   layout: LayoutMode;
+  alignItems?: AlignItemsMode;
+  justifyContent?: JustifyContentMode;
   sync: SyncFlags;
   theme: 'dark' | 'light';
   frames: boolean;

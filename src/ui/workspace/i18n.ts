@@ -100,6 +100,15 @@ export interface Translations {
   compareSideBySide: string;
   resetSplit: string;
   dropHere: string;
+  alignItemsTitle: string;
+  justifyContentTitle: string;
+  alignTop: string;
+  alignCenterV: string;
+  alignBottom: string;
+  alignLeft: string;
+  alignCenterH: string;
+  alignRight: string;
+  alignSpaceBetween: string;
 }
 
 export const TRANSLATIONS: Record<Language, Translations> = {
@@ -203,6 +212,15 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     compareSideBySide: 'Side by Side',
     resetSplit: 'Equal Split (50%)',
     dropHere: 'Drop here',
+    alignItemsTitle: 'Vertical alignment',
+    justifyContentTitle: 'Horizontal alignment',
+    alignTop: '⬆️ Top',
+    alignCenterV: '↕️ Middle',
+    alignBottom: '⬇️ Bottom',
+    alignLeft: '⬅️ Left',
+    alignCenterH: '↔️ Center',
+    alignRight: '➡️ Right',
+    alignSpaceBetween: '⇥⇤ Space Between',
   },
   tr: {
     add: '＋ Ekle',
@@ -304,6 +322,15 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     compareSideBySide: 'Yan Yana',
     resetSplit: 'Eşitle (%50)',
     dropHere: 'Buraya Bırak',
+    alignItemsTitle: 'Dikey hizalama',
+    justifyContentTitle: 'Yatay hizalama',
+    alignTop: '⬆️ Üst',
+    alignCenterV: '↕️ Orta (Dikey)',
+    alignBottom: '⬇️ Alt',
+    alignLeft: '⬅️ Sol',
+    alignCenterH: '↔️ Ortala (Yatay)',
+    alignRight: '➡️ Sağ',
+    alignSpaceBetween: '⇥⇤ Eşit Dağıt',
   },
   no: {
     add: '＋ Legg til',
@@ -405,6 +432,15 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     compareSideBySide: 'Side ved side',
     resetSplit: 'Lik deling (50%)',
     dropHere: 'Slipp her',
+    alignItemsTitle: 'Vertikal justering',
+    justifyContentTitle: 'Horisontal justering',
+    alignTop: '⬆️ Topp',
+    alignCenterV: '↕️ Midten',
+    alignBottom: '⬇️ Bunn',
+    alignLeft: '⬅️ Venstre',
+    alignCenterH: '↔️ Midtstill',
+    alignRight: '➡️ Høyre',
+    alignSpaceBetween: '⇥⇤ Jevn avstand',
   },
 };
 

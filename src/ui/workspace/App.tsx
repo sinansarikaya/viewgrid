@@ -19,7 +19,7 @@ import {
 import { LoopGuard } from '../../core/sync/protocol';
 import { effectiveSize } from '../../core/workspace/layout';
 import { b } from '../../platform/browser';
-import type { LayoutMode } from '../../core/types';
+import type { LayoutMode, AlignItemsMode, JustifyContentMode } from '../../core/types';
 import { ZOOM_PRESETS } from '../../core/types';
 import { getTranslation, type Language } from './i18n';
 import { Toast } from './Toast';
@@ -453,6 +453,25 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
           <option value="row">{t.layoutRow}</option>
           <option value="col">{t.layoutCol}</option>
         </select>
+        <select
+          value={st.model.alignItems || 'flex-start'}
+          onChange={(e) => st.setAlignItems(e.target.value as AlignItemsMode)}
+          title={t.alignItemsTitle}
+        >
+          <option value="flex-start">{t.alignTop}</option>
+          <option value="center">{t.alignCenterV}</option>
+          <option value="flex-end">{t.alignBottom}</option>
+        </select>
+        <select
+          value={st.model.justifyContent || 'flex-start'}
+          onChange={(e) => st.setJustifyContent(e.target.value as JustifyContentMode)}
+          title={t.justifyContentTitle}
+        >
+          <option value="flex-start">{t.alignLeft}</option>
+          <option value="center">{t.alignCenterH}</option>
+          <option value="flex-end">{t.alignRight}</option>
+          <option value="space-between">{t.alignSpaceBetween}</option>
+        </select>
         <div className={s.sep} />
         <details style={{ position: 'relative' }}>
           <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 6 }}>
@@ -610,7 +629,15 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
             <div style={{ fontSize: 12 }}>{t.emptyHint}</div>
           </div>
         ) : (
-          <div className={canvasClass}>
+          <div
+            className={canvasClass}
+            style={
+              {
+                '--align-items': st.model.alignItems || 'flex-start',
+                '--justify-content': st.model.justifyContent || 'flex-start',
+              } as React.CSSProperties
+            }
+          >
             {visible.map((v, idx) => {
               const showSkeletonBefore =
                 Boolean(dragState.draggingId) &&

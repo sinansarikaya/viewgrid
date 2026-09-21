@@ -63,11 +63,23 @@
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: var(--align-items, flex-start);
+  justify-content: var(--justify-content, flex-start);
 }
-.canvasRow { display: flex; gap: 20px; align-items: flex-start; min-width: min-content; }
-.canvasCol { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+.canvasRow {
+  display: flex;
+  gap: 20px;
+  align-items: var(--align-items, flex-start);
+  justify-content: var(--justify-content, flex-start);
+  min-width: min-content;
+}
+.canvasCol {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: var(--align-items, center);
+  justify-content: var(--justify-content, flex-start);
+}
 
 /* —— Viewport card —— */
 .card {
