@@ -23,14 +23,14 @@ export function IssuesDrawer() {
           {' '}🟠 {counts.major}
           {' '}🟡 {counts.minor}
         </span>
-        <button className={s.iconBtn} style={{ marginLeft: 'auto' }} onClick={() => st.setDrawerOpen(false)}>
+        <button className={`${s.iconBtn} ${s.pushRight}`} onClick={() => st.setDrawerOpen(false)}>
           ✕
         </button>
       </div>
       <div className={s.drawerBody}>
-        {st.scanning && <div style={{ color: 'var(--text-dim)' }}>{t.runningAudit}</div>}
+        {st.scanning && <div className={s.dimText}>{t.runningAudit}</div>}
         {!st.scanning && issues.length === 0 && (
-          <div style={{ color: 'var(--text-dim)', padding: '8px 0' }}>
+          <div className={s.dimText}>
             {t.noIssuesFound}
           </div>
         )}
@@ -43,7 +43,7 @@ export function IssuesDrawer() {
                 className={`${s.sev} ${i.severity === 'critical' ? s.sevCritical : i.severity === 'major' ? s.sevMajor : s.sevMinor}`}
                 title={i.severity}
               />
-              <div style={{ minWidth: 0 }}>
+              <div className={s.issueContent}>
                 <div>{i.message}</div>
                 <div className={s.sel}>
                   {i.rule} · {device}

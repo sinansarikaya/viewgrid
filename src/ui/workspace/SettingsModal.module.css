@@ -223,3 +223,9 @@
   justify-content: flex-end;
   gap: 10px;
 }
+
+.btnRowRight {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

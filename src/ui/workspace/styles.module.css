@@ -240,6 +240,19 @@
   position: relative;
 }
 
+.dimText {
+  color: var(--text-dim);
+  padding: 8px 0;
+}
+
+.issueContent {
+  min-width: 0;
+}
+
+.pushRight {
+  margin-left: auto;
+}
+
 .content {
   position: relative;
   overflow: hidden !important;

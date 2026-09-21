@@ -124,7 +124,7 @@ export function SettingsModal() {
               })}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+            <div className={s.btnRowRight}>
               <button
                 className={s.actionBtn}
                 onClick={() => {

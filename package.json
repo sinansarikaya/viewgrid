@@ -19,6 +19,7 @@
     "dev": "npm run dev:website",
     "dev:website": "vite --config website/vite.config.ts website",
     "build:website": "vite build --config website/vite.config.ts",
+    "rules:check": "eslint . && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
