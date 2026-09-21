@@ -242,6 +242,10 @@
   color: var(--text-dim);
   transition: color 0.12s ease, background 0.12s ease;
 }
+.iconBtn option {
+  background-color: var(--panel-2, #16233f);
+  color: var(--text, #e2e8f0);
+}
 .iconBtn:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.12);

@@ -46,6 +46,20 @@ button, input, select {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 4px 8px;
+  color-scheme: dark;
+}
+:root[data-theme='light'] button,
+:root[data-theme='light'] input,
+:root[data-theme='light'] select {
+  color-scheme: light;
+}
+select option {
+  background-color: var(--panel-2);
+  color: var(--text);
+}
+:root[data-theme='light'] select option {
+  background-color: var(--panel);
+  color: var(--text);
 }
 button { cursor: pointer; }
 button:hover { border-color: var(--accent); }

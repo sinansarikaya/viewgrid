@@ -125,6 +125,9 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     const el = contentRefs.current.get(viewportId);
     if (!v || !el) return;
     try {
+      el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
+      await new Promise((r) => setTimeout(r, 60));
+
       const dataUrl = await requestCapture('png');
       const p = sState.profileOf(v);
       const { width, height } = effectiveSize(p, v.orientation);
@@ -139,22 +142,36 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
   const shotAll = useCallback(async () => {
     const sState = useStore.getState();
     const tr = getTranslation(sState.language);
+    const canvas = canvasRef.current;
+    const origTop = canvas?.scrollTop ?? 0;
+    const origLeft = canvas?.scrollLeft ?? 0;
+
     try {
-      const dataUrl = await requestCapture('png');
       let n = 0;
-      for (const v of sState.visibleViewports()) {
+      const vps = sState.visibleViewports();
+      for (const v of vps) {
         const el = contentRefs.current.get(v.id);
         if (!el) continue;
         const p = sState.profileOf(v);
         const { width, height } = effectiveSize(p, v.orientation);
         try {
+          el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
+          await new Promise((r) => setTimeout(r, 80));
+
+          const dataUrl = await requestCapture('png');
           const blob = await cropToBlob(dataUrl, rectOf(el), 'png');
           downloadBlob(blob, captureFileName({ device: p.name, w: width, h: height, ext: 'png', ts: Date.now() + n }));
           n++;
-        } catch {
-          /* offscreen viewport skipped */
+        } catch (err) {
+          console.error(`Failed capturing ${p.name}:`, err);
         }
       }
+
+      if (canvas) {
+        canvas.scrollTop = origTop;
+        canvas.scrollLeft = origLeft;
+      }
+
       sState.showToast(`${n} ${tr.allScreenshotsSaved}`);
     } catch (e) {
       sState.showToast(`${tr.screenshotFailed}: ${(e as Error).message}`);
@@ -228,7 +245,8 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         sState.setPickerOpen(true);
       } else if (matchesShortcut(e, sc.shotFocused || 'c')) {
         e.preventDefault();
-        if (sState.focusedId) void shotOne(sState.focusedId);
+        const targetId = sState.focusedId || sState.visibleViewports()[0]?.id;
+        if (targetId) void shotOne(targetId);
       } else if (matchesShortcut(e, sc.shotAll || 'Shift+C')) {
         e.preventDefault();
         void shotAll();

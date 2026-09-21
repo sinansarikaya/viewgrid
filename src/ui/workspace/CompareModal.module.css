@@ -100,6 +100,12 @@
   font-size: 12px;
   max-width: 170px;
   outline: none;
+  color-scheme: dark;
+}
+
+.selectGroup select option {
+  background-color: #1f232b;
+  color: #ffffff;
 }
 
 .actionBtn {
