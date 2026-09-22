@@ -1,0 +1,77 @@
+name: '🐛 Bug Report'
+description: Report an issue or unexpected behavior in ViewGrid
+title: '[Bug]: '
+labels: ['bug', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill out the sections below to help us reproduce and fix the issue quickly.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Exact steps to reproduce the behavior.
+      placeholder: |
+        1. Open ViewGrid on URL '...'
+        2. Set viewports to '...'
+        3. Scroll / Click / Toggle '...'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Firefox
+        - Edge
+        - Brave
+        - Arc
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser Version
+      placeholder: e.g. Chrome 128, Firefox 130
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: e.g. Ubuntu 24.04, macOS 14.5, Windows 11
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ViewGrid Version
+      placeholder: e.g. 1.0.0
+      value: 1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: console-logs
+    attributes:
+      label: Console Logs / Error Output
+      description: Paste any JavaScript console errors from Developer Tools (F12) or the extension background worker.
+      render: shell

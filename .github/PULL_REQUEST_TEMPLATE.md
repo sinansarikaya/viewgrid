@@ -1,9 +1,10 @@
 ## Description
 
-Please include a summary of the changes and the related issue.
+Please include a summary of the changes and the related issue or feature request.
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
+- [ ] Performance improvement
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
 
@@ -11,7 +12,9 @@ Please include a summary of the changes and the related issue.
 
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my code
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally (`pnpm test`)
-- [ ] Typecheck passes without errors (`pnpm run typecheck`)
+- [ ] Unit tests pass locally (`pnpm test`)
+- [ ] Extension typecheck passes (`pnpm run typecheck`)
+- [ ] Website typecheck passes (`pnpm run typecheck:website`)
+- [ ] Linting checks pass (`pnpm run lint`)
 - [ ] Both Firefox & Chromium builds complete (`pnpm run build:all`)
+- [ ] Static website builds successfully (`pnpm run build:website`)

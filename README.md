@@ -4,16 +4,16 @@
 
 ![ViewGrid Logo Banner](website/public/screenshots/workspace.png)
 
-### Ultra-Fast, Ultra-Light (<15MB RAM) Responsive Web Testing & Multi-Device Workspace Extension
+### Ultra-Fast, Lightweight (~14 MB RAM) Responsive Testing & Multi-Device Workspace Extension
 
 [![CI / Build & Test](https://github.com/sinansarikaya/viewgrid/actions/workflows/ci.yml/badge.svg)](https://github.com/sinansarikaya/viewgrid/actions/workflows/ci.yml)
-[![Tests Status](https://img.shields.io/badge/tests-52%20passed-brightgreen.svg)](tests/)
-[![WebExtension Manifest V3](https://img.shields.io/badge/Manifest-V3-blue.svg)](src/manifest.mjs)
+[![Tests Status](https://img.shields.io/badge/tests-54%20passed-brightgreen.svg)](tests/)
+[![WebExtension Manifest V3](https://img.shields.io/badge/Manifest-V3-blue.svg)](scripts/manifest.mjs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue.svg)](https://www.typescriptlang.org/)
-[![Memory Footprint](https://img.shields.io/badge/Memory-%3C15MB%20RAM-success.svg)](#-key-features)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+[![Memory Footprint](https://img.shields.io/badge/Memory-~14MB%20RAM-success.svg)](#-why-viewgrid)
 
-[**Live Demo / Website**](https://sinansarikaya.github.io/viewgrid/) • [**Quick Start**](#-quick-start) • [**Documentation Map**](#-documentation-map) • [**Contributing**](CONTRIBUTING.md)
+[**Website**](https://viewgrid.sinansarikaya.dev) • [**Firefox Add-ons**](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/) • [**Chrome Web Store**](https://chromewebstore.google.com/detail/viewgrid-responsive-viewer/hmlhooeamfmhdeichnghcklahfgimgef) • [**Quick Start**](#-quick-start) • [**Documentation**](#-documentation-map) • [**Contributing**](CONTRIBUTING.md)
 
 </div>
 
@@ -21,23 +21,24 @@
 
 ## ⚡ Why ViewGrid?
 
-**ViewGrid** is a professional WebExtension built for frontend engineers, UI/UX designers, and QA teams who need to test web applications continuously across multiple devices—without bogging down their machine. 
+**ViewGrid** is a browser extension built for frontend engineers, UI/UX designers, and QA teams who need to test web applications continuously across multiple devices—without bogging down their machine. 
 
-Unlike heavy Electron-based desktop simulators that consume 850 MB+ of memory, ViewGrid runs directly inside your browser as a native Manifest V3 WebExtension with an **ultra-low memory footprint (<15 MB RAM)**.
+Unlike heavy desktop simulators or Electron bundles that consume 850 MB+ of memory, ViewGrid runs directly inside your browser as a native Manifest V3 WebExtension with near-zero overhead (**~14 MB RAM in our benchmark scenario**).
 
 ---
 
 ## ✨ Key Features
 
-- **⚡ Ultra-Low Memory Footprint (<15 MB RAM):** Extremely lightweight architecture keeps your machine fast and cool.
-- **📱 21+ Built-in Device Profiles:** Test on iPhone 15 Pro, iPad Air, Galaxy S24, MacBook Pro, 4K Desktop, Foldables, or define custom viewports.
-- **⫴ Dual Split & Proportional Overlay Curtain:** Compare devices side-by-side or use the Proportional Curtain overlay (phone stays narrow, laptop stays wide, 100% full vertical scroll height).
-- **🎨 Figma Pixel-Diff Mockup Overlay:** Drag & drop design mockups directly over your live site, toggle opacity, and compare pixel accuracy instantly.
-- **🔄 Synchronized Scroll, Click & Input Engine:** Interact with one viewport and seamlessly sync scroll, clicks, and typing across all active device viewports with loop-proof protocol guards.
-- **🛡️ Managed Framing Engine:** Bypasses `X-Frame-Options`, `CSP frame-ancestors`, `COOP`, `COEP`, and `CORP` headers safely for workspace tabs only.
-- **🧹 Bypass Cache & Cookie Retention:** One-click hard reload, timestamp buster, and full session preservation across restarts.
-- **📷 HiDPI Screenshot Export & Issue Scanner:** Capture single, batch, or full workspace screenshots; auto-detect responsive overflow and text clipping issues.
-- **⌨️ Custom Keyboard Shortcuts:** Fully configurable shortcuts (e.g. `Alt+Shift+V` to launch, `A` to add device, `C` for screenshots, `S` for sync).
+- **⚡ Ultra-Light Memory Footprint:** Native browser execution consumes <15 MB RAM in test environments without heavy process overhead.
+- **📱 21+ Built-in Device Profiles:** Test on iPhone 15 Pro, iPad Air, Galaxy S24, MacBook Pro, 4K Desktop, Foldables, or configure custom pixel viewports.
+- **⫴ Dual Split & Proportional Overlay Curtain:** Compare breakpoints side-by-side or drag the optical curtain divider to detect layout discrepancies instantly.
+- **🎨 Figma Pixel-Diff Mockup Overlay:** Overlay Figma design mockups directly over your live site, toggle opacity, and catch sub-pixel alignment issues.
+- **🔄 Zero-Echo Synchronized Interaction Hub:** Scroll, click, and type once—replicated across all viewports with epoch-fenced protocol guards to prevent feedback loops.
+- **🛡️ Security-Focused Framing Engine:** Strips `X-Frame-Options` and `CSP frame-ancestors` safely and strictly for workspace `sub_frame` requests only.
+- **🧹 Cache & Session Retention:** One-click hard reload, timestamp cache buster, and full session preservation across restarts.
+- **📷 HiDPI Screenshot Export:** Capture individual viewports or full multi-device canvas screenshots in full-resolution PNG.
+- **🔍 Responsive DOM Issue Scanner:** Automatically scans viewports for horizontal page overflows, text clipping, and touch targets smaller than 44x44px.
+- **⌨️ Keyboard-First Workflow:** Full keyboard navigation (`Alt+Shift+V`, `D` for diff, `S` for sync, `?` for cheatsheet).
 
 ---
 
@@ -55,42 +56,48 @@ Unlike heavy Electron-based desktop simulators that consume 850 MB+ of memory, V
 
 ## 🚀 Quick Start
 
-### 1. Load Pre-built Extension in Browser
+### 1. User Installation (Recommended)
 
-#### Firefox / Zen Browser (MV3)
-1. Download or build `dist/firefox/`.
-2. Open `about:debugging#/runtime/this-firefox`.
-3. Click **Load Temporary Add-on…** and select `dist/firefox/manifest.json`.
-4. Click the ViewGrid toolbar icon → **Enable Site Access** → **Open Workspace** (or press `Alt+Shift+V`).
+#### Option A: Official Extension Stores
+- **Mozilla Firefox:** Install directly from [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/).
+- **Chromium Browsers (Chrome, Edge, Brave):** Install from [Chrome Web Store](https://chromewebstore.google.com/detail/viewgrid-responsive-viewer/hmlhooeamfmhdeichnghcklahfgimgef) *(Store listing submitted & review in progress)*.
 
-#### Chrome / Brave / Edge / Arc (MV3)
-1. Download or build `dist/chromium/`.
-2. Open `chrome://extensions`.
-3. Enable **Developer mode** (top right toggle).
-4. Click **Load unpacked** and select `dist/chromium/`.
+#### Option B: Manual Sideload via GitHub Release ZIP
+1. Download the latest release package (`viewgrid-1.0.0-chromium.zip` or `viewgrid-1.0.0-firefox.zip`) and verify its checksum using `SHA256SUMS` from [GitHub Releases](https://github.com/sinansarikaya/viewgrid/releases).
+2. Unzip the downloaded file.
+3. In Chrome/Brave/Edge: navigate to `chrome://extensions`, enable **Developer mode**, and click **Load unpacked**.
+4. In Firefox: navigate to `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on…**, and select `manifest.json`.
 
 ---
 
-### 2. Build from Source
+### 2. Developer Setup (Build from Source)
 
 ```bash
 # Clone repository
 git clone https://github.com/sinansarikaya/viewgrid.git
 cd viewgrid
 
-# Install dependencies
+# Install dependencies (pnpm is our canonical package manager)
 pnpm install
 
-# Run full test suite (52 unit tests)
+# Run unit tests (54 unit tests)
 pnpm test
 
-# Run TypeScript check
+# Run code style and TypeScript typechecks
+pnpm run lint
 pnpm run typecheck
+pnpm run typecheck:website
 
-# Build Firefox & Chromium extension packages
+# Build both Firefox and Chromium packages
 pnpm run build:all
-# → dist/firefox (MV3 for Firefox)
-# → dist/chromium (MV3 for Chromium)
+# → dist/firefox (MV3 Event Pages + webRequest)
+# → dist/chromium (MV3 Service Worker + DeclarativeNetRequest)
+
+# Package release archives with SHA256SUMS
+pnpm run package:release
+# → release/viewgrid-1.0.0-chromium.zip
+# → release/viewgrid-1.0.0-firefox.zip
+# → release/SHA256SUMS
 ```
 
 ---
@@ -99,16 +106,17 @@ pnpm run build:all
 
 | Shortcut | Action |
 | --- | --- |
-| `Alt+Shift+V` / `Alt+V` | Open / Toggle ViewGrid Workspace |
-| `A` | Open Device Picker Modal |
-| `C` | Capture Focused Viewport Screenshot |
-| `Shift+C` | Capture Full Workspace Screenshot |
-| `S` | Toggle Interaction Sync (Scroll/Click) |
-| `G` | Change Layout (Grid / Row / Column) |
-| `F` | Toggle Focus Mode |
-| `I` | Open Responsive Issue Scanner Drawer |
-| `O` | Rotate Device Orientation (Portrait/Landscape) |
-| `Shift+R` | Reload All Active Viewports |
+| `Alt+Shift+V` / `Alt+V` / `⌘+Shift+V` | Open / Toggle ViewGrid Workspace |
+| `D` | Toggle Split-Diff Comparison Mode |
+| `S` | Toggle Interaction Synchronization (Scroll/Click/Input) |
+| `A` | Add Custom Viewport / Open Device Picker |
+| `O` | Rotate Viewport Orientation (Portrait / Landscape) |
+| `G` | Cycle Alignment Grid & Snap Layout |
+| `C` | Capture Full-Canvas Workspace Screenshot |
+| `Shift+C` | Capture Focused Viewport Screenshot |
+| `F` | Zoom to Fit (Fit all viewports to screen) |
+| `I` | Open Responsive Issue Scanner / Breakpoint Inspector |
+| `?` | Open Keyboard Shortcuts Cheatsheet Modal |
 | `Esc` | Close Open Modals / Drawers |
 
 ---
@@ -145,12 +153,16 @@ pnpm run build:all
 
 | Document | Purpose |
 | --- | --- |
+| [`CHANGELOG.md`](CHANGELOG.md) | Release history, version changelogs, and notable changes |
+| [`SECURITY.md`](SECURITY.md) | Security policy, private vulnerability disclosure, and threat model overview |
+| [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Contributor Covenant Code of Conduct |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Development workflow, guidelines, and pull request checklist |
 | [`docs/PRD.md`](docs/PRD.md) | Product Requirements Document (vision → roadmap → risks) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architecture, browser abstraction, sync engine, tech stack |
 | [`docs/COMPETITIVE_ANALYSIS.md`](docs/COMPETITIVE_ANALYSIS.md) | Competitive feature matrix + gap analysis |
 | [`docs/DEVICE_SPEC.md`](docs/DEVICE_SPEC.md) | Device profile schema + preset catalog plan |
 | [`docs/UX.md`](docs/UX.md) | UX architecture, IA, interaction model |
-| [`docs/SECURITY.md`](docs/SECURITY.md) | Permissions model, framing policy, threat model |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Detailed permissions model, framing policy, threat model |
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | Privacy defaults, data inventory, AI opt-in policy |
 | [`docs/TESTING.md`](docs/TESTING.md) | Test strategy + Definition of Done |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | MVP / V2 / V3 milestones, git & release strategy |
@@ -164,7 +176,7 @@ If ViewGrid saves you time and helps you build better responsive websites, consi
 [![Sponsor ViewGrid](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?style=for-the-badge&logo=github)](https://github.com/sponsors/sinansarikaya)
 
 - ☕ **Buy a coffee ($5/mo):** Support ongoing maintenance, bug fixes, and feature updates.
-- ⚡ **Pro Developer ($10/mo):** Get priority response for feature requests and issue reports.
+- ⚡ **Pro Developer ($10/mo):** Priority consideration for feature requests and issue reports.
 - 🏢 **Sponsor ($25/mo+):** Showcase your logo on the ViewGrid website and repository.
 
 👉 [**Become a Sponsor on GitHub**](https://github.com/sponsors/sinansarikaya)

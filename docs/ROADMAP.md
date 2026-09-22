@@ -62,20 +62,17 @@ all scheduled below.
 
 ## 2. Versioning
 
-- **SemVer** after v0.1.0: `MAJOR.MINOR.PATCH`.
-- During 0.x: MINOR may contain breaking changes to the **workspace file format**; format version field (`schemaVersion`) is mandatory in every persisted/exported artifact and migrations are written before breaking.
-- Store builds always match a git tag.
+- **SemVer** from v1.0.0 onwards: `MAJOR.MINOR.PATCH`.
+- Store builds and GitHub releases always match an annotated git tag (e.g. `v1.0.0`).
 
 ## 3. Git Strategy
 
 - **Trunk-based development**: short-lived branches off `main`, merged fast.
-  - `feat/<scope>` — one feature boundary ≈ one TASK.md section
-  - `fix/<scope>`, `docs/<scope>`, `chore/<scope>`, `perf/<scope>`, `test/<scope>`
-- **Conventional Commits** (`feat:`, `fix:`, `docs:`, `test:`, `perf:`, `chore:`, `refactor:`; scope = module: `sync`, `capture`, `devices`, `workspace-ui`, `platform-ff`, …). Enforced by commitlint + Husky at Foundation.
-- **PR-sized boundaries**: a PR closes at most one TASK.md sub-section and updates checkboxes in the same PR (“code + task bookkeeping together”).
-- **Release tags**: `v0.1.0`, `v0.1.1`, … annotated tags on `main`.
-- **Release branches** only for store submission stabilization: `release/0.1` cut at RC; only `fix/` and `docs/` land there.
-- **CHANGELOG.md**: Keep-a-Changelog format, updated in every release PR (Unreleased → version section).
+  - `feat/<scope>`, `fix/<scope>`, `docs/<scope>`, `chore/<scope>`, `perf/<scope>`, `test/<scope>`
+- **Conventional Commits** (`feat:`, `fix:`, `docs:`, `test:`, `perf:`, `chore:`, `refactor:`; scope = module: `sync`, `capture`, `devices`, `ui`, `platform`, …).
+- **Release tags**: `v1.0.0`, `v1.0.1`, … annotated tags on `main`.
+- **Release branches** for store submission stabilization: `release/v1.0` cut at RC.
+- **CHANGELOG.md**: Keep-a-Changelog format, updated in every release PR.
 - No commits before planning approval (this milestone satisfies the “no unnecessary commits” rule; the first commit will be `chore: initialize project skeleton` in Foundation).
 
 ## 4. Release Strategy

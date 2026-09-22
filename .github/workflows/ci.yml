@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-and-build:
-    name: Typecheck, Test & Build (Firefox + Chromium)
+    name: Lint, Typecheck, Test, Web-Ext & Package
     runs-on: ubuntu-latest
 
     steps:
@@ -29,17 +29,32 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Typecheck
+      - name: Codebase Linting (ESLint)
+        run: pnpm run lint
+
+      - name: Extension Typecheck (tsc)
         run: pnpm run typecheck
 
-      - name: Run Unit Tests
+      - name: Website Typecheck (tsc)
+        run: pnpm run typecheck:website
+
+      - name: Run Unit Tests (Vitest)
         run: pnpm test
 
       - name: Build All Extension Packages
         run: pnpm run build:all
 
-      - name: Verify Firefox Build Directory
-        run: test -f dist/firefox/manifest.json
+      - name: Validate Firefox Extension (web-ext lint)
+        run: pnpm run lint:web-ext
 
-      - name: Verify Chromium Build Directory
-        run: test -f dist/chromium/manifest.json
+      - name: Build Marketing Website (Vite)
+        run: pnpm run build:website
+
+      - name: Package Release ZIPs & Checksums
+        run: pnpm run package:release
+
+      - name: Verify Release Artifacts
+        run: |
+          test -f release/viewgrid-1.0.0-chromium.zip
+          test -f release/viewgrid-1.0.0-firefox.zip
+          test -f release/SHA256SUMS

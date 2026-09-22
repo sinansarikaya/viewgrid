@@ -8,6 +8,7 @@
  * Prerequisites: npm run build:all must run first (or this script runs it).
  */
 import { execSync } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -102,14 +103,31 @@ with zipfile.ZipFile("${zipFile.replace(/\\/g, '/')}", "w", zipfile.ZIP_DEFLATED
       execSync(`python3 -c '${pyScript.replace(/'/g, "'\\''")}'`, { stdio: 'pipe' });
     }
     const stat = fs.statSync(zipFile);
-    console.log(`[viewgrid] OK ${path.basename(zipFile)} (${Math.round(stat.size / 1024)} KB)`);
+    const hash = crypto.createHash('sha256').update(fs.readFileSync(zipFile)).digest('hex');
+    console.log(`[viewgrid] OK ${path.basename(zipFile)} (${Math.round(stat.size / 1024)} KB) - sha256: ${hash}`);
   } catch (e) {
     console.error('[viewgrid] zip failed:', e.message);
     process.exit(1);
   }
 }
 
+// Generate canonical SHA256SUMS file
+const checksumLines = [];
+for (const browser of ['chromium', 'firefox']) {
+  const zipName = `viewgrid-${version}-${browser}.zip`;
+  const zipFile = path.join(releaseDir, zipName);
+  if (fs.existsSync(zipFile)) {
+    const hash = crypto.createHash('sha256').update(fs.readFileSync(zipFile)).digest('hex');
+    checksumLines.push(`${hash}  ${zipName}`);
+  }
+}
+const sumsFile = path.join(releaseDir, 'SHA256SUMS');
+fs.writeFileSync(sumsFile, checksumLines.join('\n') + '\n', 'utf8');
+console.log(`[viewgrid] Generated ${path.basename(sumsFile)}:`);
+checksumLines.forEach((l) => console.log(`  ${l}`));
+
 console.log(`\n[viewgrid] Release packages ready in release/`);
 console.log(`  Chrome Web Store: release/viewgrid-${version}-chromium.zip`);
 console.log(`  Firefox AMO:      release/viewgrid-${version}-firefox.zip`);
+console.log(`  Checksums:        release/SHA256SUMS`);
 console.log('\nWARNING: Run manual smoke tests before uploading to stores.');

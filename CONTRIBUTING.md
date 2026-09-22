@@ -37,8 +37,10 @@ pnpm run build:all
    ```
 
 2. **Run Tests & Linting**
-   - Run `pnpm test` to ensure all 52+ unit tests pass cleanly.
-   - Run `pnpm run typecheck` to verify TypeScript types.
+   - Run `pnpm test` to ensure all 54 unit tests pass cleanly.
+   - Run `pnpm run lint` to check code formatting and style.
+   - Run `pnpm run typecheck` and `pnpm run typecheck:website` to verify TypeScript types.
+   - Run `pnpm run lint:web-ext` to validate Firefox WebExtension compatibility.
 
 3. **Load in Browser**
    - **Firefox:** Go to `about:debugging#/runtime/this-firefox` → *Load Temporary Add-on…* → Select `dist/firefox/manifest.json`.

@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Build & Publish Extension Release
+    name: Build, Package & Publish Extension Release
     runs-on: ubuntu-latest
 
     steps:
@@ -34,21 +34,15 @@ jobs:
       - name: Run Tests
         run: pnpm test
 
-      - name: Build Extension Packages
-        run: pnpm run build:all
-
-      - name: Create Release Zip Archives
-        run: |
-          mkdir -p release
-          cd dist/firefox && zip -r ../../release/viewgrid-${{ github.ref_name }}-firefox.zip . && cd ../..
-          cd dist/chromium && zip -r ../../release/viewgrid-${{ github.ref_name }}-chromium.zip . && cd ../..
+      - name: Package Release ZIPs & Generate SHA256SUMS
+        run: pnpm run package:release
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/viewgrid-${{ github.ref_name }}-firefox.zip
-            release/viewgrid-${{ github.ref_name }}-chromium.zip
+            release/*.zip
+            release/SHA256SUMS
           draft: false
           prerelease: false
           generate_release_notes: true

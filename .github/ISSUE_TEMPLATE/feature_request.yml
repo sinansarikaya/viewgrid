@@ -1,0 +1,42 @@
+name: '💡 Feature Request'
+description: Suggest a new feature, device preset, or UX enhancement
+title: '[Feature]: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an idea to make ViewGrid better!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement / Motivation
+      description: Is your feature request related to a problem or limitation?
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you would like to see implemented.
+      placeholder: It would be great if ViewGrid could...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      options:
+        - Device Presets / Custom Viewports
+        - Visual Comparison / Diff Engine
+        - Interaction Synchronization
+        - Framing / Headers / Security
+        - Screenshots & Export
+        - Performance & UI Polish
+        - Other
