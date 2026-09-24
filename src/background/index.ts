@@ -126,18 +126,17 @@ async function persistState(): Promise<void> {
 }
 
 /**
- * Chromium: DeclarativeNetRequest session rule synchronization.
- * Strips X-Frame-Options, Frame-Options, and Content-Security-Policy
- * for sub_frame requests initiated inside workspace tabs.
+ * Chromium: DeclarativeNetRequest dynamic and session rule synchronization.
+ * Strips X-Frame-Options, Frame-Options, Content-Security-Policy, and framing isolation headers
+ * for sub_frame requests across viewports. Using priority 9999 ensures rules override server headers.
+ * Both dynamic rules (persisted across restarts) and session rules are synced.
  */
 async function syncDnrRules(): Promise<void> {
-  if (!b.declarativeNetRequest?.updateSessionRules) return;
+  if (!b.declarativeNetRequest) return;
   try {
-    const tabIds = Array.from(workspaceTabs).filter((id): id is number => typeof id === 'number');
-
     const rule: any = {
       id: DNR_WORKSPACE_RULE_ID,
-      priority: 1,
+      priority: 9999,
       action: {
         type: 'modifyHeaders',
         responseHeaders: [
@@ -154,28 +153,103 @@ async function syncDnrRules(): Promise<void> {
       },
       condition: {
         resourceTypes: ['sub_frame'],
-        ...(tabIds.length > 0 ? { tabIds } : {}),
       },
     };
 
-    await b.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [DNR_WORKSPACE_RULE_ID],
-      addRules: [rule],
-    });
+    if (b.declarativeNetRequest.updateDynamicRules) {
+      await b.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: [DNR_WORKSPACE_RULE_ID],
+        addRules: [rule],
+      });
+    }
+
+    if (b.declarativeNetRequest.updateSessionRules) {
+      await b.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: [DNR_WORKSPACE_RULE_ID],
+        addRules: [rule],
+      });
+    }
   } catch (e) {
-    console.warn('[viewgrid] failed to sync DNR session rules:', e);
+    console.warn('[viewgrid] failed to sync DNR rules:', e);
+  }
+}
+
+/**
+ * Unregisters Service Worker and clears cache for a target URL origin/hostname.
+ * Prevents service workers from hijacking sub_frame requests, returning cached
+ * X-Frame-Options headers, or throwing unhandled errors inside iframes.
+ */
+async function clearServiceWorkerForUrl(urlStr?: string): Promise<void> {
+  if (!urlStr || typeof urlStr !== 'string') return;
+  try {
+    const u = new URL(urlStr);
+    if (!['http:', 'https:'].includes(u.protocol)) return;
+    const origin = u.origin;
+    const hostname = u.hostname;
+
+    const bd = b.browsingData;
+    if (!bd) return;
+
+    const removalTypes = {
+      serviceWorkers: true,
+      cacheStorage: true,
+      cache: true,
+    };
+
+    let cleared = false;
+    // 1. Try Chromium origins removal
+    if (bd.remove) {
+      try {
+        await bd.remove({ origins: [origin] }, removalTypes);
+        cleared = true;
+      } catch {}
+
+      // 2. If origins not supported (Firefox), try hostnames
+      if (!cleared) {
+        try {
+          await bd.remove({ hostnames: [hostname] }, { serviceWorkers: true, cache: true });
+          cleared = true;
+        } catch {}
+      }
+    }
+
+    // 3. Fallback to removeServiceWorkers
+    if (!cleared && bd.removeServiceWorkers) {
+      try {
+        await bd.removeServiceWorkers({ origins: [origin] });
+      } catch {
+        try {
+          await bd.removeServiceWorkers({ hostnames: [hostname] });
+        } catch {}
+      }
+    }
+  } catch (e) {
+    console.warn('[viewgrid] clearServiceWorkerForUrl failed:', e);
   }
 }
 
 // Immediately initialize DNR rules at background startup
 void syncDnrRules();
 
+function isWorkspaceUrl(url?: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  return (
+    url.startsWith(wsUrlBase) ||
+    url.includes('/workspace.html') ||
+    (url.startsWith('moz-extension://') && url.includes('workspace.html')) ||
+    (url.startsWith('chrome-extension://') && url.includes('workspace.html'))
+  );
+}
+
 function checkAndTrackWorkspace(tab: any) {
-  if (tab?.id && tab?.url && tab.url.startsWith(wsUrlBase)) {
-    if (!workspaceTabs.has(tab.id)) {
-      workspaceTabs.add(tab.id);
-      void persistState();
-      void syncDnrRules();
+  if (tab?.id && typeof tab.id === 'number') {
+    const url = tab.url || tab.pendingUrl || '';
+    if (isWorkspaceUrl(url)) {
+      if (!workspaceTabs.has(tab.id)) {
+        workspaceTabs.add(tab.id);
+        void persistState();
+        void syncDnrRules();
+      }
     }
   }
 }
@@ -188,8 +262,8 @@ try {
   b.tabs.onCreated?.addListener((tab: any) => {
     checkAndTrackWorkspace(tab);
   });
-  b.tabs.onUpdated?.addListener((_id: number, _info: any, tab: any) => {
-    checkAndTrackWorkspace(tab);
+  b.tabs.onUpdated?.addListener((tabId: number, changeInfo: any, tab: any) => {
+    checkAndTrackWorkspace({ ...tab, id: tabId, url: changeInfo?.url || tab?.url });
   });
   b.tabs.onRemoved?.addListener((tabId: number) => {
     if (workspaceTabs.has(tabId) || agentFrames.has(tabId)) {
@@ -220,29 +294,14 @@ async function routeToAgents(tabId: number, msg: unknown, onlyViewports?: string
   }
 }
 
-// —— User-Agent spoofing & cookie preservation for workspace requests (Firefox webRequest) ——
+// —— User-Agent spoofing for workspace requests (Firefox webRequest) ——
 if (b.webRequest?.onBeforeSendHeaders) {
   try {
     b.webRequest.onBeforeSendHeaders.addListener(
-      async (details: any) => {
-        const isSubFrame = details.type === 'sub_frame';
-        const isFromWorkspace =
-          (typeof details.tabId === 'number' && workspaceTabs.has(details.tabId)) ||
-          (details.documentUrl && wsUrlBase && details.documentUrl.startsWith(wsUrlBase)) ||
-          (details.originUrl && wsUrlBase && details.originUrl.startsWith(wsUrlBase)) ||
-          (details.documentUrl && details.documentUrl.startsWith('moz-extension://') && details.documentUrl.includes('/workspace.html')) ||
-          (details.originUrl && details.originUrl.startsWith('moz-extension://') && details.originUrl.includes('/workspace.html')) ||
-          details.frameAncestors?.some(
-            (a: any) =>
-              (wsUrlBase && a.url?.startsWith(wsUrlBase)) ||
-              (a.url?.startsWith('moz-extension://') && a.url?.includes('/workspace.html')),
-          );
+      (details: any) => {
+        if (details.type !== 'sub_frame') return {};
 
-        const shouldHandle = isSubFrame && isFromWorkspace;
-        if (!shouldHandle) return {};
-
-        // Auto-register workspace tab if request is identified as coming from workspace
-        if (isFromWorkspace && typeof details.tabId === 'number' && details.tabId > 0 && !workspaceTabs.has(details.tabId)) {
+        if (typeof details.tabId === 'number' && details.tabId > 0 && !workspaceTabs.has(details.tabId)) {
           workspaceTabs.add(details.tabId);
           void persistState();
           void syncDnrRules();
@@ -250,52 +309,12 @@ if (b.webRequest?.onBeforeSendHeaders) {
 
         let headers = details.requestHeaders ?? [];
 
-        // 1. UA spoofing per viewport
+        // UA spoofing per viewport
         const key = `${details.tabId ?? -1}:${details.frameId ?? -1}`;
         const ua = frameUserAgents.get(key);
         if (ua) {
           headers = headers.filter((h: any) => h.name.toLowerCase() !== 'user-agent');
           headers.push({ name: 'User-Agent', value: ua });
-        }
-
-        // 2. Bypass Sec-Fetch cross-site restrictions that cause CSRF / auth rejections
-        headers = headers.filter((h: any) => {
-          const n = h.name.toLowerCase();
-          return n !== 'sec-fetch-site' && n !== 'sec-fetch-dest' && n !== 'sec-fetch-mode';
-        });
-        headers.push({ name: 'Sec-Fetch-Site', value: 'same-origin' });
-        headers.push({ name: 'Sec-Fetch-Dest', value: details.type === 'sub_frame' ? 'document' : 'empty' });
-        headers.push({ name: 'Sec-Fetch-Mode', value: 'navigate' });
-
-        // 3. Cookie preservation: Merge user cookies from browser store so login sessions persist
-        try {
-          if (b.cookies?.getAll && details.url) {
-            const cookies = await b.cookies.getAll({ url: details.url });
-            if (cookies && cookies.length > 0) {
-              const existingCookieHeader = headers.find((h: any) => h.name.toLowerCase() === 'cookie');
-              const cookieMap = new Map<string, string>();
-              if (existingCookieHeader?.value) {
-                existingCookieHeader.value.split(';').forEach((p: string) => {
-                  const idx = p.indexOf('=');
-                  if (idx > 0) {
-                    cookieMap.set(p.slice(0, idx).trim(), p.slice(idx + 1).trim());
-                  }
-                });
-              }
-              for (const c of cookies) {
-                if (!cookieMap.has(c.name)) {
-                  cookieMap.set(c.name, c.value);
-                }
-              }
-              const merged = Array.from(cookieMap.entries())
-                .map(([k, v]) => `${k}=${v}`)
-                .join('; ');
-              headers = headers.filter((h: any) => h.name.toLowerCase() !== 'cookie');
-              headers.push({ name: 'Cookie', value: merged });
-            }
-          }
-        } catch (err) {
-          console.warn('[viewgrid] cookie bridge error:', err);
         }
 
         return { requestHeaders: headers };
@@ -313,24 +332,10 @@ if (b.webRequest?.onHeadersReceived) {
   try {
     b.webRequest.onHeadersReceived.addListener(
       (details: any) => {
-        const isSubFrame = details.type === 'sub_frame';
-        const isFromWorkspace =
-          (typeof details.tabId === 'number' && workspaceTabs.has(details.tabId)) ||
-          (details.documentUrl && wsUrlBase && details.documentUrl.startsWith(wsUrlBase)) ||
-          (details.originUrl && wsUrlBase && details.originUrl.startsWith(wsUrlBase)) ||
-          (details.documentUrl && details.documentUrl.startsWith('moz-extension://') && details.documentUrl.includes('/workspace.html')) ||
-          (details.originUrl && details.originUrl.startsWith('moz-extension://') && details.originUrl.includes('/workspace.html')) ||
-          details.frameAncestors?.some(
-            (a: any) =>
-              (wsUrlBase && a.url?.startsWith(wsUrlBase)) ||
-              (a.url?.startsWith('moz-extension://') && a.url?.includes('/workspace.html')),
-          );
+        // Unblock all sub_frame requests (iframes embedded across all viewports)
+        if (details.type !== 'sub_frame') return {};
 
-        const shouldUnblock = isSubFrame && isFromWorkspace;
-        if (!shouldUnblock) return {};
-
-        // Auto-learn tabId for subsequent sub_frame redirects
-        if (isFromWorkspace && typeof details.tabId === 'number' && details.tabId > 0 && !workspaceTabs.has(details.tabId)) {
+        if (typeof details.tabId === 'number' && details.tabId > 0 && !workspaceTabs.has(details.tabId)) {
           workspaceTabs.add(details.tabId);
           void persistState();
           void syncDnrRules();
@@ -381,6 +386,15 @@ if (b.webRequest?.onHeadersReceived) {
 async function resolveTabId(sender: any): Promise<number | undefined> {
   if (typeof sender?.tab?.id === 'number') return sender.tab.id;
   await ensureHydrated();
+  try {
+    const allTabs = await b.tabs.query({});
+    for (const t of allTabs || []) {
+      if (t?.id && isWorkspaceUrl(t?.url)) {
+        workspaceTabs.add(t.id);
+        return t.id;
+      }
+    }
+  } catch {}
   if (workspaceTabs.size > 0) {
     const first = Array.from(workspaceTabs)[0];
     if (typeof first === 'number') return first;
@@ -408,8 +422,21 @@ b.runtime.onMessage.addListener(async (msg: any, sender: any) => {
     }
 
     case 'vg/workspace-hello': {
-      const explicitTabId = typeof msg.tabId === 'number' && msg.tabId > 0 ? msg.tabId : undefined;
-      const tabId = explicitTabId ?? (await resolveTabId(sender));
+      let tabId = typeof msg.tabId === 'number' && msg.tabId > 0 ? msg.tabId : sender?.tab?.id;
+      if (!tabId) {
+        try {
+          const allTabs = await b.tabs.query({});
+          for (const t of allTabs || []) {
+            if (t?.id && isWorkspaceUrl(t?.url)) {
+              workspaceTabs.add(t.id);
+              if (!tabId) tabId = t.id;
+            }
+          }
+        } catch {}
+      }
+      if (!tabId) {
+        tabId = await resolveTabId(sender);
+      }
       if (typeof tabId === 'number') {
         workspaceTabs.add(tabId);
         await persistState();
@@ -419,10 +446,20 @@ b.runtime.onMessage.addListener(async (msg: any, sender: any) => {
       return { ok: true };
     }
 
+    case 'vg/prepare-url': {
+      if (typeof msg.url === 'string') {
+        await clearServiceWorkerForUrl(msg.url);
+      }
+      return { ok: true };
+    }
+
     case 'vg/clear-browser-cache': {
       try {
-        if ((b as any).browsingData?.removeCache) {
-          await (b as any).browsingData.removeCache({ since: 0 });
+        if (typeof msg.url === 'string') {
+          await clearServiceWorkerForUrl(msg.url);
+        }
+        if (b.browsingData?.removeCache) {
+          await b.browsingData.removeCache({ since: 0 });
         }
       } catch {}
       return { ok: true };
@@ -571,6 +608,9 @@ b.runtime.onMessage.addListener(async (msg: any, sender: any) => {
 
 // —— Launcher helpers ——
 async function openWorkspace(url?: string) {
+  if (url) {
+    await clearServiceWorkerForUrl(url);
+  }
   const target = b.runtime.getURL('workspace.html') + (url ? `?url=${encodeURIComponent(url)}` : '');
 
   const trackCreatedTab = (tab: any) => {

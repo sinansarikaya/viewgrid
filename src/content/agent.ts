@@ -10,10 +10,36 @@ import { LoopGuard, applyScrollRatios, scrollRatios, selectorPath } from '../cor
 import { runCoreDetectors } from '../core/issues/detectors';
 import type { MeasuredElement, PageMetrics, SyncEnvelope } from '../core/types';
 
+function injectWorldScript(cfg?: Record<string, unknown>): boolean {
+  try {
+    const extBrowser = (globalThis as any).browser || (globalThis as any).chrome;
+    const url = extBrowser?.runtime?.getURL?.('world-inject.js');
+    if (!url) return false;
+    const container = document.head || document.documentElement;
+    if (container) {
+      const s = document.createElement('script');
+      s.src = url;
+      if (cfg) {
+        s.dataset.viewgridConfig = JSON.stringify(cfg);
+      }
+      s.async = false;
+      container.prepend(s);
+      s.remove();
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
 // Fast early exit for non-viewport contexts (e.g. normal browser tabs):
 // ViewGrid viewports ALWAYS have window.name starting with "viewgrid:"
 const frameName: string = typeof window !== 'undefined' ? (window.name || '') : '';
 if (frameName.startsWith('viewgrid:')) {
+  // Protect navigator APIs and disable ServiceWorkers before any page script executes
+  if (!injectWorldScript()) {
+    document.addEventListener('DOMContentLoaded', () => injectWorldScript(), { once: true });
+  }
+
   const g = globalThis as any;
   if (!g.__viewgridAgentInstalled) {
     g.__viewgridAgentInstalled = true;
@@ -88,14 +114,7 @@ function initAgent(viewportId: string) {
       ?.sendMessage?.({ type: 'vg/agent-hello', viewportId })
       ?.then?.((res: any) => {
         if (res?.userAgent) {
-          try {
-            const s = document.createElement('script');
-            s.src = extBrowser.runtime.getURL('world-inject.js');
-            s.dataset.viewgridConfig = JSON.stringify({ userAgent: res.userAgent });
-            s.async = false;
-            s.onload = () => s.remove();
-            (document.head || document.documentElement).prepend(s);
-          } catch {}
+          injectWorldScript({ userAgent: res.userAgent });
         }
       })
       ?.catch?.(() => {});

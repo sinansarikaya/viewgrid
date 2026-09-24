@@ -26,4 +26,24 @@
     defineProp(navigator, 'userAgent', cfg.userAgent);
     defineProp(navigator, 'appVersion', cfg.userAgent.replace(/^Mozilla\//, ''));
   }
+
+  // Inside ViewGrid viewport frames (window.name starts with "viewgrid:"):
+  // Disable ServiceWorker registration so framed pages cannot hijack iframe network requests,
+  // store stale cache, or enforce framing restrictions.
+  const isViewGridFrame = typeof window !== 'undefined' && window.name && window.name.startsWith('viewgrid:');
+  if (isViewGridFrame && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    try {
+      if (navigator.serviceWorker.getRegistrations) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          for (const reg of regs) {
+            reg.unregister().catch(() => {});
+          }
+        }).catch(() => {});
+      }
+      navigator.serviceWorker.register = () => {
+        return Promise.reject(new Error('[viewgrid] Service workers are disabled in responsive preview frames.'));
+      };
+    } catch {}
+  }
 })();
+

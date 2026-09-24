@@ -266,13 +266,13 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
   }, []);
 
   const handleHardReload = useCallback(async () => {
+    const sState = useStore.getState();
+    const currentUrl = sState.model.url;
     try {
-      await b.runtime?.sendMessage?.({ type: 'vg/clear-browser-cache' });
+      await b.runtime?.sendMessage?.({ type: 'vg/clear-browser-cache', url: currentUrl });
     } catch {}
     sendAgentCmd('all', 'hardReload');
     sendAgentCmd('all', 'clearStorage');
-    const sState = useStore.getState();
-    const currentUrl = sState.model.url;
     if (currentUrl) {
       try {
         const u = new URL(currentUrl);
@@ -691,7 +691,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                 onClick={async () => {
                   const ok = await grantHostAccess();
                   st.setGranted(ok);
-                  if (ok) { st.showToast(t.accessGrantedMsg); void injectAgents(); }
+                  if (ok) { st.showToast(t.accessGrantedMsg); void injectAgents(); st.reloadAllFrames(); }
                   else st.showToast(t.accessDeniedMsg);
                 }}
               >
@@ -701,6 +701,34 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
           </div>
         )}
       </div>
+
+      {!st.granted && (
+        <div className={s.permissionBanner}>
+          <div className={s.permissionBannerContent}>
+            <span className={s.permissionBannerIcon}>🛡️</span>
+            <div>
+              <div className={s.permissionBannerTitle}>{t.siteAccessRequiredTitle}</div>
+              <div className={s.permissionBannerDesc}>{t.siteAccessRequiredDesc}</div>
+            </div>
+          </div>
+          <button
+            className={s.permissionBannerBtn}
+            onClick={async () => {
+              const ok = await grantHostAccess();
+              st.setGranted(ok);
+              if (ok) {
+                st.showToast(t.accessGrantedMsg);
+                void injectAgents();
+                st.reloadAllFrames();
+              } else {
+                st.showToast(t.accessDeniedMsg);
+              }
+            }}
+          >
+            {t.enableSiteAccessBtn}
+          </button>
+        </div>
+      )}
 
       <div ref={canvasRef} className={s.canvas}>
         {visible.length === 0 ? (

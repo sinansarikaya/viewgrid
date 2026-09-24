@@ -29,6 +29,7 @@ import {
 import { defaultWorkspace, parseWorkspace } from '../../core/workspace/serialize';
 import { uid } from '../../core/util/id';
 import { b } from '../../platform/browser';
+import { hasHostAccess } from './bridge';
 
 export interface StoreState {
   model: WorkspaceModel;
@@ -108,6 +109,7 @@ export interface StoreState {
   loadSaved(name: string): void;
   deleteSaved(name: string): void;
   setViewportUrl(id: string, url: string): void;
+  reloadAllFrames(): void;
 }
 
 export const DEFAULT_SHORTCUTS: Record<string, string> = {
@@ -275,7 +277,7 @@ export const useStore = create<StoreState>((set, get) => ({
     }
     let granted = true;
     try {
-      const check = await b.permissions.contains({ origins: ['<all_urls>'] });
+      const check = await hasHostAccess();
       if (typeof check === 'boolean') granted = check;
     } catch {
       granted = true;
@@ -348,6 +350,9 @@ export const useStore = create<StoreState>((set, get) => ({
 
   applyUrl(u) {
     const url = normalizeUrl(u);
+    if (url && url !== 'about:blank') {
+      b.runtime?.sendMessage?.({ type: 'vg/prepare-url', url }).catch(() => {});
+    }
     set((s) => ({
       model: {
         ...s.model,
@@ -357,6 +362,13 @@ export const useStore = create<StoreState>((set, get) => ({
       urlDraft: url,
     }));
     schedulePersist(get);
+  },
+
+  reloadAllFrames() {
+    const currentUrl = get().model.url;
+    if (currentUrl) {
+      get().applyUrl(currentUrl);
+    }
   },
 
   addDevice(profile, orientation) {

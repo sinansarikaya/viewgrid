@@ -16,8 +16,15 @@ export async function workspaceHello() {
     if (tab?.id && typeof tab.id === 'number') {
       tabId = tab.id;
     } else {
-      const tabs = await b.tabs.query({ active: true, currentWindow: true });
-      if (tabs?.[0]?.id) tabId = tabs[0].id;
+      const allTabs = await b.tabs.query({}).catch(() => []);
+      const myUrl = window.location.href.split('#')[0];
+      const match = allTabs?.find((t: any) => t.url && (t.url === myUrl || t.url.includes('/workspace.html')));
+      if (match?.id) {
+        tabId = match.id;
+      } else {
+        const active = await b.tabs.query({ active: true, currentWindow: true }).catch(() => []);
+        if (active?.[0]?.id) tabId = active[0].id;
+      }
     }
   } catch {}
   return b.runtime.sendMessage({ type: 'vg/workspace-hello', tabId });
@@ -62,8 +69,9 @@ export function listenAgents(handlers: {
 
 export async function grantHostAccess(): Promise<boolean> {
   try {
-    const ok = await b.permissions.request({ origins: ['*://*/*'] });
-    return ok;
+    const ok = await b.permissions.request({ origins: ['<all_urls>'] }).catch(() => false);
+    if (ok) return true;
+    return await b.permissions.request({ origins: ['*://*/*'] }).catch(() => false);
   } catch {
     return false;
   }
@@ -71,7 +79,9 @@ export async function grantHostAccess(): Promise<boolean> {
 
 export async function hasHostAccess(): Promise<boolean> {
   try {
-    return await b.permissions.contains({ origins: ['*://*/*'] });
+    const hasUrls = await b.permissions.contains({ origins: ['<all_urls>'] }).catch(() => false);
+    if (hasUrls) return true;
+    return await b.permissions.contains({ origins: ['*://*/*'] }).catch(() => false);
   } catch {
     return false;
   }

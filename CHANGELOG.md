@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-09-24
+
+### Fixed
+- **Service Worker & PWA Framing Isolation:** Fixed an issue where websites utilizing Service Workers (such as `castpost.app` with `sw.js`) blocked or failed iframe loading. In Firefox, Service Worker fetch interception caused runtime failures (`sw.js:78`) with unstripped `X-Frame-Options: DENY`. In Chromium, Service Worker `event.respondWith` responses bypassed declarativeNetRequest rules entirely. ViewGrid now automatically clears the target origin/hostname's Service Worker registrations and CacheStorage on URL launch/change via `browsingData`, and disables Service Worker re-registration within preview frames via `world-inject.js`.
+- **Subframe Header Stripping on Redirect Chains:** Fixed an issue where `X-Frame-Options` and CSP `frame-ancestors` were not stripped on HTTP 307/302 redirects (such as `castpost.app` redirecting to `/en`).
+- **Chromium DNR Dynamic Rules & Max Priority:** Elevated declarativeNetRequest rule priority to 9999 and synchronized persistent dynamic rules (`updateDynamicRules`) alongside session rules, ensuring framing header removal survives browser restarts and extension reload cycles.
+- **Workspace Tab ID Auto-Learning:** Workspace tab IDs are now auto-discovered and registered during subframe requests, tab navigation, and initialization, ensuring framing rules apply reliably across all frames.
+- **MV3 Storage Persistence:** Preserved active workspace tab state across service worker and event page sleep/wake cycles using `storage.session` and `storage.local` fallback.
+
+### Added
+- **Source Code Packaging for AMO:** Automated `viewgrid-<version>-source.zip` packaging for Mozilla Add-on store review and release verification.
+- **Prominent Host Permission Banner:** Added a dedicated, non-intrusive banner on top of the workspace canvas when host permissions (`<all_urls>`) are not yet granted, allowing users to grant permission with a single click and automatically reloading all active device frames.
+- **Consistent Host Access Detection:** Standardized `hasHostAccess` and `grantHostAccess` across both `<all_urls>` and `*://*/*` origin match patterns for Firefox and Chromium.
+- **Cross-Browser BrowsingData Facade:** Added typed `browsingData` facade to `browser.ts` supporting targeted origin/hostname removal of Service Workers and cache across Firefox and Chromium.
+
+---
+
 ## [1.0.0] - 2026-09-21
 
 ### Added

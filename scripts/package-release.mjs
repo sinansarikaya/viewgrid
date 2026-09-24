@@ -111,15 +111,46 @@ with zipfile.ZipFile("${zipFile.replace(/\\/g, '/')}", "w", zipfile.ZIP_DEFLATED
   }
 }
 
-// Generate canonical SHA256SUMS file
+// Packaging source code for AMO review (excluding node_modules, dist, release, .git, etc.)
+const sourceZip = path.join(releaseDir, `viewgrid-${version}-source.zip`);
+console.log(`\n[viewgrid] Packaging source code (${path.basename(sourceZip)})...`);
+if (fs.existsSync(sourceZip)) fs.rmSync(sourceZip);
+
+try {
+  const pySourceScript = `import zipfile, os
+
+ignored_dirs = {
+    'node_modules', 'dist', 'release', '.git', '.npm', '.config',
+    '.ai-rules', 'audits', '.turbo', '.cache'
+}
+ignored_exts = {'.DS_Store'}
+
+with zipfile.ZipFile("${sourceZip.replace(/\\/g, '/')}", "w", zipfile.ZIP_DEFLATED) as z:
+    for root, dirs, files in os.walk("${root.replace(/\\/g, '/')}"):
+        dirs[:] = [d for d in dirs if d not in ignored_dirs and not d.startswith('.')]
+        for file in files:
+            if file in ignored_exts or file.endswith('.pyc') or file == '.env':
+                continue
+            full = os.path.join(root, file)
+            rel = os.path.relpath(full, "${root.replace(/\\/g, '/')}")
+            z.write(full, rel)
+`;
+  execSync(`python3 -c '${pySourceScript.replace(/'/g, "'\\''")}'`, { stdio: 'pipe' });
+  const srcStat = fs.statSync(sourceZip);
+  const srcHash = crypto.createHash('sha256').update(fs.readFileSync(sourceZip)).digest('hex');
+  console.log(`[viewgrid] OK ${path.basename(sourceZip)} (${Math.round(srcStat.size / 1024)} KB) - sha256: ${srcHash}`);
+} catch (e) {
+  console.error('[viewgrid] source packaging failed:', e.message);
+  process.exit(1);
+}
+
+// Generate canonical SHA256SUMS file (including both historical and current releases)
 const checksumLines = [];
-for (const browser of ['chromium', 'firefox']) {
-  const zipName = `viewgrid-${version}-${browser}.zip`;
+const allZips = fs.readdirSync(releaseDir).filter((f) => f.endsWith('.zip')).sort();
+for (const zipName of allZips) {
   const zipFile = path.join(releaseDir, zipName);
-  if (fs.existsSync(zipFile)) {
-    const hash = crypto.createHash('sha256').update(fs.readFileSync(zipFile)).digest('hex');
-    checksumLines.push(`${hash}  ${zipName}`);
-  }
+  const hash = crypto.createHash('sha256').update(fs.readFileSync(zipFile)).digest('hex');
+  checksumLines.push(`${hash}  ${zipName}`);
 }
 const sumsFile = path.join(releaseDir, 'SHA256SUMS');
 fs.writeFileSync(sumsFile, checksumLines.join('\n') + '\n', 'utf8');
@@ -129,5 +160,6 @@ checksumLines.forEach((l) => console.log(`  ${l}`));
 console.log(`\n[viewgrid] Release packages ready in release/`);
 console.log(`  Chrome Web Store: release/viewgrid-${version}-chromium.zip`);
 console.log(`  Firefox AMO:      release/viewgrid-${version}-firefox.zip`);
+console.log(`  Source Code:      release/viewgrid-${version}-source.zip`);
 console.log(`  Checksums:        release/SHA256SUMS`);
 console.log('\nWARNING: Run manual smoke tests before uploading to stores.');

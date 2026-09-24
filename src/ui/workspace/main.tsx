@@ -4,6 +4,7 @@ import '../global.css';
 import { App } from './App';
 import { useStore } from './store';
 import { listenAgents, workspaceHello, injectAgents, sendSyncApply } from './bridge';
+import { b } from '../../platform/browser';
 import type { SyncEnvelope } from '../../core/types';
 import { LoopGuard } from '../../core/sync/protocol';
 
@@ -11,6 +12,12 @@ const hub = new LoopGuard();
 
 async function boot() {
   await useStore.getState().hydrate();
+  const initialUrl = useStore.getState().model.url;
+  if (initialUrl && initialUrl !== 'about:blank') {
+    try {
+      await b.runtime.sendMessage({ type: 'vg/prepare-url', url: initialUrl });
+    } catch {}
+  }
   try {
     await workspaceHello();
   } catch (err) {

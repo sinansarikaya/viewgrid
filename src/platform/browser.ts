@@ -9,14 +9,30 @@ const raw = g.browser || g.chrome || {};
 function promisify<T = any>(fn: (...args: any[]) => any, context: any, ...args: any[]): Promise<T> {
   return new Promise((resolve, reject) => {
     try {
+      let settled = false;
       const res = fn.call(context, ...args, (result: T) => {
+        if (settled) return;
+        settled = true;
         const err = raw.runtime?.lastError;
         if (err) reject(new Error(err.message || String(err)));
         else resolve(result);
       });
       // If the browser API natively returned a Promise (Firefox or modern Chrome MV3)
       if (res && typeof res.then === 'function') {
-        res.then(resolve, reject);
+        res.then(
+          (val: T) => {
+            if (!settled) {
+              settled = true;
+              resolve(val);
+            }
+          },
+          (err: any) => {
+            if (!settled) {
+              settled = true;
+              reject(err);
+            }
+          },
+        );
       }
     } catch (e) {
       reject(e);
@@ -94,7 +110,17 @@ export interface VgBrowser {
   commands?: {
     onCommand: { addListener(cb: (command: string) => void): void };
   };
+  browsingData?: {
+    remove(options: any, dataToRemove: any): Promise<void>;
+    removeCache(options: any): Promise<void>;
+    removeServiceWorkers(options: any): Promise<void>;
+  };
   declarativeNetRequest?: {
+    updateDynamicRules(options: {
+      addRules?: any[];
+      removeRuleIds?: number[];
+    }): Promise<void>;
+    getDynamicRules(): Promise<any[]>;
     updateSessionRules(options: {
       addRules?: any[];
       removeRuleIds?: number[];
@@ -308,8 +334,37 @@ export const b: VgBrowser = {
         },
       }
     : undefined,
+  browsingData: raw.browsingData
+    ? {
+        remove(options: any, dataToRemove: any): Promise<void> {
+          if (!raw.browsingData?.remove) return Promise.resolve();
+          return promisify(raw.browsingData.remove, raw.browsingData, options, dataToRemove);
+        },
+        removeCache(options: any): Promise<void> {
+          if (!raw.browsingData?.removeCache) return Promise.resolve();
+          return promisify(raw.browsingData.removeCache, raw.browsingData, options);
+        },
+        removeServiceWorkers(options: any): Promise<void> {
+          if (raw.browsingData?.removeServiceWorkers) {
+            return promisify(raw.browsingData.removeServiceWorkers, raw.browsingData, options);
+          }
+          if (raw.browsingData?.remove) {
+            return promisify(raw.browsingData.remove, raw.browsingData, options, { serviceWorkers: true });
+          }
+          return Promise.resolve();
+        },
+      }
+    : undefined,
   declarativeNetRequest: raw.declarativeNetRequest
     ? {
+        updateDynamicRules(options: { addRules?: any[]; removeRuleIds?: number[] }): Promise<void> {
+          if (!raw.declarativeNetRequest?.updateDynamicRules) return Promise.resolve();
+          return promisify(raw.declarativeNetRequest.updateDynamicRules, raw.declarativeNetRequest, options);
+        },
+        getDynamicRules(): Promise<any[]> {
+          if (!raw.declarativeNetRequest?.getDynamicRules) return Promise.resolve([]);
+          return promisify(raw.declarativeNetRequest.getDynamicRules, raw.declarativeNetRequest);
+        },
         updateSessionRules(options: { addRules?: any[]; removeRuleIds?: number[] }): Promise<void> {
           if (!raw.declarativeNetRequest?.updateSessionRules) return Promise.resolve();
           return promisify(raw.declarativeNetRequest.updateSessionRules, raw.declarativeNetRequest, options);

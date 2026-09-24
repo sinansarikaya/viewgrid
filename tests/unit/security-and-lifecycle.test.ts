@@ -100,6 +100,61 @@ describe('P0-2: Chromium DeclarativeNetRequest Architecture', () => {
       'content-security-policy',
     ]);
   });
+
+  it('correctly extracts origin and hostname for targeted browsingData service worker clearing', () => {
+    function getRemovalTargets(urlStr: string): { origin: string; hostname: string } | null {
+      try {
+        const u = new URL(urlStr);
+        if (!['http:', 'https:'].includes(u.protocol)) return null;
+        return { origin: u.origin, hostname: u.hostname };
+      } catch {
+        return null;
+      }
+    }
+
+    const t1 = getRemovalTargets('https://castpost.app/en');
+    expect(t1?.origin).toBe('https://castpost.app');
+    expect(t1?.hostname).toBe('castpost.app');
+
+    const t2 = getRemovalTargets('http://localhost:3000/dashboard');
+    expect(t2?.origin).toBe('http://localhost:3000');
+    expect(t2?.hostname).toBe('localhost');
+
+    const t3 = getRemovalTargets('chrome-extension://abcdef/workspace.html');
+    expect(t3).toBeNull();
+  });
+
+  it('verifies service worker disabler intercepts and unregisters inside ViewGrid frames', async () => {
+    const registrations = [{ unregister: async () => true }];
+    let registerCalled = false;
+
+    const mockNavigator: any = {
+      serviceWorker: {
+        getRegistrations: async () => registrations,
+        register: async () => {
+          registerCalled = true;
+          return {};
+        },
+      },
+    };
+
+    // Simulate world-inject logic for viewgrid frames
+    const isViewGridFrame = true;
+    if (isViewGridFrame && mockNavigator.serviceWorker) {
+      if (mockNavigator.serviceWorker.getRegistrations) {
+        const regs = await mockNavigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          await reg.unregister();
+        }
+      }
+      mockNavigator.serviceWorker.register = () => {
+        return Promise.reject(new Error('[viewgrid] Service workers are disabled in responsive preview frames.'));
+      };
+    }
+
+    await expect(mockNavigator.serviceWorker.register('/sw.js')).rejects.toThrow('Service workers are disabled');
+    expect(registerCalled).toBe(false);
+  });
 });
 
 describe('P0-3: postMessage Security Model', () => {

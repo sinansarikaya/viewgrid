@@ -45,6 +45,9 @@ export interface Translations {
   siteAccessGranted: string;
   siteAccessHint: string;
   enableSiteAccess: string;
+  siteAccessRequiredTitle: string;
+  siteAccessRequiredDesc: string;
+  enableSiteAccessBtn: string;
   howToEnable: string;
   searchDevices: string;
   customDevice: string;
@@ -159,6 +162,9 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     siteAccessGranted: 'site access: granted',
     siteAccessHint: 'XFO/CSP-protected sites need the framing grant (☰ → Enable site access).',
     enableSiteAccess: 'Enable site access (framing + sync)',
+    siteAccessRequiredTitle: 'Site Access Permission Required for Framing',
+    siteAccessRequiredDesc: 'To display protected sites (like CastPost) and remove X-Frame-Options/CSP blocking, please grant site access.',
+    enableSiteAccessBtn: 'Grant Site Access',
     howToEnable: 'How to enable',
     searchDevices: 'Search devices or presets...',
     customDevice: 'Custom device',
@@ -271,6 +277,9 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     siteAccessGranted: 'site erişimi: etkin',
     siteAccessHint: 'XFO/CSP korumalı siteler için çerçeve izni gerekir (☰ → Site erişimini etkinleştir).',
     enableSiteAccess: 'Site erişimini etkinleştir (çerçeve + senk)',
+    siteAccessRequiredTitle: 'Sitelere Erişim İzni Gerekli',
+    siteAccessRequiredDesc: 'Korumalı siteleri (CastPost vb.) görüntülemek ve X-Frame-Options/CSP engellerini kaldırmak için site erişim iznini onaylayın.',
+    enableSiteAccessBtn: 'Site İzni Ver',
     howToEnable: 'Nasıl etkinleştirilir?',
     searchDevices: 'Cihaz veya şablon ara...',
     customDevice: 'Özel cihaz',
@@ -383,6 +392,9 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     siteAccessGranted: 'nettstedstilgang: innvilget',
     siteAccessHint: 'XFO/CSP-beskyttede sider krever rammetillatelse (☰ → Aktiver nettstedstilgang).',
     enableSiteAccess: 'Aktiver nettstedstilgang (rammer + synk)',
+    siteAccessRequiredTitle: 'Nettstedstilgang kreves for innramming',
+    siteAccessRequiredDesc: 'For å vise beskyttede nettsteder og fjerne X-Frame-Options/CSP-blokkering, vennligst gi nettstedstilgang.',
+    enableSiteAccessBtn: 'Gi nettstedstilgang',
     howToEnable: 'Hvordan aktivere',
     searchDevices: 'Søk etter enheter eller maler...',
     customDevice: 'Egendefinert enhet',
