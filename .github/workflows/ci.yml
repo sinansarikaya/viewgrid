@@ -54,7 +54,26 @@ jobs:
         run: pnpm run package:release
 
       - name: Verify Release Artifacts
+        shell: bash
         run: |
-          test -f release/viewgrid-1.0.0-chromium.zip
-          test -f release/viewgrid-1.0.0-firefox.zip
-          test -f release/SHA256SUMS
+          set -euo pipefail
+
+          version="$(node -p "require('./package.json').version")"
+
+          artifacts=(
+            "release/viewgrid-${version}-chromium.zip"
+            "release/viewgrid-${version}-firefox.zip"
+            "release/viewgrid-${version}-source.zip"
+            "release/SHA256SUMS"
+          )
+
+          for artifact in "${artifacts[@]}"; do
+            if [[ ! -f "$artifact" ]]; then
+              echo "::error::Missing release artifact: $artifact"
+              echo "Generated release files:"
+              find release -maxdepth 1 -type f -printf '%f\n' 2>/dev/null || ls -la release/
+              exit 1
+            fi
+          done
+
+          echo "All release artifacts verified for version ${version}."

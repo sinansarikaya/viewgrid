@@ -54,7 +54,7 @@ export const siteConfig = {
    * Update these values once public store URLs are assigned by Google and Mozilla.
    */
   storeLinks: {
-    chrome: 'https://chromewebstore.google.com/detail/viewgrid-responsive-viewer/hmlhooeamfmhdeichnghcklahfgimgef',
+    chrome: 'https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef',
     firefox: 'https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/',
   } as StoreLinks,
 
