@@ -15,6 +15,16 @@
 
 [**Website**](https://viewgrid.sinansarikaya.dev) • [**Firefox Add-ons**](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/) • [**Chrome Web Store**](https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef) • [**Quick Start**](#-quick-start) • [**Documentation**](#-documentation-map) • [**Contributing**](CONTRIBUTING.md)
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef">
+    <img src="https://img.shields.io/badge/Chrome_Web_Store-Add_to_Chrome-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/">
+    <img src="https://img.shields.io/badge/Firefox_Add--ons-Get_Firefox_Add--on-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white" alt="Firefox Add-ons" />
+  </a>
+</p>
+
 </div>
 
 ---
@@ -59,8 +69,13 @@ Unlike heavy desktop simulators or Electron bundles that consume 850 MB+ of memo
 ### 1. User Installation (Recommended)
 
 #### Option A: Official Extension Stores
-- **Mozilla Firefox:** Install directly from [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/).
-- **Chromium Browsers (Chrome, Edge, Brave):** Install directly from [Chrome Web Store](https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef).
+
+Install with one click directly from official extension directories:
+
+| Platform / Browser | Channel | Direct Install |
+| :--- | :--- | :--- |
+| **Google Chrome & Chromium**<br>*(Chrome, Edge, Brave, Opera, Arc)* | [Chrome Web Store Listing](https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef) | [![Available on Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Add_to_Chrome-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef) |
+| **Mozilla Firefox**<br>*(Firefox, Zen Browser, LibreWolf, Floorp)* | [Firefox Add-ons (AMO) Listing](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/) | [![Available on Firefox Add-ons](https://img.shields.io/badge/Firefox_Add--ons-Get_Add--on-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/) |
 
 #### Option B: Manual Sideload via GitHub Release ZIP
 1. Download the latest release package (`viewgrid-1.0.1-chromium.zip` or `viewgrid-1.0.1-firefox.zip`) and verify its checksum using `SHA256SUMS` from [GitHub Releases](https://github.com/sinansarikaya/viewgrid/releases).
