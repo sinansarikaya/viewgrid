@@ -4,26 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:;" />
-  <title>ViewGrid — Multi-Viewport Responsive Testing in Your Browser</title>
-  <meta name="description" content="A browser extension for Chromium and Firefox that opens phone, tablet, and desktop views side by side with synchronized scrolling, split-diff comparison, and 100% local processing." />
+  <title>ViewGrid — Test Every Breakpoint at Once | Multi-Viewport Responsive Workspace</title>
+  <meta name="description" content="View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Free browser extension for Chrome & Firefox with Figma diffing and zero telemetry." />
   <link rel="canonical" href="https://viewgrid.sinansarikaya.dev/" />
   
   <!-- Hreflang language alternates -->
   <link rel="alternate" hreflang="en" href="https://viewgrid.sinansarikaya.dev/" />
   <link rel="alternate" hreflang="tr" href="https://viewgrid.sinansarikaya.dev/?lang=tr" />
+  <link rel="alternate" hreflang="no" href="https://viewgrid.sinansarikaya.dev/?lang=no" />
   <link rel="alternate" hreflang="x-default" href="https://viewgrid.sinansarikaya.dev/" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://viewgrid.sinansarikaya.dev/" />
-  <meta property="og:title" content="ViewGrid — Multi-Viewport Responsive Testing in Your Browser" />
-  <meta property="og:description" content="A browser extension for Chromium and Firefox that opens phone, tablet, and desktop views side by side with synchronized scrolling, split-diff comparison, and 100% local processing." />
+  <meta property="og:title" content="ViewGrid — Test Every Breakpoint at Once" />
+  <meta property="og:description" content="View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Live on Chrome Web Store & Firefox AMO." />
   <meta property="og:image" content="https://viewgrid.sinansarikaya.dev/icon128.png" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="ViewGrid — Multi-Viewport Responsive Testing in Your Browser" />
-  <meta name="twitter:description" content="A browser extension for Chromium and Firefox that opens phone, tablet, and desktop views side by side with synchronized scrolling, split-diff comparison, and 100% local processing." />
+  <meta name="twitter:title" content="ViewGrid — Test Every Breakpoint at Once" />
+  <meta name="twitter:description" content="View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Live on Chrome Web Store & Firefox AMO." />
   <meta name="twitter:image" content="https://viewgrid.sinansarikaya.dev/icon128.png" />
 
   <!-- JSON-LD Structured Data -->
@@ -32,9 +33,10 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "ViewGrid",
+    "softwareVersion": "1.0.1",
     "operatingSystem": "Browser Extension (Chromium, Firefox)",
     "applicationCategory": "DeveloperApplication",
-    "description": "Multi-viewport responsive testing browser extension with synchronized scrolling, device profiles, and Figma diff overlay.",
+    "description": "Multi-viewport responsive testing workspace for Chrome and Firefox with synchronized scrolling, device presets, and Figma mockup overlay.",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -462,12 +464,52 @@
       margin-left: 4px;
     }
 
-    /* Small Quiet Store Review Pending Line */
+    /* Hero Slogan Kicker Pill */
+    .hero-slogan-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 14px;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    /* Small Quiet Store Review Pending Line (Fallback) */
     .store-pending-note {
       font-size: 0.82rem;
       color: var(--text-muted);
       margin-top: 10px;
       font-style: italic;
+    }
+
+    /* Store Live Status Note */
+    .store-live-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+    .store-badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 999px;
+      padding: 2px 9px;
     }
 
     /* Keyboard Shortcut Badges & Hints */
@@ -2239,11 +2281,14 @@
 
       <div class="container hero-inner">
         <div class="hero-header">
-          <h1 class="hero-title" data-i18n="heroTitle">
+          <div class="hero-slogan-pill" data-i18n="heroSlogan">
             Stop resizing your browser.
+          </div>
+          <h1 class="hero-title" data-i18n="heroTitle">
+            Test every breakpoint at once.
           </h1>
           <p class="hero-sub" data-i18n="heroSub">
-            ViewGrid opens phone, tablet and desktop views side by side in one tab, scrolling together so you never miss a broken breakpoint.
+            View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction.
           </p>
 
           <div class="hero-store-group">
@@ -2289,9 +2334,9 @@
               </a>
             </div>
 
-            <!-- Single quiet review pending note -->
-            <p class="store-pending-note" id="store-pending-line">
-              Firefox live on AMO &bull; Chrome store review in progress
+            <!-- Verified live store badges note -->
+            <p class="store-live-note" id="store-live-line">
+              <span class="store-badge-live">● Live on Chrome Web Store &amp; Firefox AMO</span> &bull; Manifest V3 &bull; 100% Free &amp; Open Source
             </p>
 
             <!-- Global Keyboard Shortcut Banner -->
@@ -3000,23 +3045,23 @@
               <span class="btn-arrow-icon">&rarr;</span>
             </a>
 
-            <p class="store-pending-note" id="install-pending-line">
-              Firefox live on AMO &bull; Chrome store review in progress
+            <p class="store-live-note" id="install-live-line">
+              <span class="store-badge-live">● Version 1.0.1 Live</span> &bull; Official WebExtension Stores &bull; Zero Telemetry
             </p>
           </div>
         </div>
 
-        <!-- Visually quiet manual install section (easy to delete or update) -->
+        <!-- Visually quiet manual install section -->
         <div class="quiet-manual-box">
-          <h5>Install manually (Chromium ZIP)</h5>
-          <p>If you prefer not to wait for store registry approval, you can sideload the extension archive directly:</p>
+          <h5>Install manually or develop locally (Release ZIP)</h5>
+          <p>If you prefer offline installation or loading unpacked developer builds, download the verified archives:</p>
           <ol>
-            <li>Download and unzip <code>viewgrid-1.0.0-chromium.zip</code> from <a href="https://github.com/sinansarikaya/viewgrid/releases" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">GitHub Releases</a>.</li>
-            <li>Open <code>chrome://extensions</code> in your browser and enable Developer Mode.</li>
-            <li>Click <em>"Load unpacked"</em> and select the unzipped directory.</li>
+            <li>Download and unzip <code>viewgrid-1.0.1-chromium.zip</code> (or <code>viewgrid-1.0.1-firefox.zip</code>) from <a href="https://github.com/sinansarikaya/viewgrid/releases" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">GitHub Releases</a>.</li>
+            <li>In Chrome/Brave/Edge: open <code>chrome://extensions</code>, enable Developer Mode, and click <em>"Load unpacked"</em>.</li>
+            <li>In Firefox: open <code>about:debugging#/runtime/this-firefox</code> and click <em>"Load Temporary Add-on…"</em>.</li>
           </ol>
           <p style="margin-top: 8px; font-size: 0.8rem; color: var(--text-faint);">
-            Firefox users: store installation via AMO is the supported route.
+            Direct store installation via Chrome Web Store and Firefox Add-ons provides automatic background updates.
           </p>
         </div>
       </div>
@@ -3187,13 +3232,16 @@
   <script>
     /* -------------------------------------------------------------
        1. STORE STATUS & CONFIGURATION
-       Toggle STORES_PENDING to false when store reviews approve.
+       Both Chrome Web Store and Firefox AMO are approved & live (v1.0.1).
        ------------------------------------------------------------- */
-    const STORES_PENDING = true;
+    const STORES_PENDING = false;
 
     function applyStoreStatus() {
       document.querySelectorAll('.store-pending-note').forEach(line => {
         line.style.display = STORES_PENDING ? 'block' : 'none';
+      });
+      document.querySelectorAll('.store-live-note').forEach(line => {
+        line.style.display = 'inline-flex';
       });
     }
 
@@ -3211,8 +3259,9 @@
         navFaq: "FAQ",
         navPrivacy: "Privacy Policy",
         shortcutNav: "Shortcuts",
-        heroTitle: "Stop resizing your browser.",
-        heroSub: "ViewGrid opens phone, tablet and desktop views side by side in one tab, scrolling together so you never miss a broken breakpoint.",
+        heroSlogan: "Stop resizing your browser.",
+        heroTitle: "Test every breakpoint at once.",
+        heroSub: "View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction.",
         shortcutHero: "Launch instantly on any page &bull; <u>View all shortcuts</u>",
         tourLabel: "Interface tour",
         whyLabel: "Why",
@@ -3338,8 +3387,9 @@
         navFaq: "SSS",
         navPrivacy: "Gizlilik Politikası",
         shortcutNav: "Kısayollar",
-        heroTitle: "Tarayıcınızı çekiştirmeyi bırakın.",
-        heroSub: "ViewGrid; telefon, tablet ve masaüstü görünümlerini tek bir sekmede yan yana açar, eşzamanlı kaydırır ve kırılma noktalarını kaçırmanızı engeller.",
+        heroSlogan: "Tarayıcınızı çekiştirmeyi bırakın.",
+        heroTitle: "Tüm kırılma noktalarını aynı anda test edin.",
+        heroSub: "Telefon, tablet ve masaüstü düzenlerini tek bir sekmede yan yana görüntüleyin; eşzamanlı kaydırma ve etkileşimle kırılma noktası hatalarını kaçırmayın.",
         shortcutHero: "Herhangi bir sayfada anında başlatın &bull; <u>Tüm kısayolları gör</u>",
         tourLabel: "Arayüz turu",
         whyLabel: "Neden",
@@ -3438,8 +3488,9 @@
         navFaq: "FAQ",
         navPrivacy: "Personvern",
         shortcutNav: "Snarveier",
-        heroTitle: "Slutt å endre størrelse på nettleseren.",
-        heroSub: "ViewGrid åpner mobil, nettbrett og desktop side om side i én fane, rullende sammen så du aldri overser en layoutfeil.",
+        heroSlogan: "Slutt å endre størrelse på nettleseren.",
+        heroTitle: "Test alle knekkpunkter samtidig.",
+        heroSub: "Se mobil-, nettbrett- og desktop-oppsett side om side i én nettleserfane, med synkronisert rulling og interaksjon.",
         shortcutHero: "Start umiddelbart på hvilken som helst side &bull; <u>Vis alle snarveier</u>",
         tourLabel: "Grensesnitt-tur",
         whyLabel: "Hvorfor",

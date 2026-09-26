@@ -110,10 +110,10 @@ export function StoreSection() {
         {/* GitHub Releases Manual Install Callout */}
         <div className="release-candidate-box">
           <div className="rc-info">
-            <span className="badge badge-emerald">RELEASE CANDIDATE AVAILABLE</span>
-            <h4>Want to use ViewGrid right now?</h4>
+            <span className="badge badge-emerald">OFFICIAL RELEASE v{siteConfig.product.version} LIVE</span>
+            <h4>Offline package or local development?</h4>
             <p>
-              Download the pre-packaged zip releases directly from our GitHub Releases page and load unpacked in 10 seconds.
+              In addition to one-click installation via official browser stores, you can download verified release packages directly from GitHub.
             </p>
           </div>
           <div className="rc-actions">
@@ -123,10 +123,10 @@ export function StoreSection() {
               rel="noopener noreferrer"
               className="btn btn-outline"
             >
-              Download Release ZIP (v{siteConfig.product.version})
+              GitHub Releases (v{siteConfig.product.version})
             </a>
             <a href="/docs/#install" className="btn btn-primary">
-              Manual Install Guide
+              Manual Sideload Guide
             </a>
           </div>
         </div>

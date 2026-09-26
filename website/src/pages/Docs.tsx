@@ -4,7 +4,7 @@ import { Footer } from '../components/Footer';
 import { siteConfig } from '../data/site.config';
 
 export function Docs() {
-  const { product } = siteConfig;
+  const { product, storeLinks } = siteConfig;
 
   return (
     <div className="site-root">
@@ -61,12 +61,42 @@ export function Docs() {
             <section id="install" className="docs-section">
               <h2>Installation Guide</h2>
               <p>
-                ViewGrid is packaged natively for both Chromium browsers and Mozilla Firefox. You can install via store once published, or load the release candidate zip today:
+                ViewGrid is officially available on both the Chrome Web Store and Firefox Add-ons (AMO). You can install with one click directly from the stores or load verified release packages manually:
               </p>
+
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', margin: '16px 0 24px' }}>
+                <a
+                  href={storeLinks.chrome}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{ textDecoration: 'none' }}
+                >
+                  Add to Chrome (Store)
+                </a>
+                <a
+                  href={storeLinks.firefox}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{ textDecoration: 'none' }}
+                >
+                  Add to Firefox (AMO)
+                </a>
+                <a
+                  href={product.releasesUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline"
+                  style={{ textDecoration: 'none' }}
+                >
+                  GitHub Releases (v{product.version})
+                </a>
+              </div>
 
               <div className="install-tabs-box">
                 <div className="install-block">
-                  <h3>Google Chrome / Brave / Edge / Arc</h3>
+                  <h3>Google Chrome / Brave / Edge / Arc (Manual Sideload)</h3>
                   <ol>
                     <li>Download <code>viewgrid-{product.version}-chromium.zip</code> from <a href={product.releasesUrl} target="_blank" rel="noopener noreferrer">GitHub Releases</a>.</li>
                     <li>Unzip the archive to a local folder on your computer.</li>
@@ -77,7 +107,7 @@ export function Docs() {
                 </div>
 
                 <div className="install-block">
-                  <h3>Mozilla Firefox</h3>
+                  <h3>Mozilla Firefox / Zen Browser (Manual Sideload)</h3>
                   <ol>
                     <li>Download <code>viewgrid-{product.version}-firefox.zip</code> from <a href={product.releasesUrl} target="_blank" rel="noopener noreferrer">GitHub Releases</a>.</li>
                     <li>Navigate to <code>about:debugging#/runtime/this-firefox</code> in Firefox.</li>

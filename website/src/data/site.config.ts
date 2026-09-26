@@ -34,10 +34,10 @@ export interface FaqItem {
 export const siteConfig = {
   product: {
     name: 'ViewGrid',
-    tagline: 'Multi-Viewport Responsive Testing Workspace',
-    subheading: 'Stop constantly resizing your browser. Test phone, tablet, laptop, and desktop viewports side-by-side with synchronized interactions, pixel-level diffing, and zero telemetry.',
-    description: 'ViewGrid is a professional browser extension for Chrome and Firefox that provides a multi-viewport testing workspace. Render multiple real-time responsive viewports simultaneously, synchronize scroll and click interactions, compare breakpoints with split and curtain diff sliders, and automatically unblock X-Frame-Options and CSP headers for sub_frames.',
-    version: '1.0.0',
+    tagline: 'Test every breakpoint at once.',
+    subheading: 'View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Stop resizing your browser.',
+    description: 'ViewGrid is a developer-focused browser extension for Chrome and Firefox that provides a multi-viewport responsive testing workspace. Render phone, tablet, and desktop layouts side-by-side, synchronize scrolling and click interactions, compare breakpoints with split and optical curtain diff sliders, overlay Figma mockups, and automatically unblock X-Frame-Options and CSP headers for sub_frames.',
+    version: '1.0.1',
     canonicalUrl: 'https://viewgrid.sinansarikaya.dev',
     repositoryUrl: 'https://github.com/sinansarikaya/viewgrid',
     issuesUrl: 'https://github.com/sinansarikaya/viewgrid/issues',
@@ -180,7 +180,7 @@ export const siteConfig = {
       id: 'benchmark',
       title: 'Performance & Memory Architecture (<15 MB RAM)',
       tagline: 'Native browser engine execution',
-      description: 'ViewGrid runs directly inside native Chromium & Firefox runtimes, consuming <15 MB RAM without heavy Electron process overhead.',
+      description: 'ViewGrid runs directly inside native Chromium & Firefox runtimes, consuming <15 MB RAM in benchmark test scenarios without heavy desktop process overhead.',
       badge: '<15MB RAM',
       file: '/screenshots/benchmark.png',
     },
@@ -221,7 +221,7 @@ export const siteConfig = {
     },
     {
       question: 'How do I install ViewGrid right now?',
-      answer: 'ViewGrid is currently at the Release Candidate stage. You can download the zip release from our GitHub Releases page and load it as an unpacked extension in Chrome (chrome://extensions) or temporary add-on in Firefox (about:debugging), or install it directly once approved on the Chrome Web Store and Firefox Add-ons.',
+      answer: 'ViewGrid is officially live for Google Chrome and Mozilla Firefox. You can install it directly from the Chrome Web Store or Firefox Add-ons (AMO), or download offline pre-packaged zip releases from our GitHub Releases page.',
     },
   ] as FaqItem[],
 };

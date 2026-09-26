@@ -11,13 +11,11 @@ release/
 scratch/
 .agents/
 
-# AI Rules, Task & Audit Files (GitHub'a kesinlikle gönderilmez)
+# AI Rules & Audit Files (GitHub'a gönderilmez)
 ai-rules.md
 .ai-rules/
 rules/
 AGENTS.md
-TASKS.md
-TASK.md
 *.md.audit
 audits/
 prompts/
