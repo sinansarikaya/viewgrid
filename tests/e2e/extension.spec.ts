@@ -96,6 +96,7 @@ test('scan groups repeated findings, shows evidence and exports a structured rep
   await expect(drawer.locator('article')).not.toHaveCount(0);
   await expect(drawer.locator('code').filter({ hasText: '#intentional' })).toHaveCount(0);
   await drawer.getByRole('button', { name: 'Copy report', exact: true }).click();
+  await expect(page.getByText('Copied', { exact: true })).toBeVisible();
   const download = page.waitForEvent('download');
   await drawer.getByRole('button', { name: 'Export JSON' }).click();
   const file = await download; expect(file.suggestedFilename()).toBe('viewgrid-issues.json');

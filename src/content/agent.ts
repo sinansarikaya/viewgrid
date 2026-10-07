@@ -97,6 +97,9 @@ function initAgent(viewportId: string) {
   let observedUrl = location.href;
   window.setInterval(() => {
     if (location.href === observedUrl) return;
+    // Do not consume a SPA transition while replay suppression is active.
+    // It must still be broadcast on the next tick.
+    if (suppressed()) return;
     observedUrl = location.href;
     if (safeHttpUrl(observedUrl)) emit('nav', { url: observedUrl });
   }, 250);
@@ -196,7 +199,10 @@ function initAgent(viewportId: string) {
   function handleAgentDo(msg: any) {
     if (!msg || typeof msg !== 'object') return;
     const cmd = String(msg.cmd || '');
-    suppress(250);
+    // Appearance/configuration messages on iframe load must not discard the
+    // user's first click or SPA transition. Only commands that move the page
+    // need the replay suppression window.
+    if (['reload', 'hardReload', 'back', 'forward', 'goto', 'scrollToTop', 'highlight'].includes(cmd)) suppress(250);
     if (cmd === 'reload' || cmd === 'hardReload') {
       try { sessionStorage.setItem(reloadKey, '1'); } catch {}
       // Reload without clearing site data or altering the application URL.

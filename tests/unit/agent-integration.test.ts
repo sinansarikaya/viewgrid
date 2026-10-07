@@ -17,6 +17,21 @@ beforeEach(async () => {
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 const apply = (channel: string, seq: number, payload: any) => receiver({ type: 'vg/agent-apply', env: { channel, seq, epoch: 100, sourceViewportId: 'tablet', ts: 0, payload } });
 describe('real content agent', () => {
+  it('does not suppress the first user click after appearance initialization', () => {
+    receiver({ type: 'vg/agent-do', cmd: 'setColorScheme', scheme: 'auto' });
+    document.querySelector('button')!.click();
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ type: 'vg/agent-event', env: expect.objectContaining({ channel: 'click' }) }));
+  });
+  it('retries SPA URL changes after replay suppression expires', () => {
+    vi.advanceTimersByTime(200);
+    apply('input', 1, { selector: '#name', value: 'test' });
+    history.pushState({}, '', '/spa-regression');
+    vi.advanceTimersByTime(50);
+    expect(send.mock.calls.some(([m]) => m.env?.channel === 'nav')).toBe(false);
+    vi.advanceTimersByTime(250);
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ type: 'vg/agent-event', env: expect.objectContaining({ channel: 'nav', payload: { url: location.href } }) }));
+    history.replaceState({}, '', '/');
+  });
   it('applies input through the native setter and dispatches events without rebroadcasting', () => {
     const input = document.querySelector('input')!;
     let observed = '';
