@@ -20,7 +20,7 @@
 
 <br />
 
-[**Official Website**](https://viewgrid.sinansarikaya.dev) • [**Chrome Web Store**](https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef) • [**Firefox Add-ons**](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/) • [**Quick Start**](#-quick-start--installation) • [**Documentation**](#-documentation-map) • [**Contributing**](CONTRIBUTING.md)
+[**Official Website**](https://viewgrid.sinansarikaya.dev) • [**Chrome Web Store**](https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef) • [**Firefox Add-ons**](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/) • [**Video Walkthrough**](#-video-walkthrough) • [**Quick Start**](#-quick-start--installation) • [**Documentation**](#-documentation-map) • [**Contributing**](CONTRIBUTING.md)
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef">
@@ -30,6 +30,24 @@
   <a href="https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/">
     <img src="https://img.shields.io/badge/Firefox_Add--ons-Get_Firefox_Add--on-FF7139?style=for-the-badge&logo=firefoxbrowser&logoColor=white" alt="Install on Firefox" />
   </a>
+</p>
+
+</div>
+
+---
+
+## 🎬 Video Walkthrough
+
+<div align="center">
+
+<a href="promos/viewgrid-promo-en.mp4">
+  <img src="promos/poster-play.jpg" alt="Watch ViewGrid 60s Demo" width="880" />
+</a>
+
+<p align="center">
+  <b>▶️ Watch the 60-Second Walkthrough in Action:</b><br />
+  <a href="promos/viewgrid-promo-en.mp4"><b>English Walkthrough Video (55s)</b></a> &nbsp;•&nbsp; 
+  <a href="promos/viewgrid-promo-tr.mp4"><b>Türkçe Tanıtım Videosu (64s)</b></a>
 </p>
 
 </div>
@@ -214,6 +232,7 @@ pnpm run package:release
 
 | Document | Purpose |
 | :--- | :--- |
+| [`promos/README.md`](promos/README.md) | Official 1080p promo videos & walkthrough assets (EN & TR) |
 | [`docs/STORE_LISTINGS.md`](docs/STORE_LISTINGS.md) | Official store listing copy for Chrome Web Store and Firefox AMO |
 | [`docs/STORE_SCREENSHOT_PLAN.md`](docs/STORE_SCREENSHOT_PLAN.md) | Screenshot strategy, captions, and specifications for store assets |
 | [`docs/GITHUB_METADATA.md`](docs/GITHUB_METADATA.md) | GitHub repository About description, website URL, and recommended topics |
