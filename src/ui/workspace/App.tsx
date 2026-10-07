@@ -6,26 +6,24 @@ import { DevicePicker } from './DevicePicker';
 import { IssuesDrawer } from './IssuesDrawer';
 import {
   captureFileName,
-  cropToBlob,
   downloadBlob,
   fullCaptureBlob,
   grantHostAccess,
   injectAgents,
-  rectOf,
-  requestScan,
-  requestCapture,
   sendAgentCmd,
 } from './bridge';
+import { startScan } from './scan';
+import { groupIssues } from '../../core/issues/report';
+import { captureViewport, isCapturing } from './capture';
 import { LoopGuard } from '../../core/sync/protocol';
 import { effectiveSize, gridColumns, calculateSnapGuides, type GuideLine, type Bounds } from '../../core/workspace/layout';
-import { b } from '../../platform/browser';
 import type { LayoutMode, AlignItemsMode, JustifyContentMode } from '../../core/types';
 import { ZOOM_PRESETS } from '../../core/types';
 import { getTranslation, type Language } from './i18n';
 import { Toast } from './Toast';
 import { SettingsModal } from './SettingsModal';
 import { BenchmarkModal } from './BenchmarkModal';
-import { workspaceHello } from './bridge';
+import { workspaceHello, workspaceMessage } from './bridge';
 
 function matchesShortcut(e: KeyboardEvent, comboStr?: string): boolean {
   if (!comboStr) return false;
@@ -110,147 +108,31 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     else contentRefs.current.delete(id);
   }, []);
 
-  const doScan = useCallback(() => {
-    useStore.getState().clearIssues();
-    useStore.getState().setScanning(true);
-    useStore.getState().setDrawerOpen(true);
-    void requestScan();
-    window.setTimeout(() => useStore.getState().setScanning(false), 2500);
-  }, []);
-
+  const doScan = useCallback(() => { void startScan(); }, []);
   const shotOne = useCallback(async (viewportId: string) => {
-    const sState = useStore.getState();
-    const tr = getTranslation(sState.language);
-    const v = sState.model.viewports.find((x) => x.id === viewportId);
-    const el = contentRefs.current.get(viewportId);
-    if (!v || !el) return;
-    const canvas = canvasRef.current;
+    const state = useStore.getState(), tr = getTranslation(state.language);
+    const v = state.model.viewports.find(v => v.id === viewportId), el = contentRefs.current.get(viewportId);
+    if (!v || !el || isCapturing()) return;
     try {
-      userInteracted.current = true;
-      const cardEl = (el.closest(`.${s.card}`) as HTMLElement) || el;
-
-      let blob: Blob | null = null;
-      let lastErr: unknown = null;
-
-      const strategies = [
-        () => {
-          if (canvas) {
-            const canvasRect = canvas.getBoundingClientRect();
-            const cardRect = cardEl.getBoundingClientRect();
-            const targetTop = canvas.scrollTop + (cardRect.top - canvasRect.top) - (canvasRect.height - cardRect.height) / 2;
-            const targetLeft = canvas.scrollLeft + (cardRect.left - canvasRect.left) - (canvasRect.width - cardRect.width) / 2;
-            canvas.scrollTo({ top: Math.max(0, Math.round(targetTop)), left: Math.max(0, Math.round(targetLeft)), behavior: 'instant' as any });
-          }
-          cardEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
-        },
-        () => {
-          cardEl.scrollIntoView({ block: 'start', inline: 'start', behavior: 'instant' as any });
-        },
-      ];
-
-      for (const strat of strategies) {
-        try {
-          strat();
-          await new Promise((r) => setTimeout(r, 220));
-          const dataUrl = await requestCapture('png');
-          blob = await cropToBlob(dataUrl, rectOf(el), 'png');
-          if (blob) break;
-        } catch (err) {
-          lastErr = err;
-        }
-      }
-
-      if (!blob) throw lastErr || new Error('capture failed');
-
-      const p = sState.profileOf(v);
+      const blob = await captureViewport(el), p = state.profileOf(v);
       const { width, height } = effectiveSize(p, v.orientation);
       downloadBlob(blob, captureFileName({ device: p.name, w: width, h: height, ext: 'png' }));
-      sState.showToast(tr.screenshotSaved);
-    } catch (e) {
-      sState.showToast(`${tr.screenshotFailed}: ${(e as Error).message}`);
-    }
+      state.showToast(tr.screenshotSaved);
+    } catch (e) { state.showToast(`${tr.screenshotFailed}: ${(e as Error).message}`); }
   }, []);
-
   const shotAll = useCallback(async () => {
-    const sState = useStore.getState();
-    const tr = getTranslation(sState.language);
-    const canvas = canvasRef.current;
-    const origTop = canvas?.scrollTop ?? 0;
-    const origLeft = canvas?.scrollLeft ?? 0;
-
-    userInteracted.current = true;
-
+    if (isCapturing()) return;
+    const state = useStore.getState(), tr = getTranslation(state.language);
+    let completed = 0;
     try {
-      let n = 0;
-      const vps = sState.visibleViewports();
-      for (let i = 0; i < vps.length; i++) {
-        const v = vps[i];
-        if (!v) continue;
-        const el = contentRefs.current.get(v.id);
-        if (!el) continue;
-        const p = sState.profileOf(v);
+      for (const v of state.visibleViewports().filter(v => !v.minimized)) {
+        const el = contentRefs.current.get(v.id); if (!el) continue;
+        const blob = await captureViewport(el), p = state.profileOf(v);
         const { width, height } = effectiveSize(p, v.orientation);
-        const cardEl = (el.closest(`.${s.card}`) as HTMLElement) || el;
-
-        let blob: Blob | null = null;
-        let lastErr: unknown = null;
-
-        const strategies = [
-          () => {
-            if (canvas) {
-              const canvasRect = canvas.getBoundingClientRect();
-              const cardRect = cardEl.getBoundingClientRect();
-              const targetTop = canvas.scrollTop + (cardRect.top - canvasRect.top) - (canvasRect.height - cardRect.height) / 2;
-              const targetLeft = canvas.scrollLeft + (cardRect.left - canvasRect.left) - (canvasRect.width - cardRect.width) / 2;
-              canvas.scrollTo({ top: Math.max(0, Math.round(targetTop)), left: Math.max(0, Math.round(targetLeft)), behavior: 'instant' as any });
-            }
-            cardEl.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as any });
-          },
-          () => {
-            cardEl.scrollIntoView({ block: 'start', inline: 'start', behavior: 'instant' as any });
-          },
-        ];
-
-        for (const strat of strategies) {
-          try {
-            strat();
-            await new Promise((r) => setTimeout(r, 220));
-            const dataUrl = await requestCapture('png');
-            blob = await cropToBlob(dataUrl, rectOf(el), 'png');
-            if (blob) break;
-          } catch (err) {
-            lastErr = err;
-          }
-        }
-
-        if (blob) {
-          downloadBlob(
-            blob,
-            captureFileName({
-              device: p.name,
-              w: width,
-              h: height,
-              ext: 'png',
-              ts: Date.now(),
-              index: i,
-            }),
-          );
-          n++;
-          await new Promise((r) => setTimeout(r, 200));
-        } else {
-          console.error(`Failed capturing ${p.name} (viewport ${v.id}) after retries:`, lastErr);
-        }
+        downloadBlob(blob, captureFileName({ device: p.name, w: width, h: height, ext: 'png', index: completed++ }));
       }
-
-      if (canvas) {
-        canvas.scrollTop = origTop;
-        canvas.scrollLeft = origLeft;
-      }
-
-      sState.showToast(`${n} ${tr.allScreenshotsSaved}`);
-    } catch (e) {
-      sState.showToast(`${tr.screenshotFailed}: ${(e as Error).message}`);
-    }
+      state.showToast(`${completed} ${tr.allScreenshotsSaved}`);
+    } catch (e) { state.showToast(`${tr.screenshotFailed} (${completed} saved): ${(e as Error).message}`); }
   }, []);
 
   const shotWorkspace = useCallback(async () => {
@@ -266,24 +148,8 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
   }, []);
 
   const handleHardReload = useCallback(async () => {
-    const sState = useStore.getState();
-    const currentUrl = sState.model.url;
-    try {
-      await b.runtime?.sendMessage?.({ type: 'vg/clear-browser-cache', url: currentUrl });
-    } catch {}
-    sendAgentCmd('all', 'hardReload');
-    sendAgentCmd('all', 'clearStorage');
-    if (currentUrl) {
-      try {
-        const u = new URL(currentUrl);
-        u.searchParams.set('_vg_nocache', Date.now().toString());
-        sState.applyUrl(u.href);
-      } catch {
-        sState.applyUrl(currentUrl);
-      }
-    }
-    const tr = getTranslation(sState.language);
-    sState.showToast(tr.cacheBypassedToast);
+    await useStore.getState().persist();
+    await workspaceMessage({ type: 'vg/hard-reload' });
   }, []);
 
   // Ping background to register workspace tabId reliably
@@ -294,6 +160,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
   // —— keyboard map (docs/UX.md §6 MVP subset) ——
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (isCapturing()) return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const sState = useStore.getState();
@@ -573,7 +440,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         </details>
         <div className={s.sep} />
         <button onClick={doScan} title={t.issues}>
-          🔍 {st.issues.length > 0 ? <span className={s.badge + ' ' + s.warn}>{st.issues.length}</span> : t.issues}
+          🔍 {groupIssues(st.issues).length > 0 ? <span className={s.badge + ' ' + s.warn}>{groupIssues(st.issues).length}</span> : t.issues}
         </button>
         <button onClick={() => st.setDrawerOpen(!st.drawerOpen)}>{t.panel}</button>
         <button onClick={() => void shotAll()} title={t.shotAll}>📷</button>
@@ -635,7 +502,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         </button>
         <button
           onClick={() => st.setBenchmarkOpen(true)}
-          title={st.language === 'tr' ? 'Mimari & Bellek Benchmark (<15 MB RAM)' : 'Architecture & Memory Benchmark (<15 MB RAM)'}
+          title={st.language === 'tr' ? 'Çalışma biçimi ve sınırlar' : 'Runtime and limitations'}
           style={{
             background: 'rgba(16, 185, 129, 0.12)',
             border: '1px solid rgba(16, 185, 129, 0.4)',
@@ -645,7 +512,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
             padding: '2px 8px',
           }}
         >
-          ⚡ &lt;15MB RAM
+          ⚡ Local
         </button>
         <button onClick={st.toggleTheme} title={t.theme}>{st.model.theme === 'dark' ? '☀' : '◐'}</button>
 
@@ -870,7 +737,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         <span>{visible.length} {t.viewports}</span>
         <span>{t.layout}: {st.model.layout === 'grid' ? t.layoutGrid : st.model.layout === 'row' ? t.layoutRow : t.layoutCol}</span>
         <span>{t.zoomPresets}: {ZOOM_PRESETS.map((z) => `${z * 100}%`).join(' / ')}</span>
-        <span>{t.issues}: {st.issues.length}</span>
+        <span>{t.issues}: {groupIssues(st.issues).length}</span>
         <span>{st.granted ? t.siteAccessGranted : t.siteAccessLimited}</span>
         <span>local-only ●</span>
       </div>

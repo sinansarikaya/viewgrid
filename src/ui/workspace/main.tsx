@@ -4,7 +4,7 @@ import '../global.css';
 import { App } from './App';
 import { useStore } from './store';
 import { listenAgents, workspaceHello, injectAgents, sendSyncApply } from './bridge';
-import { b } from '../../platform/browser';
+import { acceptScanResult } from './scan';
 import type { SyncEnvelope } from '../../core/types';
 import { LoopGuard } from '../../core/sync/protocol';
 
@@ -12,12 +12,6 @@ const hub = new LoopGuard();
 
 async function boot() {
   await useStore.getState().hydrate();
-  const initialUrl = useStore.getState().model.url;
-  if (initialUrl && initialUrl !== 'about:blank') {
-    try {
-      await b.runtime.sendMessage({ type: 'vg/prepare-url', url: initialUrl });
-    } catch {}
-  }
   try {
     await workspaceHello();
   } catch (err) {
@@ -26,15 +20,12 @@ async function boot() {
   listenAgents({
     onEvent: (env: SyncEnvelope) => {
       const s = useStore.getState();
-      if (!s.model.sync[env.channel]) return;
+      if (!s.model.sync[env.channel] || !s.model.viewports.some(v => v.id === env.sourceViewportId)) return;
       // hub-side accept (epoch/seq fencing) — also updates lastSeq
       if (!hub.accept(env)) return;
       void sendSyncApply(env);
     },
-    onScanResult: (viewportId, issues) => {
-      useStore.getState().mergeScanResult(viewportId, issues);
-      useStore.getState().setScanning(false);
-    },
+    onScanResult: acceptScanResult,
   });
   // sync toggles reset the epoch to fence stale echoes
   useStore.subscribe((s, prev) => {

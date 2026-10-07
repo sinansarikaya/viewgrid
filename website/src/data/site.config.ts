@@ -81,7 +81,7 @@ export const siteConfig = {
       id: 'framing-engine',
       title: 'Smart Header Relaxer',
       tagline: 'Test sites blocked by X-Frame-Options & CSP',
-      description: 'Built-in DeclarativeNetRequest (Chromium) and webRequest (Firefox) engine strips XFO and rewrites frame-ancestors solely for workspace sub_frames. Your normal browsing tabs stay 100% protected.',
+      description: 'Framing exceptions apply only to direct workspace previews. Chromium removes preview CSP headers; Firefox preserves other CSP directives. Normal tabs and nested frames retain their protections.',
       icon: '🛡️',
       highlight: 'Chromium DNR & Firefox webRequest',
     },
@@ -178,10 +178,10 @@ export const siteConfig = {
     },
     {
       id: 'benchmark',
-      title: 'Performance & Memory Architecture (<15 MB RAM)',
+      title: 'Native browser runtime',
       tagline: 'Native browser engine execution',
-      description: 'ViewGrid runs directly inside native Chromium & Firefox runtimes, consuming <15 MB RAM in benchmark test scenarios without heavy desktop process overhead.',
-      badge: '<15MB RAM',
+      description: 'ViewGrid runs inside Chromium and Firefox. Memory and latency depend on page content, viewport count and hardware.',
+      badge: 'Local runtime',
       file: '/screenshots/benchmark.png',
     },
     {

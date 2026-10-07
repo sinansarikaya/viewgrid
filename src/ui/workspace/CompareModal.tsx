@@ -236,9 +236,9 @@ export function CompareModal() {
                 type="button"
                 className={`${s.modeBtn} ${mode === 'figma' ? s.modeBtnActive : ''}`}
                 onClick={() => setMode('figma')}
-                title="Figma Mockup Pixel-Diff"
+                title="Compare an exported design image"
               >
-                🎨 Figma Diff
+                🎨 Design Overlay
               </button>
             </div>
 
@@ -306,7 +306,7 @@ export function CompareModal() {
             <div className={s.figmaStage}>
               <div className={s.figmaControlsBar}>
                 <div className={s.figmaControlItem}>
-                  <strong style={{ color: 'var(--accent)' }}>Figma Mockup:</strong>
+                  <strong style={{ color: 'var(--accent)' }}>Design image:</strong>
                   <input
                     type="file"
                     accept="image/*"

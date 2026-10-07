@@ -1,8 +1,8 @@
 {
   "name": "viewgrid",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
-  "description": "ViewGrid — multi-viewport responsive testing workspace for Firefox (WebExtension)",
+  "description": "ViewGrid \u2014 multi-viewport responsive testing workspace for Firefox (WebExtension)",
   "type": "module",
   "scripts": {
     "gen:icons": "node scripts/gen-icons.mjs",
@@ -21,7 +21,8 @@
     "build:website": "vite build --config website/vite.config.ts",
     "rules:check": "eslint . && tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -30,11 +31,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@playwright/test": "1.58.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "esbuild": "^0.24.0",
     "eslint": "^9.15.0",
+    "jsdom": "26.1.0",
     "prettier": "^3.3.3",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.14.0",

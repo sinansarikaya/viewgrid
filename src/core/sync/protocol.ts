@@ -10,7 +10,8 @@ import type { SyncChannel, SyncEnvelope } from '../types';
  * honored as `env.epoch >= lastSeenEpoch` so reset never resurrects older sessions.
  */
 export class LoopGuard {
-  private epoch = 1;
+  constructor(private epoch = 1) {}
+  private sourceEpoch = new Map<string, number>();
   private lastSeq = new Map<string, number>();
   private applyingDepth = 0;
   private seq = 0;
@@ -29,10 +30,17 @@ export class LoopGuard {
   accept(env: SyncEnvelope, selfViewportId?: string): boolean {
     if (!env || typeof env.channel !== 'string') return false;
     if (selfViewportId && env.sourceViewportId === selfViewportId) return false;
-    if (env.epoch < 1) return false;
+    if (!Number.isFinite(env.epoch) || env.epoch < 1 || !Number.isSafeInteger(env.seq) || env.seq < 1) return false;
+    const lastEpoch = this.sourceEpoch.get(env.sourceViewportId) ?? 0;
+    if (env.epoch < lastEpoch) return false;
+    if (env.epoch > lastEpoch) {
+      this.sourceEpoch.set(env.sourceViewportId, env.epoch);
+      for (const key of this.lastSeq.keys()) {
+        if (key.startsWith(`${env.sourceViewportId}:`)) this.lastSeq.delete(key);
+      }
+    }
     const key = `${env.sourceViewportId}:${env.channel}`;
-    const last = this.lastSeq.get(key) ?? 0;
-    if (env.seq <= last) return false;
+    if (env.seq <= (this.lastSeq.get(key) ?? 0)) return false;
     this.lastSeq.set(key, env.seq);
     return true;
   }

@@ -6,7 +6,6 @@ import { ZOOM_PRESETS } from '../../core/types';
 import { clampZoom, displayedSize, effectiveSize } from '../../core/workspace/layout';
 import { DeviceFrame } from './DeviceFrame';
 import { getTranslation } from './i18n';
-import { b } from '../../platform/browser';
 
 import { getDeviceCategoryIcon } from './utils';
 import { sendAgentCmd } from './bridge';
@@ -55,14 +54,6 @@ export function ViewportCard({
     active: false,
     visible: false,
   });
-
-  useEffect(() => {
-    b.runtime?.sendMessage?.({
-      type: 'vg/set-device-config',
-      viewportId: vp.id,
-      userAgent: profile.userAgent,
-    }).catch(() => {});
-  }, [vp.id, profile.userAgent]);
 
   useEffect(() => {
     onRegister(vp.id, contentRef.current);

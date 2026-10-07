@@ -39,6 +39,11 @@ export interface StoreState {
   focusMode: boolean;
   issues: Issue[];
   scanning: boolean;
+  scanId: string | null;
+  scanPending: string[];
+  scanFailed: string[];
+  scanTruncated: string[];
+  scannedAt: number | null;
   pickerOpen: boolean;
   drawerOpen: boolean;
   toast: string | null;
@@ -184,6 +189,7 @@ export const useStore = create<StoreState>((set, get) => ({
   focusMode: false,
   issues: [],
   scanning: false,
+  scanId: null, scanPending: [], scanFailed: [], scanTruncated: [], scannedAt: null,
   pickerOpen: false,
   drawerOpen: false,
   compareOpen: false,
@@ -350,16 +356,13 @@ export const useStore = create<StoreState>((set, get) => ({
 
   applyUrl(u) {
     const url = normalizeUrl(u);
-    if (url && url !== 'about:blank') {
-      b.runtime?.sendMessage?.({ type: 'vg/prepare-url', url }).catch(() => {});
-    }
     set((s) => ({
       model: {
         ...s.model,
         url,
         viewports: s.model.viewports.map((v) => ({ ...v, url })),
       },
-      urlDraft: url,
+      urlDraft: url, issues: [], scanId: null, scanning: false, scannedAt: null,
     }));
     schedulePersist(get);
   },
@@ -407,7 +410,7 @@ export const useStore = create<StoreState>((set, get) => ({
         url: get().model.url,
       };
     });
-    set((s) => ({ model: { ...s.model, viewports } }));
+    set((s) => ({ model: { ...s.model, viewports }, issues: [], scanId: null, scannedAt: null }));
     schedulePersist(get);
   },
 
@@ -421,6 +424,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set((s) => ({
       model: { ...s.model, viewports: s.model.viewports.filter((v) => v.id !== id) },
       focusedId: s.focusedId === id ? null : s.focusedId,
+      issues: s.issues.filter(i => i.viewportId !== id),
     }));
     schedulePersist(get);
   },
@@ -675,3 +679,10 @@ export function normalizeUrl(raw: string): string {
 }
 
 export { effectiveSize, swapOrientation, DEFAULT_SYNC, MAX_VIEWPORTS };
+
+// Measurements describe a particular set of pages and dimensions, never a later layout.
+useStore.subscribe((state, previous) => {
+  if (state.model.viewports !== previous.model.viewports && (state.issues.length || state.scanId)) {
+    useStore.setState({ issues: [], scanId: null, scanning: false, scanPending: [], scanFailed: [], scanTruncated: [], scannedAt: null });
+  }
+});

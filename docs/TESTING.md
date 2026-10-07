@@ -1,3 +1,15 @@
+# Current automated coverage (1.0.2)
+
+`pnpm test` runs production core and DOM integration tests. `pnpm run test:e2e` loads the Chromium build in a real Chromium browser against a local fixture. CI runs both before packaging; the tagged release workflow runs the same gates.
+
+The E2E suite covers loading and orientation, normal-tab framing isolation, sync after reload, nav-only and SPA navigation, grouped issue export, storage-preserving hard reload and full viewport PNG dimensions. Firefox manifest validation is automated. Real Firefox/ESR and Windows/macOS smoke testing are still required before store submission.
+
+The older smoke scripts are retired in favor of assertion-based Playwright tests. A success log without an assertion is not verification.
+
+The historical strategy below is a roadmap, not a claim that every planned test or feature exists.
+
+---
+
 # Testing Strategy & Definition of Done — ViewGrid
 
 Goal: every feature is **verifiably** done — not “UI works”. This doc is the contract for

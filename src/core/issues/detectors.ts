@@ -9,7 +9,7 @@ export type OmitViewport = Omit<Issue, 'viewportId'>;
 let issueSeq = 0;
 function mk(rule: string, severity: IssueSeverity, message: string, e?: MeasuredElement, data?: Record<string, unknown>): OmitViewport {
   issueSeq = (issueSeq + 1) % 1e9;
-  return { id: `iss_${issueSeq}`, rule, severity, message, selector: e?.selector, data: { ...data, tag: e?.tag } };
+  return { id: `iss_${issueSeq}`, rule, severity, message, selector: e?.selector, data: { ...data, tag: e?.tag, rect: e?.rect, text: e?.text, heuristic: true } };
 }
 
 export function detectHorizontalOverflow(m: PageMetrics): OmitViewport[] {
@@ -33,6 +33,7 @@ export function detectTextClipping(m: PageMetrics): OmitViewport[] {
   const out: OmitViewport[] = [];
   for (const e of m.elements) {
     if (
+      !e.intentionallyClipped &&
       e.text &&
       e.scrollWidth !== undefined &&
       e.clientWidth !== undefined &&
@@ -46,43 +47,50 @@ export function detectTextClipping(m: PageMetrics): OmitViewport[] {
       }));
     }
   }
-  return out.slice(0, 12);
+  return out;
 }
 
 export function detectOutOfViewport(m: PageMetrics): OmitViewport[] {
   const out: OmitViewport[] = [];
   for (const e of m.elements) {
-    if (!e.isInteractive || e.rect.width <= 0) continue;
+    if (!e.isInteractive || e.intentionallyClipped || e.rect.width <= 0) continue;
     if (e.rect.x + e.rect.width > m.innerWidth + 1 || e.rect.x < -1) {
       out.push(mk('out-of-viewport', 'major', `<${e.tag}> extends outside viewport`, e, { rect: e.rect }));
     }
   }
-  return out.slice(0, 12);
+  return out;
 }
 
 export function detectSmallTapTargets(m: PageMetrics): OmitViewport[] {
   const out: OmitViewport[] = [];
+  if (m.checkTapTargets === false) return out;
   for (const e of m.elements) {
-    if (!e.isInteractive || e.rect.width <= 0 || e.rect.height <= 0) continue;
+    if (!e.isInteractive || e.inlineTextLink || e.intentionallyClipped || e.rect.width <= 0 || e.rect.height <= 0) continue;
     const min = Math.min(e.rect.width, e.rect.height);
-    if (min > 0 && min < 24) {
+    if (min > 0 && min < 44) {
       out.push(
-        mk('small-tap-target', 'minor', `Tap target ${Math.round(e.rect.width)}×${Math.round(e.rect.height)}px (< 24px)`, e, {
+        mk('small-tap-target', 'minor', `Tap target ${Math.round(e.rect.width)}×${Math.round(e.rect.height)}px (< 44px recommendation)`, e, {
           rect: e.rect,
         }),
       );
     }
   }
-  return out.slice(0, 12);
+  return out;
 }
 
 export function runCoreDetectors(m: PageMetrics): OmitViewport[] {
-  return [
+  const issues = [
     ...detectHorizontalOverflow(m),
     ...detectTextClipping(m),
     ...detectOutOfViewport(m),
     ...detectSmallTapTargets(m),
   ];
+  const seen = new Set<string>();
+  return issues.filter(i => {
+    const key = `${i.rule}:${i.selector || 'document'}`;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
 }
 
 export function severityRank(s: IssueSeverity): number {

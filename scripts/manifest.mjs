@@ -7,7 +7,7 @@ export function buildManifest(target, iconFiles) {
   const base = {
     manifest_version: 3,
     name: 'ViewGrid — Responsive Viewer',
-    version: '1.0.1',
+    version: '1.0.2',
     description:
       'Multi-viewport responsive web design & layout testing workspace with side-by-side device previews and synchronized scrolling.',
     icons: iconFiles,
@@ -19,12 +19,6 @@ export function buildManifest(target, iconFiles) {
         run_at: 'document_start',
         all_frames: true,
         match_about_blank: true,
-      },
-    ],
-    web_accessible_resources: [
-      {
-        resources: ['world-inject.js'],
-        matches: ['<all_urls>'],
       },
     ],
     action: {
@@ -57,8 +51,6 @@ export function buildManifest(target, iconFiles) {
         'webRequestBlocking',
         'declarativeNetRequest',
         'declarativeNetRequestWithHostAccess',
-        'browsingData',
-        'cookies',
       ],
       browser_specific_settings: {
         gecko: {
@@ -76,17 +68,6 @@ export function buildManifest(target, iconFiles) {
   // Chromium (Chrome Web Store / Edge Add-ons)
   return {
     ...base,
-    content_scripts: [
-      ...base.content_scripts,
-      {
-        matches: ['<all_urls>'],
-        js: ['world-inject.js'],
-        run_at: 'document_start',
-        all_frames: true,
-        match_about_blank: true,
-        world: 'MAIN',
-      },
-    ],
     permissions: [
       'storage',
       'tabs',
@@ -96,8 +77,6 @@ export function buildManifest(target, iconFiles) {
       'contextMenus',
       'declarativeNetRequest',
       'declarativeNetRequestWithHostAccess',
-      'browsingData',
-      'cookies',
     ],
     background: { service_worker: 'background.js' },
   };

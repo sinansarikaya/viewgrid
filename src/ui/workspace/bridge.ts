@@ -9,25 +9,15 @@ import type { SyncEnvelope, Issue } from '../../core/types';
 import { cropRectInImage, imageScale, captureFileName } from '../../core/capture/crop';
 import type { Rect } from '../../core/types';
 
+let workspaceTabId: number | undefined;
 export async function workspaceHello() {
-  let tabId: number | undefined;
-  try {
-    const tab = await (b.tabs as any)?.getCurrent?.();
-    if (tab?.id && typeof tab.id === 'number') {
-      tabId = tab.id;
-    } else {
-      const allTabs = await b.tabs.query({}).catch(() => []);
-      const myUrl = window.location.href.split('#')[0];
-      const match = allTabs?.find((t: any) => t.url && (t.url === myUrl || t.url.includes('/workspace.html')));
-      if (match?.id) {
-        tabId = match.id;
-      } else {
-        const active = await b.tabs.query({ active: true, currentWindow: true }).catch(() => []);
-        if (active?.[0]?.id) tabId = active[0].id;
-      }
-    }
-  } catch {}
-  return b.runtime.sendMessage({ type: 'vg/workspace-hello', tabId });
+  const tab = await b.tabs.getCurrent();
+  workspaceTabId = tab?.id;
+  if (workspaceTabId === undefined) throw new Error('Workspace tab is unavailable');
+  return workspaceMessage({ type: 'vg/workspace-hello' });
+}
+export function workspaceMessage(message: Record<string, unknown>) {
+  return b.runtime.sendMessage({ ...message, tabId: workspaceTabId });
 }
 
 export async function injectAgents() {
@@ -36,19 +26,19 @@ export async function injectAgents() {
 }
 
 export function sendSyncApply(env: SyncEnvelope) {
-  return b.runtime.sendMessage({ type: 'vg/sync-apply', env, excludeViewportId: env.sourceViewportId });
+  return workspaceMessage({ type: 'vg/sync-apply', env, excludeViewportId: env.sourceViewportId });
 }
 
 export function sendAgentCmd(target: string[] | 'all', cmd: string, url?: string, extra?: Record<string, unknown>) {
-  return b.runtime.sendMessage({ type: 'vg/agent-cmd', target, cmd, url, ...extra });
+  return workspaceMessage({ type: 'vg/agent-cmd', target, cmd, url, ...extra });
 }
 
-export function requestScan() {
-  return b.runtime.sendMessage({ type: 'vg/scan-run' });
+export function requestScan(scanId: string, target: string[], touchViewportIds: string[]) {
+  return workspaceMessage({ type: 'vg/scan-run', scanId, target, touchViewportIds }) as Promise<{ ok: boolean; reached?: string[] }>;
 }
 
 export async function requestCapture(format: 'png' | 'jpeg' = 'png', quality = 92): Promise<string> {
-  const res = (await b.runtime.sendMessage({ type: 'vg/capture', format, quality })) as {
+  const res = (await workspaceMessage({ type: 'vg/capture', format, quality })) as {
     ok: boolean;
     dataUrl?: string;
     error?: string;
@@ -59,11 +49,12 @@ export async function requestCapture(format: 'png' | 'jpeg' = 'png', quality = 9
 
 export function listenAgents(handlers: {
   onEvent: (env: SyncEnvelope) => void;
-  onScanResult: (viewportId: string, issues: Omit<Issue, 'viewportId'>[]) => void;
+  onScanResult: (viewportId: string, issues: Omit<Issue, 'viewportId'>[], scanId: string, truncated: boolean) => void;
 }) {
-  b.runtime.onMessage.addListener((msg: any) => {
+  b.runtime.onMessage.addListener((msg: any, sender: any) => {
+    if (sender.tab?.id !== workspaceTabId || !(sender.frameId > 0)) return;
     if (msg?.type === 'vg/agent-event' && msg.env) handlers.onEvent(msg.env);
-    if (msg?.type === 'vg/scan-result') handlers.onScanResult(String(msg.viewportId), msg.issues ?? []);
+    if (msg?.type === 'vg/scan-result') handlers.onScanResult(String(msg.viewportId), msg.issues ?? [], msg.scanId, !!msg.truncated);
   });
 }
 
@@ -101,6 +92,8 @@ export async function cropToBlob(dataUrl: string, cssRect: Rect, format: 'png' |
   const scale = imageScale(img.naturalWidth, window.innerWidth);
   const crop = cropRectInImage(img.naturalWidth, img.naturalHeight, cssRect, scale);
   if (!crop) throw new Error('viewport is not in the visible capture area');
+  const expectedW = Math.round(cssRect.width * scale), expectedH = Math.round(cssRect.height * scale);
+  if (Math.abs(crop.width - expectedW) > 1 || Math.abs(crop.height - expectedH) > 1) throw new Error('Capture is clipped. Fit the viewport on screen and retry.');
   const canvas = document.createElement('canvas');
   canvas.width = crop.width;
   canvas.height = crop.height;
@@ -136,9 +129,8 @@ export function downloadBlob(blob: Blob, filename: string) {
   if (b.downloads?.download) {
     b.downloads
       .download({ url, filename, saveAs: false })
-      .catch(() => {
-        triggerDomDownload(url, filename);
-      });
+      .catch(() => { triggerDomDownload(url, filename); })
+      .finally(() => setTimeout(() => URL.revokeObjectURL(url), 60000));
   } else {
     triggerDomDownload(url, filename);
   }

@@ -121,7 +121,7 @@ try {
 
 ignored_dirs = {
     'node_modules', 'dist', 'release', '.git', '.npm', '.config',
-    '.ai-rules', 'audits', '.turbo', '.cache'
+    '.ai-rules', 'audits', 'audit', 'test-results', 'playwright-report', '.turbo', '.cache'
 }
 ignored_exts = {'.DS_Store'}
 

@@ -1,0 +1,12 @@
+.drawer { position: fixed; top: 82px; right: 0; bottom: 26px; width: min(440px, 92vw); z-index: 60; display:flex; flex-direction:column; background:var(--panel, #0f172a); color:var(--text, #e2e8f0); border-left:1px solid var(--border, #334155); box-shadow:-12px 0 32px #0004; font-size:12px; }
+.header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 8px; font-size:15px; }
+.summary { padding:0 16px; font-size:14px; }.summary b { font-size:22px; }.summary span { color:#94a3b8; }
+.note { color:#94a3b8; line-height:1.5; margin:8px 16px; }
+.actions { display:flex; flex-wrap:wrap; gap:6px; padding:8px 0; }.drawer > .actions { padding:8px 16px; }
+.drawer button, .drawer select, .drawer input { border:1px solid var(--border, #334155); color:inherit; background:var(--bg, #111c30); border-radius:6px; padding:7px 9px; font-size:11px; }
+.drawer button { cursor:pointer; }.drawer button:hover { border-color:#38bdf8; }.drawer button:disabled { opacity:.45; cursor:default; }
+.filters { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:0 16px 12px; }.filters input { grid-column:1/-1; min-width:0; }.filters select { min-width:0; }
+.body { overflow:auto; padding:0 16px 16px; flex:1; }.card { padding:12px; margin:0 0 10px; border:1px solid var(--border, #334155); border-radius:10px; line-height:1.5; }.card p { margin:8px 0; }
+.rule { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }.rule span { border-radius:12px; padding:2px 7px; background:#fbbf2420; color:#fbbf24; }.rule span[data-severity=major] { color:#fb923c; background:#fb923c20; }.rule span[data-severity=critical] { color:#f87171; background:#f8717120; }
+.selector { display:block; overflow-wrap:anywhere; padding:6px 8px; border-radius:5px; background:#0002; color:#7dd3fc; }.devices { display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin:9px 0; }.devices button { font-size:10px; padding:4px 6px; }
+.advice { color:#94a3b8; } .card summary { cursor:pointer; color:#7dd3fc; } .card pre { font-size:10px; white-space:pre-wrap; overflow-wrap:anywhere; } .warning { border-left:3px solid #fbbf24; padding:8px; background:#fbbf2410; }

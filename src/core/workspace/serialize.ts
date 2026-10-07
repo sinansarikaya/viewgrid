@@ -1,5 +1,7 @@
 import type { WorkspaceModel, ViewportState, SyncFlags, LayoutMode, AlignItemsMode, JustifyContentMode, Orientation, DeviceProfile } from '../types';
 import { DEFAULT_SYNC, MAX_VIEWPORTS } from '../types';
+import { validateDeviceProfile } from '../devices/schema';
+import { safeHttpUrl } from '../security/framing';
 import { clampZoom } from './layout';
 
 export interface ParseResult {
@@ -15,7 +17,7 @@ function parseViewport(v: unknown, errors: string[], i: number): ViewportState |
     errors.push(`viewports[${i}] not an object`);
     return null;
   }
-  if (typeof v.id !== 'string') {
+  if (typeof v.id !== 'string' || !v.id.trim()) {
     errors.push(`viewports[${i}].id missing`);
     return null;
   }
@@ -25,13 +27,15 @@ function parseViewport(v: unknown, errors: string[], i: number): ViewportState |
       errors.push(`viewports[${i}].custom invalid`);
       return null;
     }
+    if (validateDeviceProfile(v.custom).length || !Number.isFinite(v.custom.width) || Number(v.custom.width) > 10000 || Number(v.custom.height) > 10000) { errors.push(`viewports[${i}].custom invalid`); return null; }
     custom = v.custom as unknown as DeviceProfile;
   }
+  if (typeof v.url === 'string' && v.url && v.url !== 'about:blank' && !safeHttpUrl(v.url)) { errors.push(`viewports[${i}].url invalid`); return null; }
   const out: ViewportState = {
     id: v.id,
     deviceId: typeof v.deviceId === 'string' ? v.deviceId : 'custom',
     orientation: v.orientation === 'landscape' ? 'landscape' : 'portrait',
-    zoom: clampZoom(typeof v.zoom === 'number' ? v.zoom : 1),
+    zoom: clampZoom(typeof v.zoom === 'number' && Number.isFinite(v.zoom) ? v.zoom : 1),
     minimized: !!v.minimized,
     hidden: !!v.hidden,
     url: typeof v.url === 'string' ? v.url : '',
@@ -43,7 +47,7 @@ function parseViewport(v: unknown, errors: string[], i: number): ViewportState |
   if (typeof (v as any).frameFinish === 'string') {
     out.frameFinish = (v as any).frameFinish;
   }
-  if (isObj((v as any).position) && typeof (v as any).position.x === 'number' && typeof (v as any).position.y === 'number') {
+  if (isObj((v as any).position) && typeof (v as any).position.x === 'number' && typeof (v as any).position.y === 'number' && Number.isFinite((v as any).position.x) && Number.isFinite((v as any).position.y)) {
     out.position = { x: Math.round((v as any).position.x), y: Math.round((v as any).position.y) };
   }
   return out;
@@ -58,9 +62,11 @@ export function parseWorkspace(input: unknown): ParseResult {
   if (Array.isArray(input.viewports)) {
     input.viewports.slice(0, MAX_VIEWPORTS).forEach((v, i) => {
       const vp = parseViewport(v, errors, i);
-      if (vp) viewports.push(vp);
+      if (vp && viewports.some(existing => existing.id === vp.id)) errors.push(`duplicate viewport id: ${vp.id}`);
+      else if (vp) viewports.push(vp);
     });
   }
+  if (typeof input.url === 'string' && input.url && input.url !== 'about:blank' && !safeHttpUrl(input.url)) errors.push('invalid workspace URL');
   const sync: SyncFlags = { ...DEFAULT_SYNC };
   const syncIn = input.sync;
   if (isObj(syncIn)) {

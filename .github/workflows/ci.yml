@@ -47,6 +47,21 @@ jobs:
       - name: Validate Firefox Extension (web-ext lint)
         run: pnpm run lint:web-ext
 
+      - name: Install Chromium for end-to-end tests
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Real Chromium extension flows
+        run: pnpm run test:e2e
+
+      - name: Upload browser test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-report
+          path: |
+            playwright-report/
+            test-results/
+
       - name: Build Marketing Website (Vite)
         run: pnpm run build:website
 

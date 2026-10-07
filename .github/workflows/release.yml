@@ -2,6 +2,8 @@ name: Release Automation
 
 on:
   push:
+    branches: [main]
+    paths: ['package.json']
     tags:
       - 'v*'
 
@@ -16,6 +18,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Resolve release version
+        id: version
+        run: node -e "require('fs').appendFileSync(process.env.GITHUB_OUTPUT, 'tag=v' + require('./package.json').version + '\n')"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -34,15 +40,33 @@ jobs:
       - name: Run Tests
         run: pnpm test
 
+      - name: Lint and typecheck
+        run: pnpm run lint && pnpm run typecheck && pnpm run typecheck:website
+
+      - name: Build extension packages
+        run: pnpm run build:all
+
+      - name: Validate Firefox package
+        run: pnpm run lint:web-ext
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser regression tests
+        run: pnpm run test:e2e
+
       - name: Package Release ZIPs & Generate SHA256SUMS
         run: pnpm run package:release
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           files: |
             release/*.zip
             release/SHA256SUMS
           draft: false
           prerelease: false
+          body_path: docs/releases/${{ steps.version.outputs.tag }}.md
           generate_release_notes: true

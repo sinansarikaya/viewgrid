@@ -29,3 +29,7 @@ SEO-AUDIT.md
 DEPLOYMENT-AUDIT.md
 STRIX-AUDIT.md
 .github/copilot-instructions.md
+
+audit/
+test-results/
+playwright-report/

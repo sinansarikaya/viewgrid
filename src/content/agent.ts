@@ -8,38 +8,14 @@
  */
 import { LoopGuard, applyScrollRatios, scrollRatios, selectorPath } from '../core/sync/protocol';
 import { runCoreDetectors } from '../core/issues/detectors';
-import type { MeasuredElement, PageMetrics, SyncEnvelope } from '../core/types';
-
-function injectWorldScript(cfg?: Record<string, unknown>): boolean {
-  try {
-    const extBrowser = (globalThis as any).browser || (globalThis as any).chrome;
-    const url = extBrowser?.runtime?.getURL?.('world-inject.js');
-    if (!url) return false;
-    const container = document.head || document.documentElement;
-    if (container) {
-      const s = document.createElement('script');
-      s.src = url;
-      if (cfg) {
-        s.dataset.viewgridConfig = JSON.stringify(cfg);
-      }
-      s.async = false;
-      container.prepend(s);
-      s.remove();
-      return true;
-    }
-  } catch {}
-  return false;
-}
+import { collectMetrics } from './metrics';
+import { safeHttpUrl } from '../core/security/framing';
+import type { SyncEnvelope } from '../core/types';
 
 // Fast early exit for non-viewport contexts (e.g. normal browser tabs):
 // ViewGrid viewports ALWAYS have window.name starting with "viewgrid:"
 const frameName: string = typeof window !== 'undefined' ? (window.name || '') : '';
 if (frameName.startsWith('viewgrid:')) {
-  // Protect navigator APIs and disable ServiceWorkers before any page script executes
-  if (!injectWorldScript()) {
-    document.addEventListener('DOMContentLoaded', () => injectWorldScript(), { once: true });
-  }
-
   const g = globalThis as any;
   if (!g.__viewgridAgentInstalled) {
     g.__viewgridAgentInstalled = true;
@@ -80,7 +56,7 @@ if (frameName.startsWith('viewgrid:')) {
 function initAgent(viewportId: string) {
   const g = globalThis as any;
   const extBrowser = g.browser || g.chrome;
-  const guard = new LoopGuard();
+  const guard = new LoopGuard(Math.floor(performance.timeOrigin * 1000));
   let suppressUntil = 0;
   const suppress = (ms = 120) => {
     suppressUntil = performance.now() + ms;
@@ -108,19 +84,28 @@ function initAgent(viewportId: string) {
     }
   };
 
-  // —— hello & world inject ——
-  try {
-    extBrowser?.runtime
-      ?.sendMessage?.({ type: 'vg/agent-hello', viewportId })
-      ?.then?.((res: any) => {
-        if (res?.userAgent) {
-          injectWorldScript({ userAgent: res.userAgent });
-        }
-      })
-      ?.catch?.(() => {});
-  } catch {
-    /* ignore */
+  // Re-register after document replacement; the document epoch changes after reload.
+  const reloadKey = `viewgrid:remote-reload:${viewportId}`;
+  const hello = () => extBrowser?.runtime?.sendMessage?.({ type: 'vg/agent-hello', viewportId })?.catch?.(() => {});
+  void hello();
+  window.addEventListener('pageshow', hello);
+  let remoteReload = false;
+  try { remoteReload = sessionStorage.getItem(reloadKey) === '1'; sessionStorage.removeItem(reloadKey); } catch {}
+  if (!remoteReload && (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'reload') {
+    window.setTimeout(() => emit('reload', {}), 300);
   }
+  let observedUrl = location.href;
+  window.setInterval(() => {
+    if (location.href === observedUrl) return;
+    observedUrl = location.href;
+    if (safeHttpUrl(observedUrl)) emit('nav', { url: observedUrl });
+  }, 250);
+  for (const kind of ['keydown', 'keyup'] as const) document.addEventListener(kind, e => {
+    if (!e.isTrusted || e.ctrlKey || e.metaKey || e.altKey) return;
+    const el = e.target instanceof Element ? e.target : null;
+    if (!el) return;
+    emit('key', { selector: selectorPath(el), kind, key: e.key, code: e.code, shiftKey: e.shiftKey });
+  }, true);
 
   // —— scroll (rAF-coalesced; only broadcast if triggered by user interaction) ——
   let scrollPending = false;
@@ -130,7 +115,7 @@ function initAgent(viewportId: string) {
   window.addEventListener('touchmove', () => { userInteracted = true; }, { passive: true, capture: true });
   window.addEventListener('pointerdown', () => { userInteracted = true; }, { passive: true, capture: true });
   window.addEventListener('keydown', (e) => {
-    if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Space', 'Home', 'End'].includes(e.key)) {
+    if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(e.key)) {
       userInteracted = true;
     }
   }, { passive: true, capture: true });
@@ -167,14 +152,12 @@ function initAgent(viewportId: string) {
       if (suppressed()) return;
       const el = ev.target instanceof Element ? ev.target : null;
       if (!el) return;
-      emit('click', { selector: selectorPath(el), nx: ev.clientX / window.innerWidth, ny: ev.clientY / window.innerHeight });
+      if (ev.defaultPrevented || ev.ctrlKey || ev.metaKey || ev.altKey || ev.shiftKey) return;
       const anchor = el.closest?.('a[href]');
       if (anchor) {
         const href = (anchor as HTMLAnchorElement).href;
-        if (href && !href.startsWith('javascript:')) {
-          emit('nav', { url: href, viaClick: true });
-        }
-      }
+        if (safeHttpUrl(href) && !(anchor as HTMLAnchorElement).download && (anchor as HTMLAnchorElement).target !== '_blank') emit('nav', { url: href });
+      } else emit('click', { selector: selectorPath(el), nx: ev.clientX / window.innerWidth, ny: ev.clientY / window.innerHeight });
     },
     true,
   );
@@ -214,31 +197,11 @@ function initAgent(viewportId: string) {
     if (!msg || typeof msg !== 'object') return;
     const cmd = String(msg.cmd || '');
     suppress(250);
-    if (cmd === 'reload') location.reload();
-    else if (cmd === 'hardReload') {
-      try {
-        sessionStorage?.clear?.();
-        localStorage?.clear?.();
-      } catch {}
-      try {
-        const u = new URL(location.href);
-        u.searchParams.set('_vg_nocache', Date.now().toString());
-        location.replace(u.href);
-      } catch {
-        location.reload();
-      }
-    }
-    else if (cmd === 'clearStorage') {
-      try {
-        const cookies = document.cookie.split(';');
-        for (const c of cookies) {
-          const eqPos = c.indexOf('=');
-          const name = eqPos > -1 ? c.substring(0, eqPos).trim() : c.trim();
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        }
-        sessionStorage?.clear?.();
-        localStorage?.clear?.();
-      } catch {}
+    if (cmd === 'reload' || cmd === 'hardReload') {
+      try { sessionStorage.setItem(reloadKey, '1'); } catch {}
+      // Reload without clearing site data or altering the application URL.
+      if (cmd === 'hardReload') (location.reload as (force?: boolean) => void)(true);
+      else location.reload();
     }
     else if (cmd === 'back') history.back();
     else if (cmd === 'forward') history.forward();
@@ -254,6 +217,16 @@ function initAgent(viewportId: string) {
     else if (cmd === 'scrollToTop') window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     else if (cmd === 'setColorScheme') applyColorScheme(String(msg.scheme || 'auto'));
     else if (cmd === 'setTouchCursor') applyTouchCursor(!!msg.enabled);
+    else if (cmd === 'highlight' && typeof msg.selector === 'string') {
+      try {
+        const el = document.querySelector(msg.selector) as HTMLElement | null;
+        if (!el) return;
+        el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
+        const before = el.style.outline, offset = el.style.outlineOffset;
+        el.style.outline = '3px solid #f59e0b'; el.style.outlineOffset = '3px';
+        window.setTimeout(() => { el.style.outline = before; el.style.outlineOffset = offset; }, 2500);
+      } catch { /* element may have disappeared since scan */ }
+    }
   }
 
   // —— apply from hub & direct window messages ——
@@ -274,10 +247,10 @@ function initAgent(viewportId: string) {
     }
 
     if (msg.type === 'vg/agent-scan') {
-      const metrics = collectMetrics();
-      const issues = runCoreDetectors(metrics).map((i) => ({ ...i }));
+      const metrics = collectMetrics(document, window, !Array.isArray(msg.touchViewportIds) || msg.touchViewportIds.includes(viewportId));
+      const issues = runCoreDetectors(metrics).map(i => ({ ...i, data: { ...i.data, url: location.href, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight } }));
       extBrowser?.runtime
-        ?.sendMessage?.({ type: 'vg/scan-result', viewportId, issues })
+        ?.sendMessage?.({ type: 'vg/scan-result', viewportId, scanId: msg.scanId, issues, scannedElements: metrics.scannedElements, truncated: metrics.truncated })
         ?.catch?.(() => {});
     }
   });
@@ -435,24 +408,29 @@ function initAgent(viewportId: string) {
         break;
       }
       case 'nav':
-        if (p.viaClick) break; // click-replay (if enabled) already navigates peers
         suppress(300);
-        if (typeof p.url === 'string' && p.url !== location.href) location.assign(p.url);
+        if (safeHttpUrl(p.url) && p.url !== location.href) { observedUrl = p.url; location.assign(p.url); }
         break;
       case 'reload':
-        suppress(300);
-        location.reload();
+        handleAgentDo({ cmd: 'reload' });
         break;
+      case 'key': {
+        suppress(100);
+        const target = document.querySelector(String(p.selector || '')) || document.activeElement;
+        target?.dispatchEvent(new KeyboardEvent(p.kind === 'keyup' ? 'keyup' : 'keydown', { key: String(p.key || ''), code: String(p.code || ''), shiftKey: !!p.shiftKey, bubbles: true, cancelable: true }));
+        break;
+      }
       case 'input':
       case 'form': {
         suppress(100);
         const target = document.querySelector(String(p.selector ?? '')) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
         if (target) {
           if (typeof p.value === 'string' && target.value !== p.value) {
-            target.value = p.value;
+            const proto = target instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : target instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+            Object.getOwnPropertyDescriptor(proto, 'value')?.set?.call(target, p.value);
           }
           if (typeof p.checked === 'boolean' && 'checked' in target && (target as HTMLInputElement).checked !== p.checked) {
-            (target as HTMLInputElement).checked = p.checked;
+            Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'checked')?.set?.call(target, p.checked);
           }
           target.dispatchEvent(new Event('input', { bubbles: true }));
           target.dispatchEvent(new Event('change', { bubbles: true }));
@@ -462,7 +440,10 @@ function initAgent(viewportId: string) {
     }
   }
 
+  let originalAppearance: Array<{ el: HTMLElement; theme: string | null; color: string | null; dark: boolean; light: boolean }> | null = null;
   function applyColorScheme(scheme: string) {
+    if (scheme === 'auto' && !originalAppearance) return;
+    if (scheme !== 'auto' && !originalAppearance) originalAppearance = [document.documentElement, document.body].filter((el): el is HTMLElement => !!el).map(el => ({ el, theme: el.getAttribute('data-theme'), color: el.getAttribute('data-color-scheme'), dark: el.classList.contains('dark'), light: el.classList.contains('light') }));
     let styleEl = document.getElementById('viewgrid-color-scheme-override') as HTMLStyleElement | null;
     const docEl = document.documentElement;
     const bodyEl = document.body;
@@ -565,65 +546,14 @@ function initAgent(viewportId: string) {
       } catch {}
     } else {
       styleEl?.remove();
-      delete docEl.dataset.colorScheme;
-      delete docEl.dataset.theme;
-      docEl.classList.remove('dark', 'light', 'vg-force-invert');
-      if (bodyEl) bodyEl.classList.remove('dark', 'light');
-    }
-  }
-
-  // —— metrics collection (bounded) ——
-  function collectMetrics(): PageMetrics {
-    const elements: MeasuredElement[] = [];
-    const sel = 'a,button,input,select,textarea,summary,label,[role="button"],[tabindex]';
-    document.querySelectorAll(sel).forEach((el, i) => {
-      if (i > 400) return;
-      const r = el.getBoundingClientRect();
-      const cs = getComputedStyle(el);
-      elements.push({
-        selector: selectorPath(el),
-        tag: el.tagName.toLowerCase(),
-        rect: { x: r.x, y: r.y, width: r.width, height: r.height },
-        text: (el.textContent ?? '').trim().slice(0, 80),
-        isInteractive: true,
-        overflowX: cs.overflowX,
-        scrollWidth: el.scrollWidth,
-        clientWidth: el.clientWidth,
-      });
-    });
-    // text-clip candidates: bounded walker
-    const walker = document.createTreeWalker(document.body ?? document.documentElement, NodeFilter.SHOW_ELEMENT);
-    let n = 0;
-    let node = walker.nextNode() as Element | null;
-    while (node && n < 1500) {
-      n++;
-      if (node.scrollWidth > node.clientWidth + 2 && node.textContent?.trim()) {
-        const cs = getComputedStyle(node);
-        if (['hidden', 'clip'].includes(cs.overflowX)) {
-          elements.push({
-            selector: selectorPath(node),
-            tag: node.tagName.toLowerCase(),
-            rect: rectOf(node),
-            text: (node.textContent ?? '').trim().slice(0, 80),
-            overflowX: cs.overflowX,
-            scrollWidth: node.scrollWidth,
-            clientWidth: node.clientWidth,
-          });
-        }
+      for (const original of originalAppearance ?? []) {
+        const { el, theme, color, dark, light } = original;
+        if (theme === null) el.removeAttribute('data-theme'); else el.setAttribute('data-theme', theme);
+        if (color === null) el.removeAttribute('data-color-scheme'); else el.setAttribute('data-color-scheme', color);
+        el.classList.toggle('dark', dark); el.classList.toggle('light', light); el.classList.remove('vg-force-invert');
       }
-      node = walker.nextNode() as Element | null;
+      originalAppearance = null;
     }
-    return {
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight,
-      scrollWidth: document.documentElement.scrollWidth,
-      scrollHeight: document.documentElement.scrollHeight,
-      elements,
-    };
   }
 
-  function rectOf(el: Element) {
-    const r = el.getBoundingClientRect();
-    return { x: r.x, y: r.y, width: r.width, height: r.height };
-  }
 }

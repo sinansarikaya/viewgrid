@@ -10,6 +10,10 @@ function promisify<T = any>(fn: (...args: any[]) => any, context: any, ...args: 
   return new Promise((resolve, reject) => {
     try {
       let settled = false;
+      if (g.browser) {
+        Promise.resolve(fn.call(context, ...args)).then(resolve, reject);
+        return;
+      }
       const res = fn.call(context, ...args, (result: T) => {
         if (settled) return;
         settled = true;
@@ -52,6 +56,9 @@ export interface VgBrowser {
     lastError?: { message?: string };
   };
   tabs: {
+    reload(tabId: number, options: { bypassCache: boolean }): Promise<void>;
+    getCurrent(): Promise<{ id?: number; windowId?: number; url?: string }>;
+    get(tabId: number): Promise<{ id?: number; windowId?: number; url?: string; active?: boolean }>;
     create(props: { url?: string; active?: boolean; windowId?: number }): Promise<{ id?: number }>;
     captureTab?(tabId: number, opts?: unknown): Promise<string>;
     captureVisibleTab?(windowId?: number, opts?: unknown): Promise<string>;
@@ -185,6 +192,9 @@ export const b: VgBrowser = {
     },
   },
   tabs: {
+    reload(tabId: number, options: { bypassCache: boolean }) { return promisify(raw.tabs.reload, raw.tabs, tabId, options); },
+    getCurrent() { return promisify(raw.tabs.getCurrent, raw.tabs); },
+    get(tabId: number) { return promisify(raw.tabs.get, raw.tabs, tabId); },
     create(props: { url?: string; active?: boolean; windowId?: number }): Promise<{ id?: number }> {
       if (!raw.tabs?.create) return Promise.resolve({});
       return promisify(raw.tabs.create, raw.tabs, props);
@@ -211,6 +221,7 @@ export const b: VgBrowser = {
       if (!raw.tabs?.query) return Promise.resolve([]);
       return promisify(raw.tabs.query, raw.tabs, q);
     },
+    onCreated: raw.tabs?.onCreated,
     onUpdated: raw.tabs?.onUpdated,
     onRemoved: raw.tabs?.onRemoved,
   },

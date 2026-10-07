@@ -103,6 +103,8 @@ export interface MeasuredElement {
   scrollWidth?: number;
   clientWidth?: number;
   isInteractive?: boolean;
+  intentionallyClipped?: boolean;
+  inlineTextLink?: boolean;
 }
 
 export interface PageMetrics {
@@ -111,6 +113,9 @@ export interface PageMetrics {
   scrollWidth: number;
   scrollHeight: number;
   elements: MeasuredElement[];
+  checkTapTargets?: boolean;
+  scannedElements?: number;
+  truncated?: boolean;
 }
 
 /** Message envelope kinds used across background ↔ content ↔ workspace. */

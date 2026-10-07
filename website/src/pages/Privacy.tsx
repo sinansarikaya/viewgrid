@@ -60,7 +60,7 @@ export function Privacy() {
                 <div className="perm-row">
                   <code>declarativeNetRequestWithHostAccess</code>
                   <span>Chromium</span>
-                  <span>Relaxes <code>X-Frame-Options</code> and <code>Content-Security-Policy: frame-ancestors</code> response headers solely for <code>sub_frame</code> requests inside active ViewGrid workspace tabs so you can test your sites. Normal browser tabs remain unaffected.</span>
+                  <span>Framing exceptions apply only to direct previews in verified workspace tabs. Chromium removes XFO and CSP response headers for those previews; Firefox removes XFO and only the frame-ancestors directive. Normal tabs and nested third-party frames retain their protections. Site cookies, storage and service worker registrations are not automatically erased or rewritten.</span>
                 </div>
                 <div className="perm-row">
                   <code>webRequest & webRequestBlocking</code>

@@ -72,3 +72,10 @@ describe('workspace serialization', () => {
     expect(res.ok).toBe(false);
   });
 });
+
+describe('untrusted workspace data', () => {
+  it('rejects duplicate IDs', () => expect(parseWorkspace({ schemaVersion: 1, viewports: [{ id: 'a' }, { id: 'a' }] }).ok).toBe(false));
+  it('rejects incomplete/negative custom devices', () => expect(parseWorkspace({ schemaVersion: 1, viewports: [{ id: 'a', custom: { width: -10, height: 0 } }] }).ok).toBe(false));
+  it('rejects executable URLs', () => expect(parseWorkspace({ schemaVersion: 1, url: 'javascript:alert(1)', viewports: [] }).ok).toBe(false));
+  it('normalizes non-finite zoom', () => expect(parseWorkspace({ schemaVersion: 1, viewports: [{ id: 'a', zoom: NaN }] }).model?.viewports[0]?.zoom).toBe(1));
+});
