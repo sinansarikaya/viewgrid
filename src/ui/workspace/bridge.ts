@@ -126,21 +126,16 @@ export async function fullCaptureBlob(format: 'png' | 'jpeg' = 'png'): Promise<B
 
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
-  if (b.downloads?.download) {
-    b.downloads
-      .download({ url, filename, saveAs: false })
-      .catch(() => { triggerDomDownload(url, filename); })
-      .finally(() => setTimeout(() => URL.revokeObjectURL(url), 60000));
-  } else {
-    triggerDomDownload(url, filename);
-  }
+  triggerDomDownload(url, filename);
 }
 
 function triggerDomDownload(url: string, filename: string) {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 

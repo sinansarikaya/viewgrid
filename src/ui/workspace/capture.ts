@@ -29,6 +29,8 @@ export async function captureViewport(content: HTMLElement): Promise<Blob> {
     for (const el of restored.keys()) {
       for (const [k, v] of Object.entries({ overflow: 'visible', transform: 'none', filter: 'none', 'backdrop-filter': 'none', perspective: 'none', contain: 'none', 'clip-path': 'none', 'border-radius': '0' })) el.style.setProperty(k, v, 'important');
     }
+    document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+    document.body.style.setProperty('overflow', 'hidden', 'important');
     frame.dataset.viewgridCaptureFrame = 'true';
     for (const [k, v] of Object.entries({ position: 'fixed', left: '0', top: '0', margin: '0', border: '0', 'z-index': '2147483647', 'transform-origin': 'top left' })) frame.style.setProperty(k, v, 'important');
     const canvas = document.createElement('canvas');

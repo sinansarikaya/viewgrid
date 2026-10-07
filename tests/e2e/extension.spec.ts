@@ -1,4 +1,4 @@
-import { test, expect, chromium, type BrowserContext, type Page } from '@playwright/test';
+import { test, expect, chromium, type BrowserContext, type Page, type Frame } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -6,6 +6,18 @@ import path from 'node:path';
 let server: Server, context: BrowserContext, page: Page, profile: string, base: string, extensionId: string;
 const fixture = `<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:0;font:16px sans-serif}button{width:60px;height:44px}#small{width:30px;height:30px}#clipped{width:100px;overflow:hidden;white-space:nowrap}#intentional{width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{height:1800px}</style><h1>ViewGrid fixture</h1><input id="name"><button id="action" onclick="document.querySelector('#count').textContent=Number(document.querySelector('#count').textContent)+1">Count</button><span id="count">0</span><button id="small">Tiny</button><p id="clipped">This long text is accidentally clipped</p><p id="intentional">This long text is intentionally clipped</p><a id="next" href="/next">Next</a><button id="spa" onclick="history.pushState({},'', '/spa')">SPA</button><div class="spacer"></div><footer>End</footer>`;
 const frames = () => page.frames().filter(f => f.name().startsWith('viewgrid:'));
+async function clickInPreview(frame: Frame, selector: string) {
+  // CDP element quads in an OOPIF do not include the workspace's CSS scale.
+  // Convert page-local coordinates to the rendered iframe before a trusted mouse click.
+  const host = await frame.frameElement();
+  await host.scrollIntoViewIfNeeded();
+  const box = (await host.boundingBox())!;
+  const target = await frame.locator(selector).evaluate(el => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2, width: innerWidth, height: innerHeight };
+  });
+  await page.mouse.click(box.x + target.x * box.width / target.width, box.y + target.y * box.height / target.height);
+}
 async function reset() {
   await page.bringToFront();
   if (page.url().startsWith('chrome-extension://')) await page.evaluate(() => (globalThis as any).chrome.storage.local.clear());
@@ -42,7 +54,9 @@ test('loads four actual frames, applies device dimensions and rotates', async ()
 test('normal tabs retain framing protections while a direct workspace preview loads', async () => {
   const ordinary = await context.newPage();
   await ordinary.goto(base + '/host');
-  await expect(ordinary.frameLocator('iframe').locator('h1')).toHaveCount(0);
+  // Chromium's blocked-frame error document has its own h1; verify the protected content never rendered.
+  await expect(ordinary.frameLocator('iframe').locator('body')).not.toContainText('ViewGrid fixture');
+  expect(ordinary.frames().some(f => f.url() === base + '/protected')).toBe(false);
   await ordinary.close(); await page.bringToFront();
   const input = page.locator('input').first(); await input.fill(base + '/protected'); await input.press('Enter');
   await expect.poll(() => frames().filter(f=>f.url()===base+'/protected').length).toBe(4);
@@ -52,13 +66,13 @@ test('normal tabs retain framing protections while a direct workspace preview lo
 });
 test('click and scroll sync continue immediately after source reload', async () => {
   let source = frames()[0]!;
-  await source.locator('#action').click({ force: true });
+  await clickInPreview(source, '#action');
   await expect.poll(async () => Promise.all(frames().map(f=>f.locator('#count').textContent()))).toEqual(['1','1','1','1']);
   await source.evaluate(() => location.reload());
   await expect(source.locator('h1')).toBeVisible();
   await page.waitForTimeout(1000);
   source = frames()[0]!;
-  await source.locator('#action').click({ force: true });
+  await clickInPreview(source, '#action');
   await expect.poll(async () => Promise.all(frames().map(f=>f.locator('#count').textContent()))).toEqual(['1','1','1','1']);
   await source.evaluate(() => { window.dispatchEvent(new Event('wheel')); window.scrollTo(0,600); });
   await expect.poll(async () => (await Promise.all(frames().map(f=>f.evaluate(()=>scrollY)))).every(y=>y>0)).toBe(true);
@@ -69,9 +83,9 @@ test('navigation works with click sync disabled; SPA navigation follows', async 
   const checkboxes = page.locator('input[type="checkbox"]');
   await checkboxes.nth(1).uncheck();
   await page.locator('summary').filter({ hasText: 'Sync' }).click();
-  await frames()[0]!.locator('#next').click({ force: true });
+  await clickInPreview(frames()[0]!, '#next');
   await expect.poll(() => frames().every(f=>f.url()===base+'/next')).toBe(true);
-  await frames()[0]!.locator('#spa').click({ force: true });
+  await clickInPreview(frames()[0]!, '#spa');
   await expect.poll(() => frames().every(f=>f.url()===base+'/spa')).toBe(true);
 });
 test('scan groups repeated findings, shows evidence and exports a structured report', async () => {
@@ -85,6 +99,13 @@ test('scan groups repeated findings, shows evidence and exports a structured rep
   const download = page.waitForEvent('download');
   await drawer.getByRole('button', { name: 'Export JSON' }).click();
   const file = await download; expect(file.suggestedFilename()).toBe('viewgrid-issues.json');
+  const stream = await file.createReadStream();
+  const chunks: Buffer[] = []; for await (const chunk of stream!) chunks.push(chunk);
+  const report = JSON.parse(Buffer.concat(chunks).toString());
+  expect(report.heuristic).toBe(true);
+  expect(report.failedViewports).toEqual([]);
+  expect(report.findings.some((g: any) => g.issue.selector === '#small')).toBe(true);
+  expect(report.findings.some((g: any) => g.occurrences.length > 1)).toBe(true);
 });
 test('hard reload preserves application storage and URL', async () => {
   await frames()[0]!.evaluate(() => { localStorage.setItem('draft','keep-me'); sessionStorage.setItem('session-draft','keep-me'); });
