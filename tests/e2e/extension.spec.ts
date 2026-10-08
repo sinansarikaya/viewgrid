@@ -172,26 +172,39 @@ test('a delayed old-document reload cannot cancel a slow workspace URL change', 
   for (const frame of frames()) await expect(frame.locator('h1')).toHaveText('ViewGrid fixture');
 });
 
-test('reported CastPost URL loads and survives reload in actual Chrome', async () => {
+test('CastPost loads from a worker-warmed profile, reopens and survives a browser restart', async () => {
   test.skip(!process.env.VIEWGRID_LIVE_TEST_URL, 'Live regression is opt-in');
-  const diagnostics: string[] = [];
-  page.on('console', m => diagnostics.push(`${m.type()}: ${m.text()}`));
-  page.on('requestfailed', r => diagnostics.push(`request failed: ${r.url()} ${r.failure()?.errorText}`));
-  page.on('response', r => { if (r.request().isNavigationRequest()) diagnostics.push(`navigation: ${r.status()} ${r.url()} SW=${r.fromServiceWorker()}`); });
-  const input = page.locator('input').first();
-  await input.fill(process.env.VIEWGRID_LIVE_TEST_URL!); await input.press('Enter');
-  try {
-    await expect.poll(() => frames().filter(f => f.url().startsWith(process.env.VIEWGRID_LIVE_TEST_URL!)).length).toBe(4);
-    for (const frame of frames()) await expect(frame.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
-    const source = frames()[0]!;
-    expect(await source.evaluate(async () => { try { await navigator.serviceWorker.register('/sw.js'); return 'registered'; } catch (e) { return (e as Error).name; } })).toBe('SecurityError');
-    await source.evaluate(() => history.replaceState({}, '', location.href + '#vg-sync-regression'));
-    await expect.poll(() => frames().every(f => f.url().endsWith('#vg-sync-regression'))).toBe(true);
-    await page.waitForTimeout(1500); // Allow the site's worker activation before testing reload.
-    await Promise.all([
-      page.waitForEvent('framenavigated', { predicate: f => f === source }),
-      source.evaluate(() => location.reload()),
-    ]);
-    await expect(source.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
-  } finally { console.log('CASTPOST DIAGNOSTICS', JSON.stringify(diagnostics)); }
+  const url = process.env.VIEWGRID_LIVE_TEST_URL!;
+  const normal = await context.newPage();
+  await normal.goto(url);
+  await expect(normal.locator('h1')).toContainText('Cast once.');
+  await normal.evaluate(async () => { await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready; });
+  await expect.poll(() => normal.evaluate(() => !!navigator.serviceWorker.controller), { timeout: 20000 }).toBe(true);
+  console.log('CASTPOST WARM PROFILE', await normal.evaluate(() => ({ url: location.href, worker: navigator.serviceWorker.controller?.scriptURL })));
+  for (const phase of ['first warm open', 'reopen', 'browser restart']) {
+    if (phase === 'browser restart') {
+      await context.close();
+      const extension = path.resolve('dist/chromium');
+      context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: true, viewport: { width: 1280, height: 800 }, args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`] });
+    } else await page.close();
+    page = await context.newPage();
+    const diagnostics: string[] = [];
+    page.on('console', m => diagnostics.push(`${m.type()}: ${m.text()}`));
+    page.on('requestfailed', r => diagnostics.push(`failed: ${r.url()} ${r.failure()?.errorText}`));
+    page.on('response', r => { if (r.request().isNavigationRequest()) diagnostics.push(`${r.status()} ${r.url()} SW=${r.fromServiceWorker()}`); });
+    await page.goto(`chrome-extension://${extensionId}/workspace.html?url=${encodeURIComponent(url)}`);
+    try {
+      await expect(page.locator('iframe[name^="viewgrid:"]')).toHaveCount(4);
+      await expect.poll(() => frames().filter(f => f.url().startsWith(url)).length, { timeout: 20000 }).toBe(4);
+      for (const frame of frames()) await expect(frame.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
+      const source = frames()[0]!;
+      expect(await source.evaluate(async () => { try { await navigator.serviceWorker.register('/sw.js'); return 'registered'; } catch (e) { return (e as Error).name; } })).toBe('SecurityError');
+      await source.evaluate(() => history.replaceState({}, '', location.href + '#vg-sync-regression'));
+      await expect.poll(() => frames().every(f => f.url().endsWith('#vg-sync-regression'))).toBe(true);
+      await page.waitForTimeout(1500);
+      await Promise.all([page.waitForEvent('framenavigated', { predicate: f => f === source }), source.evaluate(() => location.reload())]);
+      await expect(source.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
+      console.log(`PASS CASTPOST CHROME: ${phase}, four healthy previews and reload`);
+    } finally { console.log('CASTPOST DIAGNOSTICS', phase, JSON.stringify(diagnostics)); }
+  }
 });

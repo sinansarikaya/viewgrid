@@ -128,17 +128,32 @@ try:
     assert result == 'SecurityError', result
     print('PASS Firefox: preview worker registration is blocked', flush=True)
     if os.environ.get('VIEWGRID_LIVE_TEST_URL'):
-        bar = driver.find_elements(By.CSS_SELECTOR, 'input')[0]
-        bar.clear()
-        bar.send_keys(os.environ['VIEWGRID_LIVE_TEST_URL'])
-        bar.send_keys(Keys.ENTER)
-        wait.until(lambda _: all('Cast once.' in frame_text(i) for i in range(4)))
-        time.sleep(1.5)  # Exercise reload after the site's worker has had time to activate.
-        before = frame_script('return performance.timeOrigin')
-        frame_script('location.reload()')
-        wait.until(lambda _: frame_script('return performance.timeOrigin') != before)
-        wait.until(lambda _: 'Cast once.' in frame_text())
-        print('PASS Firefox: CastPost live page and reload', flush=True)
+        url = os.environ['VIEWGRID_LIVE_TEST_URL']
+        main = driver.current_window_handle
+        driver.switch_to.new_window('tab')
+        driver.get(url)
+        wait.until(lambda d: 'Cast once.' in d.find_element(By.TAG_NAME, 'body').text)
+        driver.set_script_timeout(30)
+        warmed = driver.execute_async_script("const done=arguments[arguments.length-1]; navigator.serviceWorker.register('/sw.js').then(()=>navigator.serviceWorker.ready).then(()=>done(true)).catch(e=>done(String(e)));")
+        assert warmed is True, warmed
+        wait.until(lambda d: d.execute_script('return !!navigator.serviceWorker.controller'))
+        print('CASTPOST FIREFOX WARM PROFILE', driver.execute_script('return navigator.serviceWorker.controller.scriptURL'), flush=True)
+        normal = driver.current_window_handle
+        driver.switch_to.window(main)
+        driver.close()
+        for phase in ['first warm open', 'reopen', 'second reopen']:
+            driver.switch_to.window(normal)
+            driver.switch_to.new_window('tab')
+            workspace(url)
+            wait.until(lambda _: all('Cast once.' in frame_text(i) for i in range(4)))
+            time.sleep(1.5)
+            before = frame_script('return performance.timeOrigin')
+            frame_script('location.reload()')
+            wait.until(lambda _: frame_script('return performance.timeOrigin') != before)
+            wait.until(lambda _: 'Cast once.' in frame_text())
+            print(f'PASS Firefox: CastPost {phase}, four healthy previews and reload', flush=True)
+            driver.close()
+        driver.switch_to.window(normal)
 except Exception:
     driver.switch_to.default_content()
     driver.save_screenshot(str(out / 'failure.png'))
