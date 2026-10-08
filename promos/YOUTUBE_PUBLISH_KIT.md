@@ -1,101 +1,103 @@
 # 📺 ViewGrid — YouTube Yayınlama Kiti (@sinansarikaya_dev)
 
-Bu doküman, ViewGrid tanıtım videosunu **[@sinansarikaya_dev](https://www.youtube.com/@sinansarikaya_dev)** kanalında profesyonel, yüksek tıklanma oranlı (CTR) ve SEO uyumlu şekilde yayınlamak için gerekli tüm başlık, açıklama, zaman damgaları, etiketler ve küçük resim (thumbnail) yönergelerini içerir.
+Bu doküman, ViewGrid tanıtım videosunu **[@sinansarikaya_dev](https://www.youtube.com/@sinansarikaya_dev)** kanalında yayınlamak için gerekli tüm başlık, açıklama, kapak görseli, zaman damgaları ve etiketleri içerir.
 
 ---
 
-## 🎬 Video Dosyaları ve Formatı
+## 🎬 Video ve Kapak Dosyaları
 
-* **Ana Video (Türkçe):** [`promos/viewgrid-promo-tr.mp4`](viewgrid-promo-tr.mp4) (66 saniye, 1080p 16:9, H.264/AAC, 10.7 MB)
-* **İngilizce Video:** [`promos/viewgrid-promo-en.mp4`](viewgrid-promo-en.mp4) (56 saniye, 1080p 16:9, H.264/AAC, 9.8 MB)
+* **Ana Video (Türkçe):** [`viewgrid-promo-tr.mp4`](viewgrid-promo-tr.mp4) (66 saniye, 1080p 16:9, H.264/AAC, 10.7 MB)
+* **İngilizce Video:** [`viewgrid-promo-en.mp4`](viewgrid-promo-en.mp4) (56 saniye, 1080p 16:9, H.264/AAC, 9.8 MB)
 * **Küçük Resim (Thumbnail / Kapak):**
   * **Türkçe Kapak:** [`ViewGrid-tr.png`](ViewGrid-tr.png) (1672×941 Master PNG, YouTube uyumlu)
   * **İngilizce Kapak:** [`ViewGrid-en.png`](ViewGrid-en.png) (1672×941 Master PNG, YouTube uyumlu)
 
 ---
 
-## 1. 🇹🇷 Türkçe Video Yayını İçin (Tavsiye Edilen Ana Yayın)
+## 1. 🇹🇷 Türkçe Video Yayını
 
-### 📌 Başlık Alternatifleri (Birini Seçin)
-* **Seçenek 1 (En Yüksek CTR):** `Responsive Test Çilesine Son! Tek Sekmede Tüm Ekranlar Yan Yana (ViewGrid)`
-* **Seçenek 2 (Geliştirici Odaklı):** `Tarayıcı Penceresi Daraltmaktan Kurtulun: ViewGrid (v1.0.3 Güncellemesi)`
-* **Seçenek 3 (Özellik Odaklı):** `Web Geliştiricileri İçin Canlı Responsive Önizleme & Figma Diff | ViewGrid`
-
----
-
-### 📝 Açıklama Metni (Kopyalayıp Yapıştırın)
-
-```markdown
-Web geliştirirken tarayıcı penceresini sürekli daraltıp genişletmekten sıkıldınız mı? 
-
-ViewGrid, telefon, tablet ve masaüstü ekranlarını tek bir tarayıcı sekmesinde yan yana getiren, 60 FPS senkronize kaydırma sunan ve Figma tasarımlarınızı canlı kodla anında karşılaştıran açık kaynaklı bir geliştirici aracıdır.
-
-Sürüm 1.0.3 güncellemesiyle yenilenen duyarlı tasarım (responsive) hata tarayıcısı; taşan butonları, dar dokunma alanlarını ve eksik boşlukları otomatik tespit edip PDF/HTML raporu olarak indirmenizi sağlar.
-
-⚡ 100% Yerel Çalışma (Local-First) • Sıfır Telemetri • Sadece ~14 MB Bellek Kullanımı!
-
-⬇️ HEMEN ÜCRETSİZ İNDİRİN:
-🔹 Chrome Web Store: https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef
-🔹 Firefox Add-ons: https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/
-🌐 Resmî Web Sitesi: https://viewgrid.sinansarikaya.dev
-⭐ GitHub (Açık Kaynak): https://github.com/sinansarikaya/viewgrid
-
-⏱️ VİDEO ZAMAN DAMGALARI (CHAPTERS):
-00:00 - Problem: Tarayıcı Penceresi Daraltma Çilesi
-00:11 - ViewGrid İle Tanışın: Birleşik Çalışma Alanı
-00:21 - 60 FPS Eş Zamanlı Senkronize Kaydırma
-00:30 - Canlı Sayfayı Figma Tasarımıyla Karşılaştırma
-00:38 - Yenilenen Otomatik Hata Tarayıcısı & Raporlama (v1.0.3)
-00:46 - Sıfır Telemetri, Yerel Gizlilik ve 14 MB RAM
-00:56 - Ücretsiz İndirin & Abone Olun
-
-🔔 Daha fazla açık kaynaklı yazılım, geliştirici araçları ve modern web çözümleri için kanala abone olmayı ve videoyu beğenmeyi unutmayın!
-👉 @sinansarikaya_dev
-
-#webdevelopment #frontend #css #responsive #chromeextension #devtools #figma #yazılım #viewgrid
+### 📌 Başlık
+```text
+ViewGrid ile responsive tasarımları karşılaştır
 ```
 
----
+### 📝 Açıklama Metni (YouTube'a Kopyala-Yapıştır)
+
+```markdown
+Telefon, tablet ve masaüstü görünümlerini tek sekmede yan yana inceleyin.
+
+Bu kısa videoda, Chrome ve Firefox için geliştirdiğim açık kaynaklı tarayıcı eklentisi ViewGrid’i tanıtıyorum. Eşzamanlı kaydırma ve etkileşimlerle farklı ekran boyutlarını karşılaştırabilir, dışa aktarılmış PNG/SVG tasarımlarını sayfanın üzerine yerleştirebilir ve olası responsive sorunlarını inceleyebilirsiniz.
+
+Sorun tarayıcısının bulguları manuel kontrol gerektiren önerilerdir; gerçek cihaz testlerinin veya erişilebilirlik denetiminin yerini tutmaz.
+
+Web sitesi ve indirme bağlantıları:
+https://viewgrid.sinansarikaya.dev
+
+Kaynak kod:
+https://github.com/sinansarikaya/viewgrid
+
+Diğer projelerim ve notlarım:
+https://sinansarikaya.dev
+
+⏱️ Zaman Damgaları (Chapters):
+00:00 Giriş: Responsive Test Çilesi
+00:11 Birleşik Çalışma Alanı
+00:21 60 FPS Senkronize Kaydırma
+00:30 Figma Tasarımıyla Karşılaştırma
+00:38 Otomatik Hata Tarayıcısı (v1.0.3)
+00:46 Yerel Gizlilik & Düşük Bellek
+00:56 Mağazalardan İndirin
+
+#ViewGrid #WebGeliştirme #ResponsiveDesign
+```
 
 ### 🏷️ Etiketler (Tags)
 ```text
-viewgrid, responsive web design, responsive test, frontend development, web geliştirme, css responsive, breakpoints, figma diff, figma to code, chrome extension, firefox addon, web developer tools, tarayıcı eklentisi, sinan sarıkaya, sinansarikaya_dev, modern web
+ViewGrid, responsive web design, responsive test, frontend development, web geliştirme, css responsive, breakpoints, figma diff, figma to code, chrome extension, firefox addon, web developer tools, tarayıcı eklentisi, sinan sarıkaya, sinansarikaya_dev, modern web
 ```
 
 ---
 
 ## 2. 🇬🇧 English Video Option
 
-### 📌 Title Options
-* **Option 1:** `Stop Resizing Your Browser! Test Every Breakpoint at Once (ViewGrid)`
-* **Option 2:** `The Ultimate Responsive Testing Extension: ViewGrid (Multi-Screen + Figma Diff)`
+### 📌 Title
+```text
+Compare responsive designs with ViewGrid
+```
 
-### 📝 Description
+### 📝 Description (Copy-Paste to YouTube)
+
 ```markdown
-Still resizing your browser window to test responsiveness? 
+Inspect phone, tablet, and desktop views side by side in a single tab.
 
-Meet ViewGrid: a unified multi-viewport workspace inside your browser tab that renders phone, tablet, and desktop viewports side-by-side with 60 FPS synchronized scrolling.
+In this short video, I introduce ViewGrid, an open-source browser extension I developed for Chrome and Firefox. With synchronized scrolling and interactions, you can compare different screen sizes, overlay exported PNG/SVG design mockups onto the live page, and inspect potential responsive layout issues.
 
-Overlay live Figma mockups directly over code, detect layout bugs, and inspect responsive issues with the new v1.0.3 automated DOM scanner.
+Findings from the issue scanner are suggestions that require manual verification; they do not replace testing on real devices or comprehensive accessibility audits.
 
-⚡ 100% Local-First • Zero Telemetry • ~14 MB RAM footprint!
+Website & download links:
+https://viewgrid.sinansarikaya.dev
 
-⬇️ GET VIEWGRID FREE:
-🔹 Chrome: https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef
-🔹 Firefox: https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/
-🌐 Website: https://viewgrid.sinansarikaya.dev
-⭐ GitHub: https://github.com/sinansarikaya/viewgrid
+Source code:
+https://github.com/sinansarikaya/viewgrid
 
-⏱️ CHAPTERS:
-00:00 - The Problem: Manual Breakpoint Dragging
-00:08 - Meet ViewGrid: Unified Multi-Device Workspace
-00:16 - 60 FPS Synchronized Interaction
-00:24 - Live Figma Mockup Comparison
-00:31 - Automated Responsive Issue Scanner (v1.0.3)
-00:38 - Local-First Architecture & Low Memory
-00:46 - Install Free & Outro
+Other projects and notes:
+https://sinansarikaya.dev
 
-Subscribe to @sinansarikaya_dev for more developer tools!
+⏱️ Chapters:
+00:00 Introduction: The Responsive Testing Problem
+00:08 Unified Multi-Device Workspace
+00:16 60 FPS Synchronized Scrolling
+00:24 Live Figma Mockup Comparison
+00:31 Automated Issue Scanner (v1.0.3)
+00:38 Local-First Privacy & Low Memory
+00:46 Free Download & Outro
+
+#ViewGrid #WebDevelopment #ResponsiveDesign
+```
+
+### 🏷️ Tags
+```text
+ViewGrid, responsive web design, responsive test, frontend development, web developer tools, css responsive, breakpoints, figma diff, live mockup overlay, chrome extension, firefox addon, open source developer tools, sinansarikaya_dev, modern web
 ```
 
 ---
