@@ -36,6 +36,7 @@ server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 Thread(target=server.serve_forever, daemon=True).start()
 base = f'http://127.0.0.1:{server.server_port}'
 uuid = '11111111-1111-4111-8111-111111111111'
+os.environ['MOZ_REMOTE_ALLOW_SYSTEM_ACCESS'] = '1'
 options = webdriver.FirefoxOptions()
 options.add_argument('-headless')
 options.set_preference('extensions.webextensions.uuids', json.dumps({'viewgrid@viewgrid.dev': uuid}))
@@ -93,8 +94,11 @@ try:
     wait.until(lambda _: all('ViewGrid Firefox fixture' in frame_text(i) for i in range(4)))
     print('PASS Firefox: protected preview response loads', flush=True)
     frame_script('location.assign(arguments[0])', 0, base + '/protected-next')
+    wait.until(lambda _: frame_script('return location.href') == base + '/protected-next')
     wait.until(lambda _: 'ViewGrid Firefox fixture' in frame_text())
+    before = frame_script('return performance.timeOrigin')
     frame_script('location.reload()')
+    wait.until(lambda _: frame_script('return performance.timeOrigin') != before)
     wait.until(lambda _: 'ViewGrid Firefox fixture' in frame_text())
     print('PASS Firefox: protected navigation and reload', flush=True)
     print('FIREFOX HEADERS', driver.execute_script('return window.__vgHeaders'), flush=True)
@@ -113,9 +117,11 @@ try:
         bar.clear()
         bar.send_keys(os.environ['VIEWGRID_LIVE_TEST_URL'])
         bar.send_keys(Keys.ENTER)
-        wait.until(lambda _: all('CastPost' in frame_text(i) for i in range(4)))
+        wait.until(lambda _: all('Cast once.' in frame_text(i) for i in range(4)))
+        before = frame_script('return performance.timeOrigin')
         frame_script('location.reload()')
-        wait.until(lambda _: 'CastPost' in frame_text())
+        wait.until(lambda _: frame_script('return performance.timeOrigin') != before)
+        wait.until(lambda _: 'Cast once.' in frame_text())
         print('PASS Firefox: CastPost live page and reload', flush=True)
 except Exception:
     driver.switch_to.default_content()

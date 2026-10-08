@@ -3,10 +3,10 @@ import { isWorkspaceUrl, relaxFirefoxHeaders, safeHttpUrl, workspaceRule } from 
 import { LoopGuard } from '../../src/core/sync/protocol';
 
 describe('production framing policy', () => {
-  it('does not install a rule without an open workspace', () => expect(workspaceRule([], 'extension')).toEqual([]));
-  it('scopes direct preview rules to explicit tab IDs and extension initiator', () => {
-    const rule = workspaceRule([42], 'extension')[0]!;
-    expect(rule.condition).toEqual({ resourceTypes: ['sub_frame'], tabIds: [42], initiatorDomains: ['extension'] });
+  it('does not install a rule without an open workspace', () => expect(workspaceRule([])).toEqual([]));
+  it('scopes subframe rules to explicit workspace tab IDs including page-initiated loads', () => {
+    const rule = workspaceRule([42])[0]!;
+    expect(rule.condition).toEqual({ resourceTypes: ['sub_frame'], tabIds: [42] });
     expect(rule.action.responseHeaders.map(h => h.header)).not.toContain('set-cookie');
   });
   it('rejects ordinary pages that merely contain workspace.html', () => {

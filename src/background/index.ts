@@ -13,7 +13,7 @@ function syncRules() {
     // Remove the globally-scoped rule left behind by 1.0.1, even on upgrade.
     await b.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [1001] });
     await b.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [1001], addRules: b.webRequest?.onHeadersReceived ? [] : workspaceRule([...workspaceTabs], new URL(workspaceUrl).hostname),
+      removeRuleIds: [1001], addRules: b.webRequest?.onHeadersReceived ? [] : workspaceRule([...workspaceTabs]),
     });
   });
   return ruleQueue;

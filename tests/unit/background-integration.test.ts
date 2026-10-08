@@ -17,7 +17,7 @@ describe('actual background entrypoint', () => {
     const result = await mock.listeners.message!({ type: 'vg/workspace-hello', tabId: 42 }, { url: mock.tabs[0]!.url });
     expect(result.ok).toBe(true);
     expect(mock.dynamic).toHaveBeenCalledWith({ removeRuleIds: [1001] });
-    expect(mock.rules.mock.calls.at(-1)?.[0]).toMatchObject({ addRules: [{ condition: { tabIds: [42], initiatorDomains: ['ours'] } }] });
+    expect(mock.rules.mock.calls.at(-1)?.[0]).toMatchObject({ addRules: [{ condition: { tabIds: [42], resourceTypes: ['sub_frame'] } }] });
     expect(await mock.listeners.message!({ type: 'vg/workspace-hello', tabId: 99 }, { url: mock.tabs[1]!.url })).toMatchObject({ ok: false });
   });
   it('uses browser bypass-cache reload without a site data clearing API', async () => {

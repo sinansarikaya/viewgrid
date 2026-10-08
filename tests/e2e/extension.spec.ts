@@ -62,7 +62,8 @@ test('normal tabs retain framing protections while a direct workspace preview lo
   await expect.poll(() => frames().filter(f=>f.url()===base+'/protected').length).toBe(4);
   for(const frame of frames()) await expect(frame.locator('h1')).toHaveText('ViewGrid fixture');
   const rules = await page.evaluate(() => (globalThis as any).chrome.declarativeNetRequest.getSessionRules());
-  expect(rules[0].condition.tabIds).toHaveLength(1); expect(rules[0].condition.initiatorDomains).toEqual([extensionId]);
+  expect(rules[0].condition.tabIds).toHaveLength(1);
+  expect(rules[0].condition.initiatorDomains).toBeUndefined();
 });
 test('click and scroll sync continue immediately after source reload', async () => {
   let source = frames()[0]!;
@@ -140,8 +141,9 @@ test('protected previews retain framing exceptions after their own navigation an
   await frames()[0]!.evaluate(url => location.assign(url), base + '/protected-next');
   await expect.poll(() => frames().filter(f => f.url() === base + '/protected-next').length).toBeGreaterThan(0);
   await expect(frames()[0]!.locator('h1')).toHaveText('ViewGrid fixture');
-  await frames()[0]!.evaluate(() => location.reload());
-  await expect(frames()[0]!.locator('h1')).toHaveText('ViewGrid fixture');
+  const source = frames()[0]!;
+  await Promise.all([page.waitForEvent('framenavigated', { predicate: f => f === source }), source.evaluate(() => location.reload())]);
+  await expect(source.locator('h1')).toHaveText('ViewGrid fixture');
 });
 
 test('reported CastPost URL loads and survives reload in actual Chrome', async () => {
@@ -153,8 +155,12 @@ test('reported CastPost URL loads and survives reload in actual Chrome', async (
   const input = page.locator('input').first();
   await input.fill(process.env.VIEWGRID_LIVE_TEST_URL!); await input.press('Enter');
   try {
-    await expect.poll(async () => { const texts = await Promise.all(frames().map(f => f.locator('body').innerText({ timeout: 2000 }).catch(() => ''))); return texts.length === 4 && texts.every(t => /CastPost/i.test(t)); }, { timeout: 20000 }).toBe(true);
-    await frames()[0]!.evaluate(() => location.reload());
-    await expect(frames()[0]!.locator('body')).toContainText(/CastPost/i, { timeout: 20000 });
+    for (const frame of frames()) await expect(frame.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
+    const source = frames()[0]!;
+    await Promise.all([
+      page.waitForEvent('framenavigated', { predicate: f => f === source }),
+      source.evaluate(() => location.reload()),
+    ]);
+    await expect(source.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
   } finally { console.log('CASTPOST DIAGNOSTICS', JSON.stringify(diagnostics)); }
 });

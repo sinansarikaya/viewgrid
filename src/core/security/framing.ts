@@ -1,4 +1,4 @@
-/** Framing exceptions are limited to direct previews in verified workspace tabs. */
+/** Framing exceptions are confined to verified workspace tabs. */
 export function isWorkspaceUrl(url: string | undefined, workspaceUrl: string): boolean {
   if (!url) return false;
   try {
@@ -7,18 +7,19 @@ export function isWorkspaceUrl(url: string | undefined, workspaceUrl: string): b
   } catch { return false; }
 }
 
-export function workspaceRule(tabIds: number[], extensionHost: string) {
+export function workspaceRule(tabIds: number[]) {
   if (!tabIds.length) return [];
   return [{
     id: 1001, priority: 1,
     action: { type: 'modifyHeaders', responseHeaders: [
       { header: 'x-frame-options', operation: 'remove' },
-      // DNR cannot edit one CSP directive. This exception is confined to direct
-      // preview documents; normal tabs and nested third-party frames retain CSP.
+      // DNR cannot edit one CSP directive or select parentFrameId. A tab-scoped
+      // subframe rule also covers page-initiated navigation and reload. Ordinary
+      // tabs retain their protections; nested frames in a workspace are included.
       { header: 'content-security-policy', operation: 'remove' },
       { header: 'content-security-policy-report-only', operation: 'remove' },
     ] },
-    condition: { resourceTypes: ['sub_frame'], tabIds, initiatorDomains: [extensionHost] },
+    condition: { resourceTypes: ['sub_frame'], tabIds },
   }];
 }
 
