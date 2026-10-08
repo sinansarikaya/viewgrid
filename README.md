@@ -10,6 +10,8 @@ ViewGrid is a local browser extension for Chrome/Chromium and Firefox, with sync
 
 Version 1.0.3 fixes a regression where protected previews stopped loading after their own navigation or reload. Both installable browser builds are included in dist/ and in the source ZIP; manifest versions come from package.json. The Issues panel now distinguishes unique findings from occurrences across devices and provides filters, element highlighting, copy and JSON export. See [CHANGELOG.md](CHANGELOG.md).
 
+Same-version corrected builds retain **1.0.3** and show a source build ID in the workspace. Use the **build-ID packages linked at the top of the release notes**, or download current main and load its dist folders. Original tagged ZIPs are retained for history and do not include later fixes.
+
 GitHub release packages and browser-store submissions are separate distribution channels. The store links above may offer an older version until review is complete.
 
 ## Features
@@ -17,6 +19,7 @@ GitHub release packages and browser-store submissions are separate distribution 
 - **21 device profiles and 5 preset sets**, custom dimensions, portrait/landscape, zoom, duplication and up to 16 viewports.
 - **Grid, row, column and free layouts**, manual ordering, alignment, focus mode, hardware frames and a touch cursor.
 - **Synchronized scroll, clicks, navigation, reload, inputs/forms and key events.** Each channel can be toggled independently. Document epochs keep synchronization working after reload. Input events use native setters so controlled React inputs receive changes.
+- **Low-latency scroll mirroring:** scroll travels directly through the workspace to peer previews; receiving pages scroll instantly even when their CSS requests smooth animation. Browser frame/IPC delays still exist; this is not a zero-millisecond guarantee.
 - **Split, curtain and side-by-side comparisons.** Overlay an exported PNG/SVG design with adjustable opacity/blending and preserved aspect ratio. This is a visual overlay, not a Figma API integration or an automated pixel-diff score.
 - **PNG screenshots** of one or every expanded viewport at its logical dimensions and the host browser's capture scale. Large viewports are tiled; device frames are excluded. Export is limited to 32 megapixels. Keep the workspace tab active; Escape cancels a capture. The workspace screenshot button captures the currently visible workspace.
 - **Responsive issue review** for horizontal overflow, clipped text, out-of-viewport controls and recommended 44×44 CSS-pixel touch targets on touch device profiles.
@@ -44,7 +47,7 @@ Framing exceptions are confined to **verified ViewGrid workspace tabs**. Normal 
 
 - **Firefox (Manifest V2, Firefox 128+):** removes X-Frame-Options and only the `frame-ancestors` directive from CSP response headers, preserving other directives and cookies. Firefox MV3 does not permit these headers to be relaxed, so the Firefox package uses MV2.
 - **Chromium:** DeclarativeNetRequest cannot rewrite an individual CSP directive. Workspace subframe responses have XFO and CSP headers removed, including during page-initiated navigation and reload; this affects security behavior inside workspace previews and their nested frames. Normal tabs are outside the exception.
-- Both browser builds defer worker registration until the preview agent verifies its workspace tab, then disables registration and unregisters workers visible in that preview storage partition. Existing controlled previews reload once after unregistering. Normal tabs are untouched; cookies, localStorage, sessionStorage and CacheStorage are retained. Hard refresh reloads the workspace using the browser's bypass-cache option.
+- Before loading a preview, ViewGrid waits for tab-scoped framing rules and removes service-worker registrations only for the selected site's origin (Chromium) or hostname (Firefox). This can also remove that site's worker registrations used by normal tabs; a normal visit can register them again. Cookies, localStorage, sessionStorage, IndexedDB and CacheStorage are not requested for removal, and no browser-wide cache cleanup is used. Preview agents prevent worker re-registration after workspace verification. Preview documents bypass stale HTTP cache headers. Hard refresh reloads the workspace using the browser's bypass-cache option.
 - Third-party cookie policies, sandbox restrictions, service-worker-served responses and login flows can prevent a site from working in an iframe. ViewGrid is not an isolated authentication browser or a substitute for testing security headers in a normal tab.
 - Device profiles set CSS viewport dimensions. Their DPR/UA metadata does not emulate real phone hardware, mobile browser engines or network user agents. Synthetic key events reach application handlers but cannot reproduce browser-reserved or trusted default actions.
 - Previews load the sites you select and those sites make their usual network requests. ViewGrid has no telemetry or cloud proxy. RAM, frame rate and latency depend on page content, hardware and viewport count; no fixed RAM/FPS guarantee is made.

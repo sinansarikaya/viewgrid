@@ -65,6 +65,7 @@
     "tabs",
     "activeTab",
     "downloads",
+    "browsingData",
     "scripting",
     "contextMenus",
     "declarativeNetRequest",

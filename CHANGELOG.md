@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## Same-version corrections to 1.0.3 - 2026-10-08
+
+No manifest/package version increment. Corrected packages receive a source build ID; the original tag and original release ZIPs remain unchanged.
+
+- Reproduced CastPost failure in both browsers after registering its real /sw.js in a normal tab. Prior clean-profile tests did not cover this case.
+- Gate preview navigation on framing-rule readiness and selected-site service-worker removal. The first blocked document cannot run a content-script recovery hook, so cleanup now happens before any iframe request.
+- Selected-site worker removal uses Chromium origin filters or Firefox hostname filters. It can affect workers used by normal tabs for the same site; no cookies, localStorage, sessionStorage, IndexedDB or CacheStorage removal is requested. No global cache cleanup is invoked.
+- Preview document requests bypass stale HTTP cache headers. Ordinary-tab framing protections remain unchanged.
+- Route scroll directly through the verified workspace parent instead of a background runtime round trip; apply instant target scrolling and remove the 120ms scroll input lock.
+- Show installed manifest version and source build ID in the workspace; same-URL retry/reload recreates previews and fences previous-document events.
+- Test CastPost with a warmed worker, repeated workspace reopening, Chromium browser restart, data-preservation checks and measured scroll relay latency. Publish distinct build-ID assets under the existing 1.0.3 release.
+
+---
+
 ## [1.0.3] - 2026-10-08
 
 ### Fixed

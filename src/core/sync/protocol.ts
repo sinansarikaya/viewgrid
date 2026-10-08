@@ -77,7 +77,7 @@ export function scrollRatios(scrollX: number, scrollY: number, maxX: number, max
 }
 
 export function applyScrollRatios(
-  win: { scrollTo(x: number, y: number): void; document: Document },
+  win: { scrollTo(options: ScrollToOptions): void; document: Document },
   payload: Record<string, unknown>,
 ): void {
   const doc = win.document;
@@ -85,7 +85,7 @@ export function applyScrollRatios(
   const maxY = Math.max(0, doc.documentElement.scrollHeight - doc.documentElement.clientHeight);
   const xRatio = Number(payload.xRatio) || 0;
   const yRatio = Number(payload.yRatio) || 0;
-  win.scrollTo(Math.round(xRatio * maxX), Math.round(yRatio * maxY));
+  win.scrollTo({ left: Math.round(xRatio * maxX), top: Math.round(yRatio * maxY), behavior: 'instant' });
 }
 
 /** Robust-ish CSS selector path (id → nth-chain, max 6 levels). */

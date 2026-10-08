@@ -77,6 +77,8 @@ jobs:
 
       - name: Browser regression tests
         run: pnpm run test:e2e
+        env:
+          VIEWGRID_LIVE_TEST_URL: https://castpost.app/en
 
       - name: Install Firefox
         uses: browser-actions/setup-firefox@v1
@@ -89,6 +91,8 @@ jobs:
 
       - name: Firefox browser regression tests
         run: python tests/e2e/firefox_extension.py
+        env:
+          VIEWGRID_LIVE_TEST_URL: https://castpost.app/en
 
       - name: Package Release ZIPs & Generate SHA256SUMS
         run: pnpm run package:release
@@ -106,3 +110,43 @@ jobs:
           prerelease: false
           body_path: docs/releases/${{ steps.version.outputs.tag }}.md
           generate_release_notes: true
+
+      - name: Publish a corrected build without changing the version or tag
+        if: steps.existing.outputs.result == 'true'
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          SOURCE_COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
+        with:
+          script: |
+            const fs = require('fs');
+            const info = JSON.parse(fs.readFileSync('dist/chromium/build-info.json', 'utf8'));
+            const { data: release } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag: process.env.RELEASE_TAG });
+            const prefix = `viewgrid-${info.version}-build-${info.build}`;
+            const artifacts = ['chromium', 'firefox', 'source'].map(browser => ({
+              path: `release/viewgrid-${info.version}-${browser}.zip`, name: `${prefix}-${browser}.zip`, type: 'application/zip'
+            }));
+            const links = [];
+            const checksums = [];
+            for (const artifact of artifacts) {
+              let asset = release.assets.find(asset => asset.name === artifact.name);
+              if (!asset) {
+                const data = fs.readFileSync(artifact.path);
+                asset = (await github.rest.repos.uploadReleaseAsset({ ...context.repo, release_id: release.id, name: artifact.name, data, headers: { 'content-type': artifact.type, 'content-length': data.length } })).data;
+              }
+              links.push(`[${artifact.name}](${asset.browser_download_url})`);
+              if (!asset.digest?.startsWith('sha256:')) throw new Error(`Missing server digest for ${asset.name}`);
+              checksums.push(`${asset.digest.slice(7)}  ${asset.name}`);
+            }
+            const sumsName = `SHA256SUMS-${info.build}`;
+            let sums = release.assets.find(asset => asset.name === sumsName);
+            if (!sums) {
+              const data = Buffer.from(checksums.join('\n') + '\n');
+              sums = (await github.rest.repos.uploadReleaseAsset({ ...context.repo, release_id: release.id, name: sumsName, data, headers: { 'content-type': 'text/plain', 'content-length': data.length } })).data;
+            }
+            const marker = `<!-- tested-build:${info.build} -->`;
+            if (!(release.body || '').includes(marker)) {
+              const notes = fs.readFileSync('docs/releases/same-version-fixes.md', 'utf8');
+              const body = `${marker}\n## Corrected ${info.version} build: ${info.build}\n\n${notes}\n\nTested commit: ${process.env.SOURCE_COMMIT}\n\n${links.map(link => '- ' + link).join('\n')}\n- [${sumsName}](${sums.browser_download_url})\n\n---\n\n${release.body || ''}`;
+              await github.rest.repos.updateRelease({ ...context.repo, release_id: release.id, body });
+            }

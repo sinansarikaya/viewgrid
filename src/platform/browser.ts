@@ -52,6 +52,7 @@ export interface VgBrowser {
       removeListener?(cb: (msg: any, sender: any) => unknown): void;
     };
     getURL(path: string): string;
+    getManifest(): { version?: string };
     onInstalled?: { addListener(cb: () => void): void };
     lastError?: { message?: string };
   };
@@ -140,6 +141,7 @@ const messageListeners = new WeakMap<Function, any>();
 
 export const b: VgBrowser = {
   runtime: {
+    getManifest() { return raw.runtime?.getManifest?.() ?? {}; },
     sendMessage(msg: unknown): Promise<unknown> {
       if (!raw.runtime?.sendMessage) return Promise.resolve(undefined);
       return promisify(raw.runtime.sendMessage, raw.runtime, msg);

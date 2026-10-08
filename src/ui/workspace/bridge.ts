@@ -20,6 +20,11 @@ export function workspaceMessage(message: Record<string, unknown>) {
   return b.runtime.sendMessage({ ...message, tabId: workspaceTabId });
 }
 
+export async function preparePreview(url: string) {
+  const reply = await workspaceMessage({ type: 'vg/prepare-preview', url }) as { ok?: boolean; error?: string } | undefined;
+  if (!reply?.ok) throw new Error(reply?.error || 'Preview preparation did not respond. Reload the extension.');
+}
+
 export async function injectAgents() {
   // Content agents are already initialized at document_start via manifest content_scripts
   return Promise.resolve();

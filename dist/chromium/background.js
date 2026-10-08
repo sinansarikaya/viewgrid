@@ -42,6 +42,9 @@
   var messageListeners = /* @__PURE__ */ new WeakMap();
   var b = {
     runtime: {
+      getManifest() {
+        return raw.runtime?.getManifest?.() ?? {};
+      },
       sendMessage(msg) {
         if (!raw.runtime?.sendMessage) return Promise.resolve(void 0);
         return promisify(raw.runtime.sendMessage, raw.runtime, msg);
@@ -291,13 +294,17 @@
     return [{
       id: 1001,
       priority: 1,
-      action: { type: "modifyHeaders", responseHeaders: [
+      action: { type: "modifyHeaders", requestHeaders: [
+        { header: "cache-control", operation: "set", value: "no-cache" },
+        { header: "pragma", operation: "set", value: "no-cache" }
+      ], responseHeaders: [
         { header: "x-frame-options", operation: "remove" },
         // DNR cannot edit one CSP directive or select parentFrameId. A tab-scoped
         // subframe rule also covers page-initiated navigation and reload. Ordinary
         // tabs retain their protections; nested frames in a workspace are included.
         { header: "content-security-policy", operation: "remove" },
-        { header: "content-security-policy-report-only", operation: "remove" }
+        { header: "content-security-policy-report-only", operation: "remove" },
+        { header: "cache-control", operation: "set", value: "no-store" }
       ] },
       condition: { resourceTypes: ["sub_frame"], tabIds }
     }];
@@ -317,12 +324,44 @@
     }
   }
 
+  // src/core/security/preview.ts
+  function workerRemovalOptions(url, firefox) {
+    if (!safeHttpUrl(url)) throw new Error("Preview URL must use HTTP or HTTPS");
+    const parsed = new URL(url);
+    return firefox ? { hostnames: [parsed.hostname] } : { origins: [parsed.origin] };
+  }
+  function uncachedHeaders(headers, response = false) {
+    return [
+      ...headers.filter((h) => !["cache-control", "pragma"].includes(h.name.toLowerCase())),
+      { name: "Cache-Control", value: response ? "no-store" : "no-cache" },
+      ...response ? [] : [{ name: "Pragma", value: "no-cache" }]
+    ];
+  }
+
   // src/background/index.ts
   var workspaceUrl = b.runtime.getURL("workspace.html");
   var workspaceTabs = /* @__PURE__ */ new Set();
   var agents = /* @__PURE__ */ new Map();
   var hydrated;
   var ruleQueue = Promise.resolve();
+  var preparing = /* @__PURE__ */ new Map();
+  async function preparePreview(tabId, url) {
+    const firefox = !!b.webRequest?.onHeadersReceived;
+    const options = workerRemovalOptions(url, firefox);
+    const key = `${tabId}:${new URL(url).origin}`;
+    let task = preparing.get(key);
+    if (!task) {
+      task = (async () => {
+        await syncRules();
+        if (!b.browsingData) throw new Error("Reload ViewGrid and allow the browsingData permission to prepare network previews.");
+        await b.browsingData.removeServiceWorkers(options);
+      })();
+      preparing.set(key, task);
+      void task.finally(() => preparing.delete(key)).catch(() => {
+      });
+    }
+    await task;
+  }
   function syncRules() {
     ruleQueue = ruleQueue.catch(() => {
     }).then(async () => {
@@ -371,8 +410,12 @@
   if (b.webRequest?.onHeadersReceived) {
     b.webRequest.onHeadersReceived.addListener((details) => {
       if (details.type !== "sub_frame" || details.parentFrameId !== 0 || !workspaceTabs.has(details.tabId)) return {};
-      return { responseHeaders: relaxFirefoxHeaders(details.responseHeaders ?? []) };
+      return { responseHeaders: uncachedHeaders(relaxFirefoxHeaders(details.responseHeaders ?? []), true) };
     }, { urls: ["<all_urls>"] }, ["blocking", "responseHeaders"]);
+    b.webRequest.onBeforeSendHeaders.addListener((details) => {
+      if (details.type !== "sub_frame" || details.parentFrameId !== 0 || !workspaceTabs.has(details.tabId)) return {};
+      return { requestHeaders: uncachedHeaders(details.requestHeaders ?? []) };
+    }, { urls: ["<all_urls>"], types: ["sub_frame"] }, ["blocking", "requestHeaders"]);
   }
   async function workspaceTab(msg, sender) {
     if (!isWorkspaceUrl(sender.url, workspaceUrl)) return void 0;
@@ -416,6 +459,15 @@
         workspaceTabs.add(tabId);
         await syncRules();
         return { ok: true, tabId };
+      }
+      if (msg.type === "vg/prepare-preview") {
+        if (!safeHttpUrl(msg.url)) return { ok: false, error: "Invalid preview URL" };
+        try {
+          await preparePreview(tabId, msg.url);
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, error: error.message };
+        }
       }
       if (msg.type === "vg/sync-apply") {
         const source = String(msg.env?.sourceViewportId);

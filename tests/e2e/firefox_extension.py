@@ -127,6 +127,7 @@ try:
     driver.switch_to.default_content()
     assert result == 'SecurityError', result
     print('PASS Firefox: preview worker registration is blocked', flush=True)
+    wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '[data-testid="extension-version"]').text == 'v1.0.3')
     if os.environ.get('VIEWGRID_LIVE_TEST_URL'):
         url = os.environ['VIEWGRID_LIVE_TEST_URL']
         main = driver.current_window_handle
@@ -139,6 +140,7 @@ try:
         wait.until(lambda d: d.execute_script('return !!navigator.serviceWorker.controller'))
         print('CASTPOST FIREFOX WARM PROFILE', driver.execute_script('return navigator.serviceWorker.controller.scriptURL'), flush=True)
         normal = driver.current_window_handle
+        driver.execute_script("localStorage.setItem('__viewgrid_preserve','keep');document.cookie='__viewgrid_preserve=keep; SameSite=Lax; path=/';")
         driver.switch_to.window(main)
         driver.close()
         for phase in ['first warm open', 'reopen', 'second reopen']:
@@ -146,6 +148,26 @@ try:
             driver.switch_to.new_window('tab')
             workspace(url)
             wait.until(lambda _: all('Cast once.' in frame_text(i) for i in range(4)))
+            driver.save_screenshot(str(out / ('castpost-' + phase.replace(' ', '-') + '.png')))
+            if phase == 'first warm open':
+                preview_handle = driver.current_window_handle
+                driver.switch_to.window(normal)
+                preserved = driver.execute_script("return {storage:localStorage.getItem('__viewgrid_preserve'),cookie:document.cookie.includes('__viewgrid_preserve=keep')};")
+                assert preserved == {'storage':'keep','cookie':True}, preserved
+                driver.switch_to.window(preview_handle)
+                print('PASS FIREFOX DATA PRESERVATION', preserved, flush=True)
+
+                for index in range(4):
+                    frame_script("document.documentElement.style.scrollBehavior='smooth'; window.__vgScrollLatencies=[]; window.addEventListener('message',e=>{if(e.data?.type==='vg/scroll-apply')window.__vgScrollLatencies.push(Date.now()-e.data.env.ts);});", index)
+                driver.switch_to.frame(driver.find_elements(By.CSS_SELECTOR, 'iframe[name^="viewgrid:"]')[0])
+                driver.execute_async_script("const done=arguments[arguments.length-1]; window.dispatchEvent(new Event('wheel')); (async()=>{for(let step=1;step<=20;step++){const max=document.documentElement.scrollHeight-document.documentElement.clientHeight; window.scrollTo({top:Math.round(max*step*.03),behavior:'instant'}); await new Promise(r=>setTimeout(r,50));} done(true);})();")
+                driver.switch_to.default_content()
+                wait.until(lambda _: all(frame_script('return window.__vgScrollLatencies.length', i) >= 5 for i in range(1, 4)))
+                latencies = sorted(sum([frame_script('return window.__vgScrollLatencies', i) for i in range(1, 4)], []))
+                p95 = latencies[int((len(latencies)-1)*.95)]
+                print('FIREFOX SCROLL TIMING', {'samples':len(latencies),'p95Ms':p95}, flush=True)
+                assert p95 < 100, latencies
+                wait.until(lambda _: max(frame_script('return scrollY/(document.documentElement.scrollHeight-document.documentElement.clientHeight)', i) for i in range(4)) - min(frame_script('return scrollY/(document.documentElement.scrollHeight-document.documentElement.clientHeight)', i) for i in range(4)) < .02)
             time.sleep(1.5)
             before = frame_script('return performance.timeOrigin')
             frame_script('location.reload()')

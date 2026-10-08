@@ -6,6 +6,35 @@ import path from 'node:path';
 let server: Server, context: BrowserContext, page: Page, profile: string, base: string, extensionId: string;
 const fixture = `<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:0;font:16px sans-serif}button{width:60px;height:44px}#small{width:30px;height:30px}#clipped{width:100px;overflow:hidden;white-space:nowrap}#intentional{width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{height:1800px}</style><h1>ViewGrid fixture</h1><input id="name"><button id="action" onclick="document.querySelector('#count').textContent=Number(document.querySelector('#count').textContent)+1">Count</button><span id="count">0</span><button id="small">Tiny</button><p id="clipped">This long text is accidentally clipped</p><p id="intentional">This long text is intentionally clipped</p><a id="next" href="/next">Next</a><button id="spa" onclick="history.pushState({},'', '/spa')">SPA</button><div class="spacer"></div><footer>End</footer>`;
 const frames = () => page.frames().filter(f => f.parentFrame() === page.mainFrame());
+async function measureScrollSync(label: string) {
+  const previews = frames();
+  expect(previews).toHaveLength(4);
+  await Promise.all(previews.map(frame => frame.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+    (window as any).__vgScrollLatencies = [];
+    window.addEventListener('message', event => {
+      if (event.data?.type === 'vg/scroll-apply') (window as any).__vgScrollLatencies.push(Date.now() - event.data.env.ts);
+    });
+  })));
+  await previews[0]!.evaluate(async () => {
+    window.dispatchEvent(new Event('wheel'));
+    for (let step = 1; step <= 20; step++) {
+      const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      window.scrollTo({ top: Math.round(max * step * 0.03), behavior: 'instant' });
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  });
+  await expect.poll(async () => (await Promise.all(previews.slice(1).map(frame => frame.evaluate(() => (window as any).__vgScrollLatencies.length)))).every(count => count >= 5)).toBe(true);
+  const latencies = (await Promise.all(previews.slice(1).map(frame => frame.evaluate(() => (window as any).__vgScrollLatencies as number[])))).flat().sort((a, b) => a - b);
+  const p95 = latencies[Math.floor((latencies.length - 1) * 0.95)]!;
+  await expect.poll(async () => {
+    const ratios = await Promise.all(previews.map(frame => frame.evaluate(() => scrollY / (document.documentElement.scrollHeight - document.documentElement.clientHeight))));
+    return ratios.every(ratio => Math.abs(ratio - ratios[0]!) < 0.02);
+  }).toBe(true);
+  console.log('SCROLL SYNC TIMING', { label, samples: latencies.length, medianMs: latencies[Math.floor(latencies.length / 2)], p95Ms: p95 });
+  expect(p95).toBeLessThan(80);
+}
+
 async function clickInPreview(frame: Frame, selector: string) {
   // CDP element quads in an OOPIF do not include the workspace's CSS scale.
   // Convert page-local coordinates to the rendered iframe before a trusted mouse click.
@@ -54,6 +83,10 @@ test('loads four actual frames, applies device dimensions and rotates', async ()
   await first.locator('button[title*="Rotate"],button[title*="orientation" i]').first().click();
   await expect.poll(() => frame.evaluate(() => innerWidth)).toBe(before.height);
 });
+test('scroll mirrors promptly even when the target site requests smooth scrolling', async () => {
+  await measureScrollSync('local fixture with CSS smooth scrolling');
+});
+
 test('normal tabs retain framing protections while a direct workspace preview loads', async () => {
   const ordinary = await context.newPage();
   await ordinary.goto(base + '/host');
@@ -180,6 +213,11 @@ test('CastPost loads from a worker-warmed profile, reopens and survives a browse
   await expect(normal.locator('h1')).toContainText('Cast once.');
   await normal.evaluate(async () => { await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready; });
   await expect.poll(() => normal.evaluate(() => !!navigator.serviceWorker.controller), { timeout: 20000 }).toBe(true);
+  await normal.evaluate(async () => {
+    localStorage.setItem('__viewgrid_preserve', 'keep');
+    document.cookie = '__viewgrid_preserve=keep; SameSite=Lax; path=/';
+    await (await caches.open('__viewgrid_preserve')).put('/__viewgrid_preserve', new Response('keep'));
+  });
   console.log('CASTPOST WARM PROFILE', await normal.evaluate(() => ({ url: location.href, worker: navigator.serviceWorker.controller?.scriptURL })));
   for (const phase of ['first warm open', 'reopen', 'browser restart']) {
     if (phase === 'browser restart') {
@@ -197,6 +235,14 @@ test('CastPost loads from a worker-warmed profile, reopens and survives a browse
       await expect(page.locator('iframe[name^="viewgrid:"]')).toHaveCount(4);
       await expect.poll(() => frames().filter(f => f.url().startsWith(url)).length, { timeout: 20000 }).toBe(4);
       for (const frame of frames()) await expect(frame.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
+      if (phase === 'first warm open') {
+        const preserved = await normal.evaluate(async () => ({ storage: localStorage.getItem('__viewgrid_preserve'), cookie: document.cookie.includes('__viewgrid_preserve=keep'), cache: await (await (await caches.open('__viewgrid_preserve')).match('/__viewgrid_preserve'))?.text() }));
+        expect(preserved).toEqual({ storage: 'keep', cookie: true, cache: 'keep' });
+        console.log('PASS CASTPOST DATA PRESERVATION', preserved);
+      }
+      await page.screenshot({ path: `test-results/castpost-chromium-${phase.replace(/ /g, '-')}.png` });
+      if (phase === 'first warm open') await measureScrollSync('castpost.app warm profile');
+      await expect(page.getByTestId('extension-version')).toHaveText('v1.0.3');
       const source = frames()[0]!;
       expect(await source.evaluate(async () => { try { await navigator.serviceWorker.register('/sw.js'); return 'registered'; } catch (e) { return (e as Error).name; } })).toBe('SecurityError');
       await source.evaluate(() => history.replaceState({}, '', location.href + '#vg-sync-regression'));

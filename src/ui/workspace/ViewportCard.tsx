@@ -8,7 +8,7 @@ import { DeviceFrame } from './DeviceFrame';
 import { getTranslation } from './i18n';
 
 import { getDeviceCategoryIcon } from './utils';
-import { sendAgentCmd } from './bridge';
+import { preparePreview, sendAgentCmd } from './bridge';
 
 interface Props {
   vp: ViewportState;
@@ -48,6 +48,22 @@ export function ViewportCard({
   const display = displayedSize(logical, vp.zoom);
   const contentRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [attempt, setAttempt] = React.useState(0);
+  const [preview, setPreview] = React.useState<{ url: string; generation: number; ready: boolean; error?: string }>({ url: '', generation: -1, ready: false });
+  const previewReady = preview.ready && preview.url === vp.url && preview.generation === st.previewGeneration;
+  useEffect(() => {
+    let canceled = false;
+    const current = { url: vp.url, generation: st.previewGeneration };
+    setPreview({ ...current, ready: false });
+    if (!vp.url) { setPreview({ ...current, ready: true }); return; }
+    void preparePreview(vp.url).then(() => {
+      if (!canceled) setPreview({ ...current, ready: true });
+    }).catch((error: Error) => {
+      if (!canceled) setPreview({ ...current, ready: false, error: error.message });
+    });
+    return () => { canceled = true; };
+  }, [vp.url, st.previewGeneration, attempt]);
+
   const [touchPos, setTouchPos] = React.useState<{ x: number; y: number; active: boolean; visible: boolean }>({
     x: 0,
     y: 0,
@@ -98,7 +114,7 @@ export function ViewportCard({
     };
     el.addEventListener('load', onLoad);
     return () => el.removeEventListener('load', onLoad);
-  }, [onInjected, vp.url, vp.colorScheme, st.model.touchCursor, profile.touchSupport]);
+  }, [onInjected, vp.url, previewReady, st.previewGeneration, vp.colorScheme, st.model.touchCursor, profile.touchSupport]);
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!st.model.touchCursor || !profile.touchSupport) return;
@@ -263,15 +279,19 @@ export function ViewportCard({
             >
               <iframe
                 ref={iframeRef}
-                key={`${vp.id}:${vp.url}`}
+                key={`${vp.id}:${vp.url}:${st.previewGeneration}:${attempt}:${previewReady}`}
                 className={s.iframe}
                 tabIndex={-1}
                 name={`viewgrid:${vp.id}`}
-                src={vp.url || 'about:blank'}
+                src={previewReady ? vp.url || 'about:blank' : 'about:blank'}
                 style={{ width: logical.width, height: logical.height, transform: `scale(${clampZoom(vp.zoom)})` }}
                 title={`${profile.name} viewport`}
                 onLoad={onInjected}
               />
+              {!previewReady && <div role={preview.error ? 'alert' : 'status'} style={{ position: 'absolute', inset: 0, padding: 16, background: 'var(--panel)', color: 'var(--text)', overflow: 'auto' }}>
+                <p>{preview.error || (st.language === 'tr' ? 'Önizleme hazırlanıyor…' : 'Preparing preview…')}</p>
+                {preview.error && <button onClick={() => setAttempt(value => value + 1)}>{st.language === 'tr' ? 'Tekrar dene' : 'Retry'}</button>}
+              </div>}
               {st.model.touchCursor && profile.touchSupport && touchPos.visible && (
                 <div
                   className={`${s.touchDot} ${touchPos.active ? s.touchDotActive : ''}`}

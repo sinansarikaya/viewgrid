@@ -11,13 +11,17 @@ export function workspaceRule(tabIds: number[]) {
   if (!tabIds.length) return [];
   return [{
     id: 1001, priority: 1,
-    action: { type: 'modifyHeaders', responseHeaders: [
+    action: { type: 'modifyHeaders', requestHeaders: [
+      { header: 'cache-control', operation: 'set', value: 'no-cache' },
+      { header: 'pragma', operation: 'set', value: 'no-cache' },
+    ], responseHeaders: [
       { header: 'x-frame-options', operation: 'remove' },
       // DNR cannot edit one CSP directive or select parentFrameId. A tab-scoped
       // subframe rule also covers page-initiated navigation and reload. Ordinary
       // tabs retain their protections; nested frames in a workspace are included.
       { header: 'content-security-policy', operation: 'remove' },
       { header: 'content-security-policy-report-only', operation: 'remove' },
+      { header: 'cache-control', operation: 'set', value: 'no-store' },
     ] },
     condition: { resourceTypes: ['sub_frame'], tabIds },
   }];

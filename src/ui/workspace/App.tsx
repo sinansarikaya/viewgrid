@@ -43,6 +43,7 @@ function matchesShortcut(e: KeyboardEvent, comboStr?: string): boolean {
   return e.key.toLowerCase() === mainKey;
 }
 import { CompareModal } from './CompareModal';
+import { b } from '../../platform/browser';
 
 export function App({ hub: _hub }: { hub: LoopGuard }) {
   const st = useStore();
@@ -51,6 +52,16 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
   const contentRefs = useRef(new Map<string, HTMLElement>());
   const [menuOpen, setMenuOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
+  const version = b.runtime.getManifest().version || 'unknown';
+  const [build, setBuild] = useState('');
+  useEffect(() => {
+    let mounted = true;
+    void fetch(b.runtime.getURL('build-info.json')).then(response => response.json()).then(info => {
+      if (mounted && typeof info.build === 'string') setBuild(info.build);
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
 
   // Enforce initial scroll to top on launch (prevents browser/iframe from yanking down)
   const userInteracted = useRef(false);
@@ -348,7 +359,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
   return (
     <div className={s.app}>
       <div className={s.toolbar}>
-        <span className={s.brand}>ViewGrid</span>
+        <span className={s.brand}>ViewGrid <small data-testid="extension-version" style={{ fontSize: 10, fontWeight: 400 }}>v{version}</small></span>
         <button className={s.iconBtn} title={t.back} onClick={() => sendAgentCmd('all', 'back')}>←</button>
         <button className={s.iconBtn} title={t.forward} onClick={() => sendAgentCmd('all', 'forward')}>→</button>
         <button className={s.iconBtn} title={t.reloadAll} onClick={() => sendAgentCmd('all', 'reload')}>⟳</button>
@@ -734,6 +745,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
       </div>
 
       <div className={s.statusBar}>
+        <span data-testid="extension-build">ViewGrid v{version}{build && ` · ${build}`}</span>
         <span>{visible.length} {t.viewports}</span>
         <span>{t.layout}: {st.model.layout === 'grid' ? t.layoutGrid : st.model.layout === 'row' ? t.layoutRow : t.layoutCol}</span>
         <span>{t.zoomPresets}: {ZOOM_PRESETS.map((z) => `${z * 100}%`).join(' / ')}</span>

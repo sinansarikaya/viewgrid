@@ -1,11 +1,32 @@
 import { b } from '../platform/browser';
 import { isWorkspaceUrl, relaxFirefoxHeaders, safeHttpUrl, workspaceRule } from '../core/security/framing';
+import { uncachedHeaders, workerRemovalOptions } from '../core/security/preview';
 
 const workspaceUrl = b.runtime.getURL('workspace.html');
 const workspaceTabs = new Set<number>();
 const agents = new Map<number, Map<string, number>>();
 let hydrated: Promise<void> | undefined;
 let ruleQueue = Promise.resolve();
+const preparing = new Map<string, Promise<void>>();
+
+async function preparePreview(tabId: number, url: string) {
+  const firefox = !!b.webRequest?.onHeadersReceived;
+  const options = workerRemovalOptions(url, firefox);
+  const key = `${tabId}:${new URL(url).origin}`;
+  let task = preparing.get(key);
+  if (!task) {
+    task = (async () => {
+      await syncRules();
+      if (!b.browsingData) throw new Error('Reload ViewGrid and allow the browsingData permission to prepare network previews.');
+      // An existing worker can block the document BEFORE its content agent runs.
+      // Only remove this selected site's worker registrations, never all sites.
+      await b.browsingData.removeServiceWorkers(options);
+    })();
+    preparing.set(key, task);
+    void task.finally(() => preparing.delete(key)).catch(() => {});
+  }
+  await task;
+}
 
 function syncRules() {
   ruleQueue = ruleQueue.catch(() => {}).then(async () => {
@@ -51,8 +72,12 @@ b.tabs.onRemoved?.addListener(id => {
 if (b.webRequest?.onHeadersReceived) {
   b.webRequest.onHeadersReceived.addListener((details: any) => {
     if (details.type !== 'sub_frame' || details.parentFrameId !== 0 || !workspaceTabs.has(details.tabId)) return {};
-    return { responseHeaders: relaxFirefoxHeaders(details.responseHeaders ?? []) };
+    return { responseHeaders: uncachedHeaders(relaxFirefoxHeaders(details.responseHeaders ?? []), true) };
   }, { urls: ['<all_urls>'] }, ['blocking', 'responseHeaders']);
+  b.webRequest.onBeforeSendHeaders.addListener((details: any) => {
+    if (details.type !== 'sub_frame' || details.parentFrameId !== 0 || !workspaceTabs.has(details.tabId)) return {};
+    return { requestHeaders: uncachedHeaders(details.requestHeaders ?? []) };
+  }, { urls: ['<all_urls>'], types: ['sub_frame'] }, ['blocking', 'requestHeaders']);
 }
 
 async function workspaceTab(msg: any, sender: any): Promise<number | undefined> {
@@ -90,6 +115,11 @@ b.runtime.onMessage.addListener((msg: any, sender: any) => {
     if (tabId === undefined) return { ok: false, error: 'Unverified workspace' };
     if (msg.type === 'vg/workspace-hello') {
       workspaceTabs.add(tabId); await syncRules(); return { ok: true, tabId };
+    }
+    if (msg.type === 'vg/prepare-preview') {
+      if (!safeHttpUrl(msg.url)) return { ok: false, error: 'Invalid preview URL' };
+      try { await preparePreview(tabId, msg.url); return { ok: true }; }
+      catch (error) { return { ok: false, error: (error as Error).message }; }
     }
     if (msg.type === 'vg/sync-apply') {
       const source = String(msg.env?.sourceViewportId);

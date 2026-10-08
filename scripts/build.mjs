@@ -9,6 +9,7 @@
 import { build as viteBuild } from 'vite';
 import esbuild from 'esbuild';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildManifest } from './manifest.mjs';
@@ -59,6 +60,20 @@ fs.writeFileSync(
   path.join(targetDir, 'manifest.json'),
   JSON.stringify(buildManifest(target, iconFiles), null, 2),
 );
+
+// A stable source fingerprint distinguishes same-version corrected packages.
+const hash = crypto.createHash('sha256');
+function fingerprint(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) fingerprint(full);
+    else { hash.update(path.relative(root, full)); hash.update(fs.readFileSync(full)); }
+  }
+}
+fingerprint(path.join(root, 'src'));
+for (const file of ['scripts/manifest.mjs', 'scripts/build.mjs', 'scripts/gen-icons.mjs', 'vite.ui.config.ts']) hash.update(fs.readFileSync(path.join(root, file)));
+hash.update(fs.readFileSync(path.join(root, 'package.json')));
+fs.writeFileSync(path.join(targetDir, 'build-info.json'), JSON.stringify({ version: buildManifest(target, iconFiles).version, build: hash.digest('hex').slice(0, 12) }, null, 2) + '\n');
 
 // NOTE: each browser build lands exclusively in dist/<target>/.
 // Use --source-dir dist/firefox or dist/chromium explicitly.

@@ -68,7 +68,7 @@
     const maxY = Math.max(0, doc.documentElement.scrollHeight - doc.documentElement.clientHeight);
     const xRatio = Number(payload.xRatio) || 0;
     const yRatio = Number(payload.yRatio) || 0;
-    win.scrollTo(Math.round(xRatio * maxX), Math.round(yRatio * maxY));
+    win.scrollTo({ left: Math.round(xRatio * maxX), top: Math.round(yRatio * maxY), behavior: "instant" });
   }
   function selectorPath(el) {
     if (!el) return "";
@@ -312,7 +312,9 @@
         payload
       };
       try {
-        extBrowser?.runtime?.sendMessage?.({ type: "vg/agent-event", env });
+        if (channel === "scroll") {
+          window.parent.postMessage({ type: "vg/scroll-event", env }, extBrowser.runtime.getURL("").replace(/\/$/, ""));
+        } else extBrowser?.runtime?.sendMessage?.({ type: "vg/agent-event", env });
       } catch {
       }
     };
@@ -489,6 +491,10 @@
       if (e.source !== window.parent) return;
       const extOrigin = extBrowser?.runtime?.getURL("")?.replace(/\/$/, "");
       if (!extOrigin || e.origin !== extOrigin) return;
+      if (e.data?.type === "vg/scroll-apply" && e.data.env?.channel === "scroll") {
+        if (guard.accept(e.data.env, viewportId)) apply(e.data.env);
+        return;
+      }
       if (e.data && e.data.type === "vg/agent-do") {
         const cmd = e.data.cmd;
         if (cmd === "setColorScheme" || cmd === "setTouchCursor" || cmd === "scrollToTop") {
@@ -603,8 +609,10 @@
       const p = env.payload ?? {};
       switch (env.channel) {
         case "scroll":
-          suppress(120);
+          userInteracted = false;
           applyScrollRatios(window, p);
+          lastScrollX = window.scrollX;
+          lastScrollY = window.scrollY;
           break;
         case "click": {
           suppress(150);

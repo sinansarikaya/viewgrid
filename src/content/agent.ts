@@ -92,7 +92,10 @@ function initAgent(viewportId: string) {
       payload,
     };
     try {
-      extBrowser?.runtime?.sendMessage?.({ type: 'vg/agent-event', env });
+      if (channel === 'scroll') {
+        // One parent/child hop instead of two runtime hops through the worker.
+        window.parent.postMessage({ type: 'vg/scroll-event', env }, extBrowser.runtime.getURL('').replace(/\/$/, ''));
+      } else extBrowser?.runtime?.sendMessage?.({ type: 'vg/agent-event', env });
     } catch {
       /* context invalidated */
     }
@@ -287,6 +290,10 @@ function initAgent(viewportId: string) {
     const extOrigin = extBrowser?.runtime?.getURL('')?.replace(/\/$/, '');
     if (!extOrigin || e.origin !== extOrigin) return;
 
+    if (e.data?.type === 'vg/scroll-apply' && e.data.env?.channel === 'scroll') {
+      if (guard.accept(e.data.env, viewportId)) apply(e.data.env);
+      return;
+    }
     if (e.data && e.data.type === 'vg/agent-do') {
       const cmd = e.data.cmd;
       // Privileged navigation actions (goto, reload, back, forward) CANNOT be triggered via postMessage!
@@ -415,8 +422,10 @@ function initAgent(viewportId: string) {
     const p = env.payload ?? {};
     switch (env.channel) {
       case 'scroll':
-        suppress(120);
+        // Suppress the replay echo, but do not lock a user's new gesture for 120ms.
+        userInteracted = false;
         applyScrollRatios(window, p);
+        lastScrollX = window.scrollX; lastScrollY = window.scrollY;
         break;
       case 'click': {
         suppress(150);

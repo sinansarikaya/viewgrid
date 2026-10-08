@@ -49,6 +49,7 @@ export interface StoreState {
   toast: string | null;
   granted: boolean;
   urlDraft: string;
+  previewGeneration: number;
   language: 'tr' | 'en' | 'no';
   languageExplicitlySet?: boolean;
 
@@ -201,6 +202,7 @@ export const useStore = create<StoreState>((set, get) => ({
   toast: null,
   granted: true,
   urlDraft: '',
+  previewGeneration: 0,
   language: defaultLanguage(),
 
   setSettingsOpen(v) {
@@ -362,6 +364,7 @@ export const useStore = create<StoreState>((set, get) => ({
         url,
         viewports: s.model.viewports.map((v) => ({ ...v, url })),
       },
+      previewGeneration: s.previewGeneration + 1,
       urlDraft: url, issues: [], scanId: null, scanning: false, scannedAt: null,
     }));
     schedulePersist(get);

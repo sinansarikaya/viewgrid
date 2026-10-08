@@ -31,7 +31,7 @@ async function boot() {
   });
   // sync toggles reset the epoch to fence stale echoes
   useStore.subscribe((s, prev) => {
-    if (s.model.url !== prev.model.url) {
+    if (s.previewGeneration !== prev.previewGeneration) {
       // Agent epochs use performance.timeOrigin in microseconds. Old documents
       // may still emit a delayed reload while the replacement URL is loading.
       navigationFence = Date.now() * 1000;
@@ -39,10 +39,20 @@ async function boot() {
     } else if (s.model.sync !== prev.model.sync) hub.reset();
   });
   window.addEventListener('message', event => {
-    if (event.data?.type !== 'vg/identify-preview') return;
+    if (!['vg/identify-preview', 'vg/scroll-event'].includes(event.data?.type)) return;
     const frame = [...document.querySelectorAll<HTMLIFrameElement>('iframe[name^="viewgrid:"]')].find(frame => frame.contentWindow === event.source);
     if (!frame || !useStore.getState().model.viewports.some(v => frame.name === `viewgrid:${v.id}`)) return;
-    frame.contentWindow?.postMessage({ type: 'vg/preview-identity', viewportId: frame.name.slice('viewgrid:'.length) }, event.origin);
+    if (event.data.type === 'vg/identify-preview') {
+      frame.contentWindow?.postMessage({ type: 'vg/preview-identity', viewportId: frame.name.slice('viewgrid:'.length) }, event.origin);
+      return;
+    }
+    const env = event.data.env as SyncEnvelope;
+    const state = useStore.getState();
+    if (!state.model.sync.scroll || env?.channel !== 'scroll' || env.sourceViewportId !== frame.name.slice('viewgrid:'.length) || env.epoch < navigationFence || !hub.accept(env)) return;
+    for (const target of document.querySelectorAll<HTMLIFrameElement>('iframe[name^="viewgrid:"]')) {
+      if (target === frame || !state.model.viewports.some(v => target.name === `viewgrid:${v.id}`)) continue;
+      target.contentWindow?.postMessage({ type: 'vg/scroll-apply', env }, '*');
+    }
   });
   createRoot(document.getElementById('root')!).render(<App hub={hub} />);
   // inject agents into current + future frames
