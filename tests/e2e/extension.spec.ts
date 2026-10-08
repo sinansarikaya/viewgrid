@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 let server: Server, context: BrowserContext, page: Page, profile: string, base: string, extensionId: string;
 const fixture = `<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:0;font:16px sans-serif}button{width:60px;height:44px}#small{width:30px;height:30px}#clipped{width:100px;overflow:hidden;white-space:nowrap}#intentional{width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{height:1800px}</style><h1>ViewGrid fixture</h1><input id="name"><button id="action" onclick="document.querySelector('#count').textContent=Number(document.querySelector('#count').textContent)+1">Count</button><span id="count">0</span><button id="small">Tiny</button><p id="clipped">This long text is accidentally clipped</p><p id="intentional">This long text is intentionally clipped</p><a id="next" href="/next">Next</a><button id="spa" onclick="history.pushState({},'', '/spa')">SPA</button><div class="spacer"></div><footer>End</footer>`;
-const frames = () => page.frames().filter(f => f.name().startsWith('viewgrid:'));
+const frames = () => page.frames().filter(f => f.parentFrame() === page.mainFrame());
 async function clickInPreview(frame: Frame, selector: string) {
   // CDP element quads in an OOPIF do not include the workspace's CSS scale.
   // Convert page-local coordinates to the rendered iframe before a trusted mouse click.
@@ -181,8 +181,12 @@ test('reported CastPost URL loads and survives reload in actual Chrome', async (
   const input = page.locator('input').first();
   await input.fill(process.env.VIEWGRID_LIVE_TEST_URL!); await input.press('Enter');
   try {
+    await expect.poll(() => frames().filter(f => f.url().startsWith(process.env.VIEWGRID_LIVE_TEST_URL!)).length).toBe(4);
     for (const frame of frames()) await expect(frame.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
     const source = frames()[0]!;
+    expect(await source.evaluate(async () => { try { await navigator.serviceWorker.register('/sw.js'); return 'registered'; } catch (e) { return (e as Error).name; } })).toBe('SecurityError');
+    await source.evaluate(() => history.replaceState({}, '', location.href + '#vg-sync-regression'));
+    await expect.poll(() => frames().every(f => f.url().endsWith('#vg-sync-regression'))).toBe(true);
     await page.waitForTimeout(1500); // Allow the site's worker activation before testing reload.
     await Promise.all([
       page.waitForEvent('framenavigated', { predicate: f => f === source }),

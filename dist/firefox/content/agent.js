@@ -245,6 +245,21 @@
       g.__viewgridAgentInstalled = true;
       initAgent(frameName.slice("viewgrid:".length));
     }
+  } else if (typeof window !== "undefined" && window.top !== window && location.ancestorOrigins?.[0]?.startsWith("chrome-extension://")) {
+    const extBrowser = globalThis.browser || globalThis.chrome;
+    const extensionOrigin = extBrowser?.runtime?.getURL("")?.replace(/\/$/, "");
+    const identify = (event) => {
+      if (event.source !== window.parent || event.origin !== extensionOrigin || event.data?.type !== "vg/preview-identity") return;
+      if (typeof event.data.viewportId !== "string") return;
+      window.removeEventListener("message", identify);
+      const g = globalThis;
+      if (!g.__viewgridAgentInstalled) {
+        g.__viewgridAgentInstalled = true;
+        initAgent(event.data.viewportId);
+      }
+    };
+    window.addEventListener("message", identify);
+    window.parent.postMessage({ type: "vg/identify-preview" }, extensionOrigin);
   } else if (typeof window !== "undefined" && window.top === window) {
     const g = globalThis;
     if (!g.__viewgridShortcutInstalled) {

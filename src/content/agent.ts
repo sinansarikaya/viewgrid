@@ -21,6 +21,20 @@ if (frameName.startsWith('viewgrid:')) {
     g.__viewgridAgentInstalled = true;
     initAgent(frameName.slice('viewgrid:'.length));
   }
+} else if (typeof window !== 'undefined' && window.top !== window && location.ancestorOrigins?.[0]?.startsWith('chrome-extension://')) {
+  // Chromium can clear window.name on cross-site document replacement. Recover
+  // the identity only from our extension parent, matched to its actual iframe.
+  const extBrowser = (globalThis as any).browser || (globalThis as any).chrome;
+  const extensionOrigin = extBrowser?.runtime?.getURL('')?.replace(/\/$/, '');
+  const identify = (event: MessageEvent) => {
+    if (event.source !== window.parent || event.origin !== extensionOrigin || event.data?.type !== 'vg/preview-identity') return;
+    if (typeof event.data.viewportId !== 'string') return;
+    window.removeEventListener('message', identify);
+    const g = globalThis as any;
+    if (!g.__viewgridAgentInstalled) { g.__viewgridAgentInstalled = true; initAgent(event.data.viewportId); }
+  };
+  window.addEventListener('message', identify);
+  window.parent.postMessage({ type: 'vg/identify-preview' }, extensionOrigin);
 } else if (typeof window !== 'undefined' && window.top === window) {
   // In normal browser tabs, listen for keyboard shortcut to reliably open ViewGrid workspace
   const g = globalThis as any;

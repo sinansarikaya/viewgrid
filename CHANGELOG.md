@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Protected Chromium previews now continue loading after page-initiated navigation and reload. Removed the extension-only initiator filter while retaining verified workspace-tab scoping. Chromium exceptions include nested workspace frames; normal browsing tabs retain their protections.
 - Firefox uses Manifest V2: Firefox MV3 does not allow webRequest or DNR to relax X-Frame-Options/CSP. The Firefox build removes XFO and only CSP frame-ancestors on direct workspace previews, preserving other directives and cookies.
+- Chromium previews recover their viewport identity from the verified workspace parent when cross-site navigation clears window.name, keeping worker isolation and synchronization active.
 - URL changes replace preview documents and fence delayed events from the previous page, preventing slow navigation from being canceled by stale reload synchronization.
 - Build manifests read the version from package.json. Packaging rejects stale manifests instead of shipping a mismatched build.
 

@@ -1,7 +1,7 @@
 // Browser framing rules cannot modify all service-worker responses. Defer registration until
 // the isolated agent verifies this is our workspace, then use network previews.
 // Ordinary tabs are untouched; no cookies or CacheStorage are cleared.
-if (window.name.startsWith('viewgrid:') && window.top !== window && (!location.ancestorOrigins?.length || /^(chrome|moz)-extension:\/\//.test(location.ancestorOrigins[0]!)) && 'serviceWorker' in navigator) {
+if (window.top !== window && (location.ancestorOrigins?.length ? /^(chrome|moz)-extension:\/\//.test(location.ancestorOrigins[0]!) : window.name.startsWith('viewgrid:')) && 'serviceWorker' in navigator) {
   const container = navigator.serviceWorker;
   const original = container.register.bind(container);
   const verified = new Promise<boolean>(resolve => {

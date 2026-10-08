@@ -1,7 +1,7 @@
 "use strict";
 (() => {
   // src/content/world-inject.ts
-  if (window.name.startsWith("viewgrid:") && window.top !== window && (!location.ancestorOrigins?.length || /^(chrome|moz)-extension:\/\//.test(location.ancestorOrigins[0])) && "serviceWorker" in navigator) {
+  if (window.top !== window && (location.ancestorOrigins?.length ? /^(chrome|moz)-extension:\/\//.test(location.ancestorOrigins[0]) : window.name.startsWith("viewgrid:")) && "serviceWorker" in navigator) {
     const container = navigator.serviceWorker;
     const original = container.register.bind(container);
     const verified = new Promise((resolve) => {

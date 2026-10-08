@@ -38,6 +38,12 @@ async function boot() {
       hub.reset();
     } else if (s.model.sync !== prev.model.sync) hub.reset();
   });
+  window.addEventListener('message', event => {
+    if (event.data?.type !== 'vg/identify-preview') return;
+    const frame = [...document.querySelectorAll<HTMLIFrameElement>('iframe[name^="viewgrid:"]')].find(frame => frame.contentWindow === event.source);
+    if (!frame || !useStore.getState().model.viewports.some(v => frame.name === `viewgrid:${v.id}`)) return;
+    frame.contentWindow?.postMessage({ type: 'vg/preview-identity', viewportId: frame.name.slice('viewgrid:'.length) }, event.origin);
+  });
   createRoot(document.getElementById('root')!).render(<App hub={hub} />);
   // inject agents into current + future frames
   void injectAgents();
