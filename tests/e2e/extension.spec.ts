@@ -29,7 +29,7 @@ async function reset() {
 test.beforeAll(async () => {
   server = createServer((req, res) => {
     if (req.url === '/host') { res.setHeader('Content-Type','text/html'); res.end('<iframe src="/protected"></iframe>'); return; }
-    if (req.url === '/protected') { res.setHeader('X-Frame-Options','DENY'); res.setHeader('Content-Security-Policy',"frame-ancestors 'none'"); }
+    if (req.url?.startsWith('/protected')) { res.setHeader('X-Frame-Options','DENY'); res.setHeader('Content-Security-Policy',"frame-ancestors 'none'"); }
     res.setHeader('Content-Type','text/html'); res.end(fixture);
   });
   await new Promise<void>(resolve => server.listen(0,'127.0.0.1',resolve));
@@ -129,4 +129,32 @@ test('captures the full logical device viewport and restores the workspace', asy
   expect(png.readUInt32BE(16)).toBe(size.width); expect(png.readUInt32BE(20)).toBe(size.height);
   await expect(page.locator('body')).not.toHaveAttribute('data-viewgrid-capture','true');
   await expect(frame.locator('h1')).toHaveText('ViewGrid fixture');
+});
+
+
+test('protected previews retain framing exceptions after their own navigation and reload', async () => {
+  const input = page.locator('input').first();
+  await input.fill(base + '/protected'); await input.press('Enter');
+  await expect.poll(() => frames().filter(f => f.url() === base + '/protected').length).toBe(4);
+  for (const frame of frames()) await expect(frame.locator('h1')).toHaveText('ViewGrid fixture');
+  await frames()[0]!.evaluate(url => location.assign(url), base + '/protected-next');
+  await expect.poll(() => frames().filter(f => f.url() === base + '/protected-next').length).toBeGreaterThan(0);
+  await expect(frames()[0]!.locator('h1')).toHaveText('ViewGrid fixture');
+  await frames()[0]!.evaluate(() => location.reload());
+  await expect(frames()[0]!.locator('h1')).toHaveText('ViewGrid fixture');
+});
+
+test('reported CastPost URL loads and survives reload in actual Chrome', async () => {
+  test.skip(!process.env.VIEWGRID_LIVE_TEST_URL, 'Live regression is opt-in');
+  const diagnostics: string[] = [];
+  page.on('console', m => diagnostics.push(`${m.type()}: ${m.text()}`));
+  page.on('requestfailed', r => diagnostics.push(`request failed: ${r.url()} ${r.failure()?.errorText}`));
+  page.on('response', r => { if (r.request().isNavigationRequest()) diagnostics.push(`navigation: ${r.status()} ${r.url()} SW=${r.fromServiceWorker()}`); });
+  const input = page.locator('input').first();
+  await input.fill(process.env.VIEWGRID_LIVE_TEST_URL!); await input.press('Enter');
+  try {
+    await expect.poll(async () => { const texts = await Promise.all(frames().map(f => f.locator('body').innerText({ timeout: 2000 }).catch(() => ''))); return texts.length === 4 && texts.every(t => /CastPost/i.test(t)); }, { timeout: 20000 }).toBe(true);
+    await frames()[0]!.evaluate(() => location.reload());
+    await expect(frames()[0]!.locator('body')).toContainText(/CastPost/i, { timeout: 20000 });
+  } finally { console.log('CASTPOST DIAGNOSTICS', JSON.stringify(diagnostics)); }
 });

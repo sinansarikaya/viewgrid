@@ -52,6 +52,26 @@ jobs:
 
       - name: Real Chromium extension flows
         run: pnpm run test:e2e
+        env:
+          VIEWGRID_LIVE_TEST_URL: https://castpost.app/en
+
+      - name: Install Firefox
+        if: always()
+        uses: browser-actions/setup-firefox@v1
+
+      - name: Install GeckoDriver
+        if: always()
+        uses: browser-actions/setup-geckodriver@v1
+
+      - name: Install Firefox test driver
+        if: always()
+        run: python -m pip install selenium==4.36.0
+
+      - name: Real Firefox extension regression
+        if: always()
+        run: python tests/e2e/firefox_extension.py
+        env:
+          VIEWGRID_LIVE_TEST_URL: https://castpost.app/en
 
       - name: Upload browser test report
         if: always()

@@ -5,6 +5,8 @@ website/dist/
 *.log
 .DS_Store
 coverage/
+__pycache__/
+*.pyc
 .npm/
 .config/
 release/
