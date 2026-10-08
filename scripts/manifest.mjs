@@ -47,6 +47,7 @@ export function buildManifest(target, iconFiles) {
       // Firefox MV3 cannot relax CSP/X-Frame-Options (Mozilla bug 1785821).
       manifest_version: 2,
       browser_action: action,
+      content_scripts: [...base.content_scripts, { matches: ['<all_urls>'], js: ['world-inject.js'], run_at: 'document_start', all_frames: true, world: 'MAIN' }],
       commands: { _execute_browser_action: commands._execute_action },
       permissions: [
         'storage',
@@ -62,7 +63,7 @@ export function buildManifest(target, iconFiles) {
       browser_specific_settings: {
         gecko: {
           id: 'viewgrid@viewgrid.dev',
-          strict_min_version: '115.0',
+          strict_min_version: '128.0',
           data_collection_permissions: {
             required: ['none'],
           },

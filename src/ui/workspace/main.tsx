@@ -9,6 +9,7 @@ import type { SyncEnvelope } from '../../core/types';
 import { LoopGuard } from '../../core/sync/protocol';
 
 const hub = new LoopGuard();
+let navigationFence = 0;
 
 async function boot() {
   await useStore.getState().hydrate();
@@ -21,6 +22,7 @@ async function boot() {
     onEvent: (env: SyncEnvelope) => {
       const s = useStore.getState();
       if (!s.model.sync[env.channel] || !s.model.viewports.some(v => v.id === env.sourceViewportId)) return;
+      if (env.epoch < navigationFence) return;
       // hub-side accept (epoch/seq fencing) — also updates lastSeq
       if (!hub.accept(env)) return;
       void sendSyncApply(env);
@@ -29,7 +31,12 @@ async function boot() {
   });
   // sync toggles reset the epoch to fence stale echoes
   useStore.subscribe((s, prev) => {
-    if (s.model.sync !== prev.model.sync) hub.reset();
+    if (s.model.url !== prev.model.url) {
+      // Agent epochs use performance.timeOrigin in microseconds. Old documents
+      // may still emit a delayed reload while the replacement URL is loading.
+      navigationFence = Date.now() * 1000;
+      hub.reset();
+    } else if (s.model.sync !== prev.model.sync) hub.reset();
   });
   createRoot(document.getElementById('root')!).render(<App hub={hub} />);
   // inject agents into current + future frames

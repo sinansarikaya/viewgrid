@@ -69,7 +69,7 @@ export function ViewportCard({
       el.contentWindow.postMessage({ type: 'vg/agent-do', cmd: 'setColorScheme', scheme }, '*');
     } catch {}
     sendAgentCmd([vp.id], 'setColorScheme', undefined, { scheme });
-  }, [vp.id, vp.colorScheme]);
+  }, [vp.id, vp.url, vp.colorScheme]);
 
   useEffect(() => {
     const el = iframeRef.current;
@@ -79,7 +79,7 @@ export function ViewportCard({
       el.contentWindow.postMessage({ type: 'vg/agent-do', cmd: 'setTouchCursor', enabled }, '*');
     } catch {}
     sendAgentCmd([vp.id], 'setTouchCursor', undefined, { enabled });
-  }, [vp.id, st.model.touchCursor, profile.touchSupport]);
+  }, [vp.id, vp.url, st.model.touchCursor, profile.touchSupport]);
 
   // agents are injected per frame load; re-announce after navigation
   useEffect(() => {
@@ -98,7 +98,7 @@ export function ViewportCard({
     };
     el.addEventListener('load', onLoad);
     return () => el.removeEventListener('load', onLoad);
-  }, [onInjected, vp.colorScheme, st.model.touchCursor, profile.touchSupport]);
+  }, [onInjected, vp.url, vp.colorScheme, st.model.touchCursor, profile.touchSupport]);
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!st.model.touchCursor || !profile.touchSupport) return;
@@ -263,7 +263,7 @@ export function ViewportCard({
             >
               <iframe
                 ref={iframeRef}
-                key={vp.id}
+                key={`${vp.id}:${vp.url}`}
                 className={s.iframe}
                 tabIndex={-1}
                 name={`viewgrid:${vp.id}`}

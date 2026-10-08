@@ -31,7 +31,9 @@ test.beforeAll(async () => {
     if (req.url === '/sw.js') { res.setHeader('Content-Type', 'application/javascript'); res.end("self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{if(e.request.mode==='navigate')e.respondWith(fetch(e.request));});"); return; }
     if (req.url === '/host') { res.setHeader('Content-Type','text/html'); res.end('<iframe src="/protected"></iframe>'); return; }
     if (req.url?.startsWith('/protected')) { res.setHeader('X-Frame-Options','DENY'); res.setHeader('Content-Security-Policy',"frame-ancestors 'none'"); }
-    res.setHeader('Content-Type','text/html'); res.end(fixture);
+    res.setHeader('Content-Type','text/html');
+    if (req.url === '/slow-protected') { res.setHeader('X-Frame-Options','DENY'); setTimeout(() => res.end(fixture), 1000); }
+    else res.end(fixture);
   });
   await new Promise<void>(resolve => server.listen(0,'127.0.0.1',resolve));
   base = `http://127.0.0.1:${(server.address() as any).port}`;
@@ -159,6 +161,15 @@ test('preview worker registration is blocked without changing ordinary-tab worke
   await ordinary.evaluate(async () => { await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready; });
   await expect.poll(() => ordinary.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
   await ordinary.close();
+});
+
+test('a delayed old-document reload cannot cancel a slow workspace URL change', async () => {
+  const source = frames()[0]!;
+  await Promise.all([page.waitForEvent('framenavigated', { predicate: f => f === source }), source.evaluate(() => location.reload())]);
+  const input = page.locator('input').first();
+  await input.fill(base + '/slow-protected'); await input.press('Enter');
+  await expect.poll(() => frames().filter(f => f.url() === base + '/slow-protected').length).toBe(4);
+  for (const frame of frames()) await expect(frame.locator('h1')).toHaveText('ViewGrid fixture');
 });
 
 test('reported CastPost URL loads and survives reload in actual Chrome', async () => {

@@ -17,7 +17,7 @@ Host access allows the content agent to synchronize and inspect preview frames. 
 
 Firefox removes XFO and CSP frame-ancestors while retaining other response policy directives. Chromium cannot edit an individual CSP directive using DNR, so CSP response headers are removed on subframes in workspace tabs, including nested frames and page-initiated navigations. Normal tabs are outside the exception. Firefox scopes its exceptions to direct previews.
 
-Chromium defers worker registration until the preview agent verifies its workspace tab, then disables registration and unregisters workers visible in that preview storage partition. Existing controlled previews reload once after unregistering. Normal tabs are untouched; cookies, localStorage, sessionStorage and CacheStorage are retained. Browser third-party cookie and authentication policies still apply.
+Both browser builds defer worker registration until the preview agent verifies its workspace tab, then disables registration and unregisters workers visible in that preview storage partition. Existing controlled previews reload once after unregistering. Normal tabs are untouched; cookies, localStorage, sessionStorage and CacheStorage are retained. Browser third-party cookie and authentication policies still apply.
 
 Delete saved workspaces through the workspace menu; uninstalling the extension clears its browser-managed extension storage. Exported downloads and clipboard contents are under your control and are not removed by uninstalling.
 

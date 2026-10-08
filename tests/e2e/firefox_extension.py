@@ -120,6 +120,11 @@ try:
     driver.close()
     driver.switch_to.window(main)
     print('PASS Firefox: normal-tab framing protection retained', flush=True)
+    driver.switch_to.frame(driver.find_elements(By.CSS_SELECTOR, 'iframe[name^="viewgrid:"]')[0])
+    result = driver.execute_async_script("const done=arguments[arguments.length-1]; navigator.serviceWorker.register('/sw.js').then(()=>done('registered')).catch(e=>done(e.name));")
+    driver.switch_to.default_content()
+    assert result == 'SecurityError', result
+    print('PASS Firefox: preview worker registration is blocked', flush=True)
     if os.environ.get('VIEWGRID_LIVE_TEST_URL'):
         bar = driver.find_elements(By.CSS_SELECTOR, 'input')[0]
         bar.clear()

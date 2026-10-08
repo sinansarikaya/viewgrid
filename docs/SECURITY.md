@@ -2,7 +2,7 @@
 
 See README.md and PRIVACY.md for the shipped behavior. Chromium MV3 DNR exceptions apply only to subframes in verified workspace tabs, including nested frames and page-initiated navigation/reload. XFO and complete CSP headers are removed there; normal tabs retain protections. Firefox MV2 blocking webRequest removes XFO and only frame-ancestors on direct workspace previews. Firefox MV3 cannot relax these headers.
 
-Host access is requested in the browser manifests. downloads is requested; unlimitedStorage is not. Chromium defers service-worker registration until the content agent verifies the workspace, then blocks registration and unregisters workers visible in that preview partition. It never clears browser-wide workers, cookies, localStorage, sessionStorage or CacheStorage. Cached/synthetic worker responses already blocking the initial document can remain a platform limitation.
+Host access is requested in the browser manifests. downloads is requested; unlimitedStorage is not. Both browser builds defer service-worker registration until the content agent verifies the workspace, then blocks registration and unregisters workers visible in that preview partition. It never clears browser-wide workers, cookies, localStorage, sessionStorage or CacheStorage. Cached/synthetic worker responses already blocking the initial document can remain a platform limitation.
 
 The historical design below contains unimplemented permission and security proposals; it is not a description of the current release.
 
