@@ -8,9 +8,9 @@ Bu doküman, ViewGrid tanıtım videosunu **[@sinansarikaya_dev](https://www.you
 
 * **Ana Video (Türkçe):** [`promos/viewgrid-promo-tr.mp4`](viewgrid-promo-tr.mp4) (66 saniye, 1080p 16:9, H.264/AAC, 10.7 MB)
 * **İngilizce Video:** [`promos/viewgrid-promo-en.mp4`](viewgrid-promo-en.mp4) (56 saniye, 1080p 16:9, H.264/AAC, 9.8 MB)
-* **Küçük Resim (Thumbnail):**
-  * [`promos/youtube-thumbnail-tr.jpg`](youtube-thumbnail-tr.jpg) (1920×1080 Master)
-  * [`promos/youtube-thumbnail-tr-1280x720.jpg`](youtube-thumbnail-tr-1280x720.jpg) (YouTube Standart 720p)
+* **Küçük Resim (Thumbnail / Kapak):**
+  * **Türkçe Kapak:** [`ViewGrid-tr.png`](ViewGrid-tr.png) (1672×941 Master PNG, YouTube uyumlu)
+  * **İngilizce Kapak:** [`ViewGrid-en.png`](ViewGrid-en.png) (1672×941 Master PNG, YouTube uyumlu)
 
 ---
 
