@@ -28,6 +28,7 @@ async function reset() {
 }
 test.beforeAll(async () => {
   server = createServer((req, res) => {
+    if (req.url === '/sw.js') { res.setHeader('Content-Type', 'application/javascript'); res.end("self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{if(e.request.mode==='navigate')e.respondWith(fetch(e.request));});"); return; }
     if (req.url === '/host') { res.setHeader('Content-Type','text/html'); res.end('<iframe src="/protected"></iframe>'); return; }
     if (req.url?.startsWith('/protected')) { res.setHeader('X-Frame-Options','DENY'); res.setHeader('Content-Security-Policy',"frame-ancestors 'none'"); }
     res.setHeader('Content-Type','text/html'); res.end(fixture);
@@ -146,6 +147,15 @@ test('protected previews retain framing exceptions after their own navigation an
   await expect(source.locator('h1')).toHaveText('ViewGrid fixture');
 });
 
+test('a service-worker controlled preview can navigate to a protected network document', async () => {
+  const source = frames()[0]!;
+  await source.evaluate(async () => { await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready; });
+  await expect.poll(() => source.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  await source.evaluate(url => location.assign(url), base + '/protected-worker');
+  await expect.poll(() => source.url()).toBe(base + '/protected-worker');
+  await expect(source.locator('h1')).toHaveText('ViewGrid fixture');
+});
+
 test('reported CastPost URL loads and survives reload in actual Chrome', async () => {
   test.skip(!process.env.VIEWGRID_LIVE_TEST_URL, 'Live regression is opt-in');
   const diagnostics: string[] = [];
@@ -157,6 +167,7 @@ test('reported CastPost URL loads and survives reload in actual Chrome', async (
   try {
     for (const frame of frames()) await expect(frame.locator('h1')).toContainText('Cast once.', { timeout: 20000 });
     const source = frames()[0]!;
+    await page.waitForTimeout(1500); // Allow the site's worker activation before testing reload.
     await Promise.all([
       page.waitForEvent('framenavigated', { predicate: f => f === source }),
       source.evaluate(() => location.reload()),

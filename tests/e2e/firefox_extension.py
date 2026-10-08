@@ -21,6 +21,11 @@ FIXTURE = '<!doctype html><h1>ViewGrid Firefox fixture</h1><button id="action" o
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
+        if self.path == '/sw.js':
+            self.send_header('Content-Type', 'application/javascript')
+            self.end_headers()
+            self.wfile.write(b"self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>{if(e.request.mode==='navigate')e.respondWith(fetch(e.request));});")
+            return
         self.send_header('Content-Type', 'text/html')
         if self.path.startswith('/protected'):
             self.send_header('X-Frame-Options', 'DENY')
@@ -101,6 +106,9 @@ try:
     wait.until(lambda _: frame_script('return performance.timeOrigin') != before)
     wait.until(lambda _: 'ViewGrid Firefox fixture' in frame_text())
     print('PASS Firefox: protected navigation and reload', flush=True)
+    frame_script("document.querySelector('#action').click()")
+    wait.until(lambda _: all(frame_script("return document.querySelector('#count').textContent", i) == '1' for i in range(4)))
+    print('PASS Firefox: actual content agents synchronize clicks', flush=True)
     print('FIREFOX HEADERS', driver.execute_script('return window.__vgHeaders'), flush=True)
     # Ensure a normal tab still cannot frame the protected page.
     main = driver.current_window_handle
@@ -112,12 +120,22 @@ try:
     driver.close()
     driver.switch_to.window(main)
     print('PASS Firefox: normal-tab framing protection retained', flush=True)
+    driver.set_script_timeout(25)
+    driver.switch_to.frame(driver.find_elements(By.CSS_SELECTOR, 'iframe[name^="viewgrid:"]')[0])
+    driver.execute_async_script("const done=arguments[arguments.length-1]; navigator.serviceWorker.register('/sw.js').then(()=>navigator.serviceWorker.ready).then(()=>done(true)).catch(e=>done({error:String(e)}));")
+    driver.switch_to.default_content()
+    wait.until(lambda _: frame_script('return !!navigator.serviceWorker.controller'))
+    frame_script('location.assign(arguments[0])', 0, base + '/protected-worker')
+    wait.until(lambda _: frame_script('return location.href') == base + '/protected-worker')
+    wait.until(lambda _: 'ViewGrid Firefox fixture' in frame_text())
+    print('PASS Firefox: service-worker controlled protected navigation', flush=True)
     if os.environ.get('VIEWGRID_LIVE_TEST_URL'):
         bar = driver.find_elements(By.CSS_SELECTOR, 'input')[0]
         bar.clear()
         bar.send_keys(os.environ['VIEWGRID_LIVE_TEST_URL'])
         bar.send_keys(Keys.ENTER)
         wait.until(lambda _: all('Cast once.' in frame_text(i) for i in range(4)))
+        time.sleep(1.5)  # Exercise reload after the site's worker has had time to activate.
         before = frame_script('return performance.timeOrigin')
         frame_script('location.reload()')
         wait.until(lambda _: frame_script('return performance.timeOrigin') != before)

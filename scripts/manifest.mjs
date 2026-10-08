@@ -1,5 +1,8 @@
+import fs from 'node:fs';
+const packageVersion = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
+
 /**
- * Per-browser manifest generation (Firefox-first MV3 + Chromium MV3).
+ * Per-browser manifest generation (Firefox MV2 + Chromium MV3).
  * Prunes unused permissions (scripting, unlimitedStorage) and handles
  * browser-specific rules (webRequestBlocking in Firefox, contextMenus in Chromium).
  */
@@ -7,7 +10,7 @@ export function buildManifest(target, iconFiles) {
   const base = {
     manifest_version: 3,
     name: 'ViewGrid — Responsive Viewer',
-    version: '1.0.2',
+    version: packageVersion,
     description:
       'Multi-viewport responsive web design & layout testing workspace with side-by-side device previews and synchronized scrolling.',
     icons: iconFiles,
@@ -38,8 +41,13 @@ export function buildManifest(target, iconFiles) {
   };
 
   if (target === 'firefox') {
+    const { action, host_permissions, commands, ...common } = base;
     return {
-      ...base,
+      ...common,
+      // Firefox MV3 cannot relax CSP/X-Frame-Options (Mozilla bug 1785821).
+      manifest_version: 2,
+      browser_action: action,
+      commands: { _execute_browser_action: commands._execute_action },
       permissions: [
         'storage',
         'tabs',
@@ -49,8 +57,7 @@ export function buildManifest(target, iconFiles) {
         'menus',
         'webRequest',
         'webRequestBlocking',
-        'declarativeNetRequest',
-        'declarativeNetRequestWithHostAccess',
+        ...host_permissions,
       ],
       browser_specific_settings: {
         gecko: {

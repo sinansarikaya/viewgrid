@@ -130,7 +130,7 @@ async function openWorkspace(url?: string) {
 }
 b.action?.onClicked.addListener(tab => { void openWorkspace(safeHttpUrl(tab.url) ? tab.url : undefined); });
 b.commands?.onCommand.addListener(command => {
-  if (command === '_execute_action') void b.tabs.query({ active: true, currentWindow: true }).then(tabs => openWorkspace(safeHttpUrl(tabs[0]?.url) ? tabs[0]!.url : undefined));
+  if ((command === '_execute_action' || command === '_execute_browser_action')) void b.tabs.query({ active: true, currentWindow: true }).then(tabs => openWorkspace(safeHttpUrl(tabs[0]?.url) ? tabs[0]!.url : undefined));
 });
 if (b.menus) {
   const setup = async () => {

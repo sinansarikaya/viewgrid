@@ -65,4 +65,5 @@ fs.writeFileSync(
 // See: npm run lint:web-ext, npm run dev:firefox (already pass --source-dir dist/firefox)
 
 console.log(`[viewgrid] build complete (${target}) → dist/${target}`);
+fs.writeFileSync(path.join(distRoot, 'README.md'), `# ViewGrid installable builds\n\nChrome/Chromium: load the chromium folder using chrome://extensions > Load unpacked.\nFirefox: about:debugging#/runtime/this-firefox > Load Temporary Add-on > firefox/manifest.json.\n\nDo not select this parent folder. Each browser folder has its own manifest.\nManifest versions are generated from package.json; rebuild both targets with npm run build:all.\n`);
 
