@@ -4,7 +4,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 let server: Server, context: BrowserContext, page: Page, profile: string, base: string, extensionId: string;
-const fixture = `<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:0;font:16px sans-serif}button{width:60px;height:44px}#small{width:30px;height:30px}#clipped{width:100px;overflow:hidden;white-space:nowrap}#intentional{width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{height:1800px}</style><h1>ViewGrid fixture</h1><input id="name"><button id="action" onclick="document.querySelector('#count').textContent=Number(document.querySelector('#count').textContent)+1">Count</button><span id="count">0</span><button id="small">Tiny</button><p id="clipped">This long text is accidentally clipped</p><p id="intentional">This long text is intentionally clipped</p><a id="next" href="/next">Next</a><button id="spa" onclick="history.pushState({},'', '/spa')">SPA</button><div class="spacer"></div><footer>End</footer>`;
+const fixture = `<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:0;font:16px sans-serif}button{width:60px;height:44px}#small{width:30px;height:30px}#clipped{width:100px;overflow:hidden;white-space:nowrap}#intentional{width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{height:1800px}</style><h1>ViewGrid fixture</h1><input id="name"><button id="action" onclick="document.querySelector('#count').textContent=Number(document.querySelector('#count').textContent)+1">Count</button><span id="count">0</span><button id="small">Tiny</button><p id="clipped">This long text is accidentally clipped</p><p id="intentional">This long text is intentionally clipped</p><a id="next" href="/next">Next</a><button id="spa" onclick="history.pushState({},'', '/spa')">SPA</button><div style="overflow:hidden"><button id="wrapped-small" style="width:25px;height:25px">S</button><p id="vertical-clip" style="height:10px;width:80px;overflow:hidden">This wrapped text has several hidden lines</p></div><div class="spacer"></div><footer>End</footer>`;
 const frames = () => page.frames().filter(f => f.parentFrame() === page.mainFrame());
 async function measureScrollSync(label: string) {
   const previews = frames();
@@ -144,6 +144,18 @@ test('scan groups repeated findings, shows evidence and exports a structured rep
   expect(report.failedViewports).toEqual([]);
   expect(report.findings.some((g: any) => g.issue.selector === '#small')).toBe(true);
   expect(report.findings.some((g: any) => g.occurrences.length > 1)).toBe(true);
+  expect(report.findings.some((g: any) => g.issue.selector === '#wrapped-small')).toBe(true);
+  expect(report.findings.some((g: any) => g.issue.rule === 'vertical-text-clipping')).toBe(true);
+  expect(Object.values(report.coverage).every(count => Number(count) > 0)).toBe(true);
+  const htmlDownload = page.waitForEvent('download');
+  await drawer.getByRole('button', { name: 'Download report (HTML / print to PDF)', exact: true }).click();
+  const htmlFile = await htmlDownload;
+  expect(htmlFile.suggestedFilename()).toBe('viewgrid-scan-report.html');
+  const htmlStream = await htmlFile.createReadStream();
+  const htmlChunks: Buffer[] = []; for await (const chunk of htmlStream!) htmlChunks.push(chunk);
+  const html = Buffer.concat(htmlChunks).toString();
+  expect(html).toContain('Completed scan'); expect(html).toContain('vertical-text-clipping');
+
 });
 test('hard reload preserves application storage and URL', async () => {
   await frames()[0]!.evaluate(() => { localStorage.setItem('draft','keep-me'); sessionStorage.setItem('session-draft','keep-me'); });
@@ -242,6 +254,15 @@ test('CastPost loads from a worker-warmed profile, reopens and survives a browse
       }
       await page.screenshot({ path: `test-results/castpost-chromium-${phase.replace(/ /g, '-')}.png` });
       if (phase === 'first warm open') await measureScrollSync('castpost.app warm profile');
+      if (phase === 'first warm open') {
+        await page.locator('button').filter({ hasText: '🔍' }).click();
+        const drawer = page.getByRole('complementary');
+        await expect(drawer.getByText('Last scan', { exact: false })).toBeVisible();
+        await expect(drawer.getByText('Inspected DOM elements', { exact: false })).toBeVisible();
+        console.log('CASTPOST SCAN', await drawer.innerText());
+        await drawer.getByRole('button', { name: 'Close issues' }).click();
+      }
+
       await expect(page.getByTestId('extension-version')).toHaveText('v1.0.3');
       const source = frames()[0]!;
       expect(await source.evaluate(async () => { try { await navigator.serviceWorker.register('/sw.js'); return 'registered'; } catch (e) { return (e as Error).name; } })).toBe('SecurityError');

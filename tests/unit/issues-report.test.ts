@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupIssues, issueReport } from '../../src/core/issues/report';
+import { groupIssues, issueReport, reportDocument } from '../../src/core/issues/report';
 import { runCoreDetectors } from '../../src/core/issues/detectors';
 import type { Issue, PageMetrics } from '../../src/core/types';
 const issue = (viewportId: string): Issue => ({ id: viewportId, viewportId, rule: 'small-tap-target', selector: '#buy', severity: 'minor', message: '30×30', data: { url: 'https://example.com' } });
@@ -22,4 +22,12 @@ describe('reviewable issue counts', () => {
     expect(runCoreDetectors(m).map(i => i.selector)).toEqual(['#buy']);
     expect(runCoreDetectors({ ...m, checkTapTargets: false })).toEqual([]);
   });
+});
+
+it('exports zero findings, incomplete status and escapes site-controlled HTML', () => {
+  const report = reportDocument([], id => id, { version: '1.0.3', url: '<script>alert(1)</script>', scannedAt: 12345, devices: ['phone'], failed: ['tablet'], truncated: [], filtered: false });
+  expect(report).toContain('Incomplete scan');
+  expect(report).toContain('0 unique findings');
+  expect(report).toContain('&lt;script&gt;');
+  expect(report).not.toContain('<script>');
 });

@@ -125,10 +125,19 @@
     }
     return out;
   }
+  function detectVerticalTextClipping(m) {
+    return m.elements.filter((e) => !e.intentionallyClipped && e.text && e.scrollHeight !== void 0 && e.clientHeight !== void 0 && e.scrollHeight > e.clientHeight + 2 && ["hidden", "clip"].includes(e.overflowY || "")).map((e) => mk(
+      "vertical-text-clipping",
+      "major",
+      `Text exceeds the fixed height of <${e.tag}>`,
+      e,
+      { scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }
+    ));
+  }
   function detectOutOfViewport(m) {
     const out = [];
     for (const e of m.elements) {
-      if (!e.isInteractive || e.intentionallyClipped || e.rect.width <= 0) continue;
+      if (!e.isInteractive || e.intentionallyClipped || e.insideHorizontalScroller || e.rect.width <= 0) continue;
       if (e.rect.x + e.rect.width > m.innerWidth + 1 || e.rect.x < -1) {
         out.push(mk("out-of-viewport", "major", `<${e.tag}> extends outside viewport`, e, { rect: e.rect }));
       }
@@ -155,6 +164,7 @@
     const issues = [
       ...detectHorizontalOverflow(m),
       ...detectTextClipping(m),
+      ...detectVerticalTextClipping(m),
       ...detectOutOfViewport(m),
       ...detectSmallTapTargets(m)
     ];
@@ -188,26 +198,40 @@
       const parent = el.parentElement;
       if (!parent || parent === doc.body || parent === doc.documentElement) return false;
       const cs = win.getComputedStyle(parent);
-      const result = ["hidden", "clip", "auto", "scroll"].includes(cs.overflowX) || clippedAncestor(parent);
+      const result = ["auto", "scroll"].includes(cs.overflowX) || clippedAncestor(parent);
       clip.set(el, result);
       return result;
+    }
+    function fullyClipped(el, rect) {
+      for (let parent = el.parentElement; parent && parent !== doc.body && parent !== doc.documentElement; parent = parent.parentElement) {
+        const cs = win.getComputedStyle(parent), bounds = parent.getBoundingClientRect();
+        if (["hidden", "clip"].includes(cs.overflowX) && (rect.right <= bounds.left || rect.left >= bounds.right)) return true;
+        if (["hidden", "clip"].includes(cs.overflowY) && (rect.bottom <= bounds.top || rect.top >= bounds.bottom)) return true;
+      }
+      return false;
     }
     for (const el of all.slice(0, limit)) {
       if (el.closest("[data-viewgrid-overlay]") || isHidden(el)) continue;
       const rect = el.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) continue;
+      if (rect.width <= 0 || rect.height <= 0 || fullyClipped(el, rect)) continue;
       const cs = win.getComputedStyle(el);
-      const intentional = clippedAncestor(el) || cs.textOverflow === "ellipsis" || Number(cs.getPropertyValue("-webkit-line-clamp")) > 0;
+      const intentional = cs.textOverflow === "ellipsis" || Number(cs.getPropertyValue("-webkit-line-clamp")) > 0;
       const interactive = el.matches('a[href],button,input:not([type="hidden"]),select,textarea,summary,[role="button"],[role="link"],[tabindex]:not([tabindex="-1"])') && !el.matches(":disabled");
       const directText = Array.from(el.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent ?? "").join(" ").trim();
-      if (!interactive && !directText && rect.right <= win.innerWidth + 1) continue;
+      const clipsText = ["hidden", "clip"].includes(cs.overflowX) && el.scrollWidth > el.clientWidth + 2 || ["hidden", "clip"].includes(cs.overflowY) && el.scrollHeight > el.clientHeight + 2;
+      const measuredText = directText || (clipsText ? el.textContent?.trim() || "" : "");
+      if (!interactive && !measuredText && rect.right <= win.innerWidth + 1) continue;
       elements.push({
         selector: selectorPath(el),
         tag: el.tagName.toLowerCase(),
         // Document coordinates prevent horizontal scroll position changing diagnoses.
         rect: { x: rect.x + win.scrollX, y: rect.y + win.scrollY, width: rect.width, height: rect.height },
-        text: directText.slice(0, 120),
+        text: measuredText.slice(0, 120),
         overflowX: cs.overflowX,
+        overflowY: cs.overflowY,
+        scrollHeight: el.scrollHeight,
+        clientHeight: el.clientHeight,
+        insideHorizontalScroller: clippedAncestor(el),
         scrollWidth: el.scrollWidth,
         clientWidth: el.clientWidth,
         isInteractive: interactive,

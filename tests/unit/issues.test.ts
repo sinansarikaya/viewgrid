@@ -96,3 +96,12 @@ describe('issue detectors', () => {
     expect(rules).toContain('small-tap-target');
   });
 });
+
+it('finds vertical text clipping and preserves tap checks in scrollers', () => {
+  const result = runCoreDetectors(metrics({ elements: [
+    { selector: '#text', tag: 'p', rect: { x: 0, y: 0, width: 100, height: 20 }, text: 'Wrapped text', overflowY: 'hidden', scrollHeight: 60, clientHeight: 20 },
+    { selector: '#tiny-tab', tag: 'button', rect: { x: 0, y: 0, width: 30, height: 30 }, isInteractive: true, insideHorizontalScroller: true },
+    { selector: '#ellipsis', tag: 'p', rect: { x: 0, y: 0, width: 100, height: 20 }, text: 'Intentional', overflowY: 'hidden', scrollHeight: 60, clientHeight: 20, intentionallyClipped: true },
+  ] }));
+  expect(result.map(i => [i.rule, i.selector])).toEqual([['vertical-text-clipping', '#text'], ['small-tap-target', '#tiny-tab']]);
+});

@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import s from './IssuesDrawer.module.css';
 import { useStore } from './store';
-import { groupIssues, issueReport } from '../../core/issues/report';
+import { groupIssues, issueReport, reportDocument } from '../../core/issues/report';
 import { issuesText } from './issues-i18n';
 import { downloadBlob, sendAgentCmd } from './bridge';
+import { b } from '../../platform/browser';
 import { startScan } from './scan';
 
 export function IssuesDrawer() {
@@ -25,15 +26,22 @@ export function IssuesDrawer() {
     <div className={s.summary}><b>{groups.length}</b> {t.unique} <span>· {groups.reduce((n, g) => n + g.occurrences.length, 0)} {t.occurrences}</span></div>
     <p className={s.note}>{t.note}</p>
     {st.scannedAt && <p className={s.note}>{t.scanned}: <time dateTime={new Date(st.scannedAt).toISOString()}>{new Date(st.scannedAt).toLocaleString(st.language === 'no' ? 'nb-NO' : st.language)}</time></p>}
+    {st.scannedAt && <p className={s.note}>{t.coverage}: {Object.entries(st.scanCoverage).map(([id, count]) => `${name(id)}: ${count}`).join(" · ")}</p>}
     <div className={s.actions}>
       <button onClick={() => void startScan()} disabled={st.scanning}>{t.rescan}</button>
-      <button disabled={!filtered.length} onClick={() => void copy(issueReport(filtered, name))}>{t.copy}</button>
-      <button disabled={!filtered.length} onClick={() => downloadBlob(new Blob([JSON.stringify({ version: 1, scannedAt: st.scannedAt, heuristic: true, failedViewports: st.scanFailed.map(name), truncatedViewports: st.scanTruncated.map(name), findings: filtered }, null, 2)], { type: 'application/json' }), 'viewgrid-issues.json')}>{t.json}</button>
+      <button disabled={!st.scannedAt || st.scanning} onClick={() => void copy(issueReport(filtered, name))}>{t.copy}</button>
+      <button disabled={!st.scannedAt || st.scanning} onClick={() => downloadBlob(new Blob([JSON.stringify({ version: 2, extensionVersion: b.runtime.getManifest().version, url: st.model.url, coverage: st.scanCoverage, filtered: query !== "" || device !== "all" || rule !== "all" || severity !== "all", scannedAt: st.scannedAt, heuristic: true, failedViewports: st.scanFailed.map(name), truncatedViewports: st.scanTruncated.map(name), findings: filtered }, null, 2)], { type: 'application/json' }), 'viewgrid-issues.json')}>{t.json}</button>
     </div>
+    <div className={s.actions}><button disabled={!st.scannedAt || st.scanning} onClick={() => downloadBlob(new Blob([reportDocument(filtered, name, {
+      version: b.runtime.getManifest().version || 'unknown', url: st.model.url, scannedAt: st.scannedAt,
+      devices: Object.keys(st.scanCoverage).map(id => `${name(id)}: ${st.scanCoverage[id]} elements`),
+      failed: st.scanFailed.map(name), truncated: st.scanTruncated.map(name),
+      filtered: query !== '' || device !== 'all' || rule !== 'all' || severity !== 'all',
+    })], { type: 'text/html;charset=utf-8' }), 'viewgrid-scan-report.html')}>{t.html}</button></div>
     <div className={s.filters}>
       <input aria-label={t.search} placeholder={t.search} value={query} onChange={e => setQuery(e.target.value)} />
       <select aria-label={t.allDevices} value={device} onChange={e => setDevice(e.target.value)}><option value="all">{t.allDevices}</option>{st.model.viewports.map(v => <option key={v.id} value={v.id}>{name(v.id)}</option>)}</select>
-      <select aria-label={t.allRules} value={rule} onChange={e => setRule(e.target.value)}><option value="all">{t.allRules}</option>{['horizontal-overflow', 'text-clipping', 'out-of-viewport', 'small-tap-target'].map(r => <option key={r}>{r}</option>)}</select>
+      <select aria-label={t.allRules} value={rule} onChange={e => setRule(e.target.value)}><option value="all">{t.allRules}</option>{['horizontal-overflow', 'text-clipping', 'vertical-text-clipping', 'out-of-viewport', 'small-tap-target'].map(r => <option key={r}>{r}</option>)}</select>
       <select aria-label={t.allSeverities} value={severity} onChange={e => setSeverity(e.target.value)}><option value="all">{t.allSeverities}</option>{['critical', 'major', 'minor'].map(r => <option key={r}>{r}</option>)}</select>
     </div>
     <div className={s.body} aria-live="polite">

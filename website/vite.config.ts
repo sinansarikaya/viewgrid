@@ -17,6 +17,7 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
         privacy: path.resolve(__dirname, 'privacy/index.html'),
         support: path.resolve(__dirname, 'support/index.html'),
+        changelog: path.resolve(__dirname, 'changelog/index.html'),
         docs: path.resolve(__dirname, 'docs/index.html'),
       },
     },

@@ -112,3 +112,7 @@ These walkthroughs were produced before 1.0.2. Historical benchmark and framing 
 [Privacy](docs/PRIVACY.md) · [Security](SECURITY.md) · [Testing](docs/TESTING.md) · [MIT License](LICENSE)
 
 Created by [Sinan Sarıkaya](https://github.com/sinansarikaya). [Sponsor ViewGrid](https://github.com/sponsors/sinansarikaya).
+
+### Scan reports (1.0.3 corrections)
+Scan visible, expanded viewports using Issues. Review grouped findings and per-device measurements, including horizontal/vertical clipping and small targets inside overflow containers. DOM counts, failed frames and the 5,000-element limit describe coverage. Export JSON or a standalone HTML report; open the HTML and print to PDF. Zero findings does not establish accessibility compliance.
+The [website changelog](https://viewgrid.sinansarikaya.dev/changelog/) lists current changes. The homepage walkthrough follows EN/TR/NO selection (NO uses the English video).

@@ -52,6 +52,7 @@ export function Footer() {
             <h4 className="footer-col-title">Resources & Legal</h4>
             <ul className="footer-links">
               <li><a href="/docs/">Documentation</a></li>
+              <li><a href="/changelog/">Changelog</a></li>
               <li><a href="/support/">Support & Bug Reports</a></li>
               <li><a href="/privacy/">Privacy Policy</a></li>
               <li>

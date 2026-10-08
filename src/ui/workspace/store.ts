@@ -40,6 +40,7 @@ export interface StoreState {
   issues: Issue[];
   scanning: boolean;
   scanId: string | null;
+  scanCoverage: Record<string, number>;
   scanPending: string[];
   scanFailed: string[];
   scanTruncated: string[];
@@ -190,7 +191,7 @@ export const useStore = create<StoreState>((set, get) => ({
   focusMode: false,
   issues: [],
   scanning: false,
-  scanId: null, scanPending: [], scanFailed: [], scanTruncated: [], scannedAt: null,
+  scanCoverage: {}, scanId: null, scanPending: [], scanFailed: [], scanTruncated: [], scannedAt: null,
   pickerOpen: false,
   drawerOpen: false,
   compareOpen: false,

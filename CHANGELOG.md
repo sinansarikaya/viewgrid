@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## Scan/report and website corrections to 1.0.3 - 2026-10-08
+
+The extension remains 1.0.3. Changes are limited to scan collection/detectors, report UI, associated tests and website/documentation.
+
+- Stop treating every overflow ancestor as intentional clipping. Preserve small-target checks inside scroll/overflow containers; exclude fully hidden off-canvas content and explicitly truncated text.
+- Add fixed-height vertical text clipping detection, with measured height evidence.
+- Display inspected DOM counts per viewport; keep failed and 5,000-element-limited scans distinguishable from successful zero-finding scans.
+- Export an escaped standalone HTML report with URL, version, scan time, devices, scope, failures and filter status. It can be printed to PDF. Enable JSON/copy exports even with zero findings.
+- Update the website to 1.0.3, add a changelog page and locally hosted English/Turkish videos. Norwegian uses the English video; language switching stops and reloads the selected video.
+
 ## Same-version corrections to 1.0.3 - 2026-10-08
 
 No manifest/package version increment. Corrected packages receive a source build ID; the original tag and original release ZIPs remain unchanged.

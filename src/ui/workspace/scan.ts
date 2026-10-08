@@ -8,7 +8,7 @@ export async function startScan() {
   const viewports = st.visibleViewports().filter(v => !v.minimized && /^https?:/.test(v.url));
   const scanId = crypto.randomUUID();
   const ids = viewports.map(v => v.id);
-  useStore.setState({ scanId, issues: [], scanning: ids.length > 0, scanPending: ids, scanFailed: [], scanTruncated: [], scannedAt: null, drawerOpen: true });
+  useStore.setState({ scanCoverage: {}, scanId, issues: [], scanning: ids.length > 0, scanPending: ids, scanFailed: [], scanTruncated: [], scannedAt: null, drawerOpen: true });
   if (!ids.length) return;
   timer = setTimeout(() => {
     const state = useStore.getState();
@@ -27,7 +27,7 @@ export async function startScan() {
     if (useStore.getState().scanId === scanId) useStore.setState({ scanning: false, scanFailed: ids, scanPending: [], scannedAt: Date.now() });
   }
 }
-export function acceptScanResult(viewportId: string, issues: Omit<Issue, 'viewportId'>[], scanId: string, truncated: boolean) {
+export function acceptScanResult(viewportId: string, issues: Omit<Issue, 'viewportId'>[], scanId: string, truncated: boolean, scannedElements = 0) {
   const state = useStore.getState();
   if (state.scanId !== scanId || !state.scanPending.includes(viewportId)) return;
   const seen = new Set<string>();
@@ -36,6 +36,6 @@ export function acceptScanResult(viewportId: string, issues: Omit<Issue, 'viewpo
     if (seen.has(key)) return false; seen.add(key); return true;
   }));
   const pending = state.scanPending.filter(id => id !== viewportId);
-  useStore.setState({ scanPending: pending, scanning: pending.length > 0, scannedAt: pending.length ? null : Date.now(), scanTruncated: truncated ? [...state.scanTruncated, viewportId] : state.scanTruncated });
+  useStore.setState({ scanCoverage: { ...state.scanCoverage, [viewportId]: scannedElements }, scanPending: pending, scanning: pending.length > 0, scannedAt: pending.length ? null : Date.now(), scanTruncated: truncated ? [...state.scanTruncated, viewportId] : state.scanTruncated });
   if (!pending.length) clearTimeout(timer);
 }

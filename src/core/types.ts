@@ -100,6 +100,10 @@ export interface MeasuredElement {
   rect: Rect;
   text?: string;
   overflowX?: string;
+  overflowY?: string;
+  scrollHeight?: number;
+  clientHeight?: number;
+  insideHorizontalScroller?: boolean;
   scrollWidth?: number;
   clientWidth?: number;
   isInteractive?: boolean;

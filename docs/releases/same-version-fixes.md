@@ -1,3 +1,8 @@
+Latest scan/report improvements (same 1.0.3 version):
+- Correct overly broad overflow exclusions and detect vertical text clipping.
+- Display DOM scan coverage. Export printable HTML reports and zero-finding JSON reports, with incomplete-scan and filter information.
+- Update website version, add /changelog/ and English/Turkish promo videos. Norwegian uses English.
+
 The extension version remains **1.0.3**. Use the build-ID ZIP links below for these corrections. The original tag and original ZIP assets are retained unchanged.
 
 - Fix CastPost on first open with an existing site service worker, not only after a manual hard refresh. Preview loading now waits for scoped rules and selected-site worker cleanup before making the iframe request.

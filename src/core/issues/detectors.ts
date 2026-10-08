@@ -50,10 +50,18 @@ export function detectTextClipping(m: PageMetrics): OmitViewport[] {
   return out;
 }
 
+export function detectVerticalTextClipping(m: PageMetrics): OmitViewport[] {
+  return m.elements.filter(e => !e.intentionallyClipped && e.text &&
+    e.scrollHeight !== undefined && e.clientHeight !== undefined &&
+    e.scrollHeight > e.clientHeight + 2 && ['hidden', 'clip'].includes(e.overflowY || ''))
+    .map(e => mk('vertical-text-clipping', 'major', `Text exceeds the fixed height of <${e.tag}>`, e,
+      { scrollHeight: e.scrollHeight, clientHeight: e.clientHeight }));
+}
+
 export function detectOutOfViewport(m: PageMetrics): OmitViewport[] {
   const out: OmitViewport[] = [];
   for (const e of m.elements) {
-    if (!e.isInteractive || e.intentionallyClipped || e.rect.width <= 0) continue;
+    if (!e.isInteractive || e.intentionallyClipped || e.insideHorizontalScroller || e.rect.width <= 0) continue;
     if (e.rect.x + e.rect.width > m.innerWidth + 1 || e.rect.x < -1) {
       out.push(mk('out-of-viewport', 'major', `<${e.tag}> extends outside viewport`, e, { rect: e.rect }));
     }
@@ -82,6 +90,7 @@ export function runCoreDetectors(m: PageMetrics): OmitViewport[] {
   const issues = [
     ...detectHorizontalOverflow(m),
     ...detectTextClipping(m),
+    ...detectVerticalTextClipping(m),
     ...detectOutOfViewport(m),
     ...detectSmallTapTargets(m),
   ];

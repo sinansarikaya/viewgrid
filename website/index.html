@@ -2239,7 +2239,7 @@
           <circle cx="14" cy="23" r="2.5" />
           <circle cx="23" cy="23" r="2.5" />
         </svg>
-        <span class="brand-title">ViewGrid</span>
+        <span class="brand-title">ViewGrid <small style="font:12px monospace">v1.0.3</small></span>
       </a>
 
       <nav class="nav-links" aria-label="Main Navigation">
@@ -2248,6 +2248,8 @@
         <a href="#features" class="nav-item" data-i18n="navFeatures">Features</a>
         <a href="#compare" class="nav-item" data-i18n="navCompare">Compare</a>
         <a href="#install" class="nav-item" data-i18n="navInstall">Install</a>
+        <a href="/changelog/" class="nav-item" data-i18n="navChangelog">Changelog</a>
+        <a href="#walkthrough" class="nav-item" data-i18n="navVideo">Video</a>
         <a href="#faq" class="nav-item" data-i18n="navFaq">FAQ</a>
         <a href="https://github.com/sinansarikaya/viewgrid" target="_blank" rel="noopener noreferrer" class="nav-item">GitHub</a>
         <a href="https://github.com/sponsors/sinansarikaya" target="_blank" rel="noopener noreferrer" class="nav-item" style="color: var(--accent); font-weight: 600;">💖 Sponsor</a>
@@ -2487,6 +2489,18 @@
           </div> <!-- #hero-live-miniature -->
         </div> <!-- .hero-visual-slot -->
       </div>
+    </section>
+
+    <section id="walkthrough" class="container" style="padding:64px 20px;max-width:1000px">
+      <h2 data-i18n="videoTitle">See ViewGrid in action</h2>
+      <p data-i18n="videoDescription" style="margin:16px 0">A short walkthrough of synchronized previews, comparison tools and responsive findings.</p>
+      <video id="promo-video" controls playsinline preload="none" poster="/videos/poster-en.jpg" aria-label="ViewGrid walkthrough" style="width:100%;aspect-ratio:16/9;border-radius:16px;background:#020617">
+        <source id="promo-source" src="/videos/viewgrid-promo-en.mp4" type="video/mp4">
+        <a id="promo-download" href="/videos/viewgrid-promo-en.mp4">Download video</a>
+      </video>
+      <p data-i18n="videoNote" style="margin-top:12px">English walkthrough</p>
+      <p data-i18n="scanUpdate">Version 1.0.3: improved overflow and text-clipping checks, touch-target measurements and printable scan reports. Findings are review suggestions, not a complete accessibility audit.</p>
+      <a href="https://github.com/sinansarikaya/viewgrid/releases/tag/v1.0.3" data-i18n="latestBuild">Download the latest tested 1.0.3 build</a>
     </section>
 
     <!-- ARCHITECTURE & LOW-MEMORY BENCHMARK SECTION -->
@@ -3117,6 +3131,7 @@
 
         <div>
           <ul class="footer-links-list">
+            <li><a href="/changelog/" data-i18n="navChangelog">Changelog</a></li>
             <li><a href="#tour" data-i18n="navTour">Tour</a></li>
             <li><a href="#features" data-i18n="navFeatures">Features</a></li>
             <li><a href="#install" data-i18n="navInstall">Install</a></li>
@@ -3221,7 +3236,7 @@
   <script>
     /* -------------------------------------------------------------
        1. STORE STATUS & CONFIGURATION
-       Both Chrome Web Store and Firefox AMO are approved & live (v1.0.1).
+       Both Chrome Web Store and Firefox AMO are approved & live; tested GitHub packages are v1.0.3.
        ------------------------------------------------------------- */
     const STORES_PENDING = false;
 
@@ -3558,6 +3573,10 @@
       return 'en';
     }
 
+    Object.assign(translations.en, { navChangelog: 'Changelog', navVideo: 'Video', videoTitle: 'See ViewGrid in action', videoDescription: 'A short walkthrough of synchronized previews, comparison tools and responsive findings.', videoNote: 'English walkthrough', scanUpdate: 'Version 1.0.3: improved overflow and text-clipping checks, touch-target measurements and printable scan reports. Findings are review suggestions, not a complete accessibility audit.', latestBuild: 'Download the latest tested 1.0.3 build' });
+    Object.assign(translations.tr, { navChangelog: 'Değişiklikler', navVideo: 'Video', videoTitle: 'ViewGrid’i çalışırken görün', videoDescription: 'Eş zamanlı önizlemeler, karşılaştırma araçları ve duyarlı tasarım bulgularını keşfedin.', videoNote: 'Türkçe tanıtım videosu', scanUpdate: 'Sürüm 1.0.3: geliştirilmiş taşma ve metin kırpılması kontrolleri, dokunma alanı ölçümleri ve yazdırılabilir tarama raporları. Bulgular incelenecek önerilerdir; tam erişilebilirlik denetimi değildir.', latestBuild: 'Test edilmiş güncel 1.0.3 paketini indir' });
+    Object.assign(translations.no, { navChangelog: 'Endringslogg', navVideo: 'Video', videoTitle: 'Se ViewGrid i bruk', videoDescription: 'En kort gjennomgang av synkroniserte visninger, sammenligning og responsive funn.', videoNote: 'Videoen vises på engelsk', scanUpdate: 'Versjon 1.0.3: forbedrede kontroller for overløp, avklippet tekst og berøringsmål, samt utskrivbare rapporter. Funn er forslag til vurdering, ikke en full tilgjengelighetskontroll.', latestBuild: 'Last ned den nyeste testede 1.0.3-pakken' });
+
     let currentLang = detectLanguage();
 
     function setLang(lang) {
@@ -3567,6 +3586,15 @@
         localStorage.setItem('viewgrid_lang', lang);
       } catch (e) {}
       document.documentElement.lang = lang;
+      const source = document.getElementById('promo-source');
+      const video = document.getElementById('promo-video');
+      const url = '/videos/viewgrid-promo-' + (lang === 'tr' ? 'tr' : 'en') + '.mp4';
+      if (source && source.getAttribute('src') !== url) {
+        video.pause(); source.setAttribute('src', url); video.load();
+      }
+      const download = document.getElementById('promo-download');
+      if (download) download.setAttribute('href', url);
+
 
       document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);

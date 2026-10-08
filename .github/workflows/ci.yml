@@ -88,6 +88,9 @@ jobs:
       - name: Build Marketing Website (Vite)
         run: pnpm run build:website
 
+      - name: Verify website video languages and changelog
+        run: node scripts/check-website.mjs
+
       - name: Package Release ZIPs & Checksums
         run: pnpm run package:release
 

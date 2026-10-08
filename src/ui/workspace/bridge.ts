@@ -54,12 +54,12 @@ export async function requestCapture(format: 'png' | 'jpeg' = 'png', quality = 9
 
 export function listenAgents(handlers: {
   onEvent: (env: SyncEnvelope) => void;
-  onScanResult: (viewportId: string, issues: Omit<Issue, 'viewportId'>[], scanId: string, truncated: boolean) => void;
+  onScanResult: (viewportId: string, issues: Omit<Issue, 'viewportId'>[], scanId: string, truncated: boolean, scannedElements: number) => void;
 }) {
   b.runtime.onMessage.addListener((msg: any, sender: any) => {
     if (sender.tab?.id !== workspaceTabId || !(sender.frameId > 0)) return;
     if (msg?.type === 'vg/agent-event' && msg.env) handlers.onEvent(msg.env);
-    if (msg?.type === 'vg/scan-result') handlers.onScanResult(String(msg.viewportId), msg.issues ?? [], msg.scanId, !!msg.truncated);
+    if (msg?.type === 'vg/scan-result') handlers.onScanResult(String(msg.viewportId), msg.issues ?? [], msg.scanId, !!msg.truncated, Number(msg.scannedElements) || 0);
   });
 }
 
