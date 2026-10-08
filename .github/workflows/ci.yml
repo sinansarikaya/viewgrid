@@ -61,7 +61,7 @@ jobs:
 
       - name: Install GeckoDriver
         if: always()
-        uses: browser-actions/setup-geckodriver@v1
+        uses: browser-actions/setup-geckodriver@fac5b0424c584257f32cf12c5eb4ba86014c34f8
 
       - name: Install Firefox test driver
         if: always()
