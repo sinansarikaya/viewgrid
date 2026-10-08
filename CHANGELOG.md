@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 The extension remains 1.0.3. Changes are limited to scan collection/detectors, report UI, associated tests and website/documentation.
 
 - Stop treating every overflow ancestor as intentional clipping. Preserve small-target checks inside scroll/overflow containers; exclude fully hidden off-canvas content and explicitly truncated text.
+- Allow one CSS pixel of rounding tolerance for the 44px touch-target recommendation to avoid reporting 43.99px as a meaningful shortfall.
 - Add fixed-height vertical text clipping detection, with measured height evidence.
 - Display inspected DOM counts per viewport; keep failed and 5,000-element-limited scans distinguishable from successful zero-finding scans.
 - Export an escaped standalone HTML report with URL, version, scan time, devices, scope, failures and filter status. It can be printed to PDF. Enable JSON/copy exports even with zero findings.

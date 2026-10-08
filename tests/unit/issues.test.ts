@@ -105,3 +105,11 @@ it('finds vertical text clipping and preserves tap checks in scrollers', () => {
   ] }));
   expect(result.map(i => [i.rule, i.selector])).toEqual([['vertical-text-clipping', '#text'], ['small-tap-target', '#tiny-tab']]);
 });
+
+it('allows subpixel rounding near 44px without hiding genuinely small targets', () => {
+  const result = detectSmallTapTargets(metrics({ elements: [
+    { selector: '#rounded', tag: 'button', isInteractive: true, rect: { x: 0, y: 0, width: 80, height: 43.99 } },
+    { selector: '#small', tag: 'button', isInteractive: true, rect: { x: 0, y: 0, width: 80, height: 42.5 } },
+  ] }));
+  expect(result.map(i => i.selector)).toEqual(['#small']);
+});

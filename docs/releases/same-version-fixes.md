@@ -1,5 +1,5 @@
 Latest scan/report improvements (same 1.0.3 version):
-- Correct overly broad overflow exclusions and detect vertical text clipping.
+- Correct overly broad overflow exclusions and detect vertical text clipping. Allow 1 CSS px rounding tolerance for the 44px touch-target recommendation.
 - Display DOM scan coverage. Export printable HTML reports and zero-finding JSON reports, with incomplete-scan and filter information.
 - Update website version, add /changelog/ and English/Turkish promo videos. Norwegian uses English.
 

@@ -75,10 +75,11 @@ export function detectSmallTapTargets(m: PageMetrics): OmitViewport[] {
   for (const e of m.elements) {
     if (!e.isInteractive || e.inlineTextLink || e.intentionallyClipped || e.rect.width <= 0 || e.rect.height <= 0) continue;
     const min = Math.min(e.rect.width, e.rect.height);
-    if (min > 0 && min < 44) {
+    // One CSS pixel tolerance avoids flagging 43.99px targets as 44px failures.
+    if (min > 0 && min < 43) {
       out.push(
         mk('small-tap-target', 'minor', `Tap target ${Math.round(e.rect.width)}×${Math.round(e.rect.height)}px (< 44px recommendation)`, e, {
-          rect: e.rect,
+          rect: e.rect, recommendation: 44, tolerance: 1,
         }),
       );
     }

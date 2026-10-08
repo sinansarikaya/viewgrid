@@ -47,7 +47,7 @@
       "en": {
         "title": "More precise scans. Reports you can share.",
         "points": [
-          "Small controls inside overflow containers remain measurable instead of being silently excluded. Completely clipped off-canvas content is excluded.",
+          "Small controls inside overflow containers remain measurable instead of being silently excluded. Completely clipped off-canvas content is excluded. Tiny differences caused by rounding are ignored.",
           "New vertical text-clipping checks catch wrapped text cut off by fixed heights; explicit ellipsis and line clamping are treated separately.",
           "Per-device DOM counts make scan coverage visible. Failed frames and scans limited to 5,000 elements are clearly marked.",
           "Export JSON or a standalone HTML report, including zero-finding scans. HTML reports include scope, filters and failures and can be printed to PDF.",
@@ -57,7 +57,7 @@
       "tr": {
         "title": "Daha hassas tarama. Paylaşılabilir raporlar.",
         "points": [
-          "Taşma kapsayıcılarının içindeki küçük kontroller artık sessizce elenmez. Tamamen kırpılmış, ekran dışı içerik taramaya dahil edilmez.",
+          "Taşma kapsayıcılarının içindeki küçük kontroller artık sessizce elenmez. Tamamen kırpılmış, ekran dışı içerik taramaya dahil edilmez. Yuvarlamadan kaynaklanan çok küçük farklar elenir.",
           "Yeni dikey metin kırpılması kontrolü, sabit yüksekliğin kestiği çok satırlı metni bulur. Kasıtlı üç nokta ve satır sınırlaması ayrı değerlendirilir.",
           "Cihaz başına DOM öğesi sayıları taramanın kapsamını gösterir. Taranamayan ekranlar ve 5.000 öğe sınırına ulaşan taramalar açıkça belirtilir.",
           "Sıfır bulgulu taramalar dahil JSON ve bağımsız HTML raporu indirin. HTML raporu kapsamı, filtreleri ve eksikleri içerir; PDF olarak yazdırılabilir.",
@@ -67,7 +67,7 @@
       "no": {
         "title": "Mer presise skanninger. Rapporter du kan dele.",
         "points": [
-          "Små kontroller i overløpsbeholdere måles fortsatt i stedet for å bli utelatt. Fullstendig avklippet innhold utenfor skjermen utelates.",
+          "Små kontroller i overløpsbeholdere måles fortsatt i stedet for å bli utelatt. Fullstendig avklippet innhold utenfor skjermen utelates. Små forskjeller som skyldes avrunding ignoreres.",
           "Ny kontroll av vertikalt avklippet tekst finner linjer som kuttes av fast høyde. Tilsiktet ellipse og linjebegrensning behandles separat.",
           "DOM-antall per enhet viser skanningens omfang. Mislykkede visninger og grensen på 5 000 elementer markeres tydelig.",
           "Eksporter JSON eller en selvstendig HTML-rapport, også uten funn. HTML-rapporten viser omfang, filtre og mangler og kan skrives ut til PDF.",
