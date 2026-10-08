@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## Scan reliability corrections to 1.0.3 - 2026-10-08
+
+The version remains 1.0.3; changes are confined to scan metrics, assessment, reporting and related documentation/tests.
+
+- Separate potential 24px minimum-target spacing concerns from ergonomic 44px advice. Evaluate 24px circles against neighboring target rectangles and other undersized-target circles. Exceptions and real hit areas still require review; this is not automatic WCAG certification.
+- Move near-threshold 36–43px suggestions to an optional category, hidden by default with an explicit count/toggle. This cutoff is a product prioritization heuristic, not a WCAG threshold.
+- Recognize native input labels, exclude inert/disabled and nested interactive decorations, and collect readable control labels. Do not mistake ellipsis text for a reason to skip actual control size checks.
+- Group repeated sibling controls of the same component/style while retaining every selector and device measurement. Keep categories and page URLs separate; group counts no longer pretend each repeated item is an independent problem.
+- Improve HTML reports with observation tables, full measurement evidence, export scope and omitted optional counts. Text/JSON reports use the same grouping and categories (JSON schema 3; extension version unchanged).
+- Validate circle boundaries, generously spaced footer links, native labels, grouping, optional advice and real CastPost scans alongside browser regressions.
+
 ## Scan/report and website corrections to 1.0.3 - 2026-10-08
 
 The extension remains 1.0.3. Changes are limited to scan collection/detectors, report UI, associated tests and website/documentation.

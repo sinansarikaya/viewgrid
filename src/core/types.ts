@@ -107,6 +107,9 @@ export interface MeasuredElement {
   scrollWidth?: number;
   clientWidth?: number;
   isInteractive?: boolean;
+  label?: string;
+  componentKey?: string;
+  actionKey?: string;
   intentionallyClipped?: boolean;
   inlineTextLink?: boolean;
 }

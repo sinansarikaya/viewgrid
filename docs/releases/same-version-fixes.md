@@ -1,3 +1,8 @@
+Scan reliability assessment (same 1.0.3 version):
+- Separate potential 24px spacing concerns, ergonomic improvements and optional 44px advice. Neighbor spacing and native label activation areas are considered; exceptions and actual hit areas still require review.
+- Group repeated component controls without dropping selectors or device measurements. Readable labels replace blank control text.
+- Hide near-threshold recommendations by default, show an explicit count/toggle and include exclusion/filter information in text, JSON and printable HTML reports.
+
 Latest scan/report improvements (same 1.0.3 version):
 - Correct overly broad overflow exclusions and detect vertical text clipping. Allow 1 CSS px rounding tolerance for the 44px touch-target recommendation.
 - Display DOM scan coverage. Export printable HTML reports and zero-finding JSON reports, with incomplete-scan and filter information.

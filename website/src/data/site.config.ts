@@ -139,7 +139,7 @@ export const siteConfig = {
       id: 'audit-scanner',
       title: 'Automated Responsive Audit',
       tagline: 'Detect horizontal overflows and small touch targets',
-      description: 'Inspect horizontal overflow, horizontal and vertical text clipping, offscreen controls and small touch targets. Review measurements across devices and export JSON or a printable HTML report, including scans with no findings. Results are suggestions, not a complete accessibility audit.',
+      description: 'Inspect horizontal overflow, horizontal and vertical text clipping, offscreen controls and small touch targets. Review grouped component measurements, distinguish potential target-spacing concerns from optional ergonomic advice, and export JSON or a printable HTML report. Results are suggestions, not a complete accessibility audit.',
       icon: '🔍',
       highlight: 'Zero-config diagnostics',
     },

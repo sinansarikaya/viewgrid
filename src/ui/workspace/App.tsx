@@ -13,7 +13,7 @@ import {
   sendAgentCmd,
 } from './bridge';
 import { startScan } from './scan';
-import { groupIssues } from '../../core/issues/report';
+import { groupIssues, primaryIssues } from '../../core/issues/report';
 import { captureViewport, isCapturing } from './capture';
 import { LoopGuard } from '../../core/sync/protocol';
 import { effectiveSize, gridColumns, calculateSnapGuides, type GuideLine, type Bounds } from '../../core/workspace/layout';
@@ -451,7 +451,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         </details>
         <div className={s.sep} />
         <button onClick={doScan} title={t.issues}>
-          🔍 {groupIssues(st.issues).length > 0 ? <span className={s.badge + ' ' + s.warn}>{groupIssues(st.issues).length}</span> : t.issues}
+          🔍 {groupIssues(primaryIssues(st.issues)).length > 0 ? <span className={s.badge + ' ' + s.warn}>{groupIssues(primaryIssues(st.issues)).length}</span> : t.issues}
         </button>
         <button onClick={() => st.setDrawerOpen(!st.drawerOpen)}>{t.panel}</button>
         <button onClick={() => void shotAll()} title={t.shotAll}>📷</button>
@@ -749,7 +749,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         <span>{visible.length} {t.viewports}</span>
         <span>{t.layout}: {st.model.layout === 'grid' ? t.layoutGrid : st.model.layout === 'row' ? t.layoutRow : t.layoutCol}</span>
         <span>{t.zoomPresets}: {ZOOM_PRESETS.map((z) => `${z * 100}%`).join(' / ')}</span>
-        <span>{t.issues}: {groupIssues(st.issues).length}</span>
+        <span>{t.issues}: {groupIssues(primaryIssues(st.issues)).length}</span>
         <span>{st.granted ? t.siteAccessGranted : t.siteAccessLimited}</span>
         <span>local-only ●</span>
       </div>

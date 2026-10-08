@@ -123,3 +123,5 @@ release: + signed build pipeline (web-ext sign) + manual OS smoke
 
 Fixtures and baselines are synthetic or public pages; **no user data in the repo**.
 E2E artifacts (screenshots/videos of failures) stay in CI storage, auto-expire.
+
+Target assessment regressions cover 20px targets with 4px gaps (clear), 16px adjacent targets (conflict), long 23.5px footer links with 10px gaps (ergonomic only), circle-vs-large-rectangle collisions, native input/label equivalence, truncated scans, optional 42px advice and component grouping across devices. Chromium checks real grouped selector observations, optional exports, HTML reports and CastPost classification. Existing Firefox and Chromium preview/sync/scroll checks still run.

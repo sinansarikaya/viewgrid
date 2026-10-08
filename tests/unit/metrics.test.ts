@@ -18,6 +18,7 @@ describe('actual DOM collector', () => {
   it('keeps scroll container children measurable without suppressing tap targets', () => {
     document.body.innerHTML = '<div style="overflow-x:auto"><button id="tab">Tab</button></div>';
     document.querySelectorAll('*').forEach(el => measurable(el));
+    Object.defineProperty(document.querySelector('div')!, 'scrollWidth', { configurable: true, value: 120 });
     const target = collectMetrics(document, window).elements.find(e => e.selector === '#tab');
     expect(target?.intentionallyClipped).toBe(false);
     expect(target?.insideHorizontalScroller).toBe(true);
@@ -52,4 +53,35 @@ it('does not mistake decorative overflow on a section for text clipping', () => 
   Object.defineProperty(section, 'scrollHeight', { value: 200 });
   Object.defineProperty(section, 'clientHeight', { value: 20 });
   expect(collectMetrics(document, window).elements.find(e => e.selector === '#decorative')?.text).toBeUndefined();
+});
+
+it('collects nested labels, image names, native-label actions and component identity', () => {
+  document.body.innerHTML = '<nav><button id="first" class="tab"><span>First tab</span></button><button id="second" class="tab" aria-label="Second tab"><svg></svg></button></nav><a id="logo" href="/"><img alt="CastPost home"></a><input id="check" type="checkbox"><label id="label" for="check">Allow notifications</label>';
+  document.querySelectorAll('*').forEach(el => measurable(el));
+  const m = collectMetrics(document, window);
+  expect(m.elements.find(e => e.selector === '#first')?.label).toBe('First tab');
+  expect(m.elements.find(e => e.selector === '#second')?.label).toBe('Second tab');
+  expect(m.elements.find(e => e.selector === '#logo')?.label).toBe('CastPost home');
+  expect(m.elements.find(e => e.selector === '#first')?.componentKey).toBe(m.elements.find(e => e.selector === '#second')?.componentKey);
+  expect(m.elements.find(e => e.selector === '#check')?.actionKey).toBe(m.elements.find(e => e.selector === '#label')?.actionKey);
+});
+it('does not count nested interactive decorations and inert controls as targets', () => {
+  document.body.innerHTML = '<button id="parent"><span role="button" id="nested">Icon</span></button><div inert><button id="inert">No</button></div>';
+  document.querySelectorAll('*').forEach(el => measurable(el));
+  expect(collectMetrics(document, window).elements.filter(e => e.isInteractive).map(e => e.selector)).toEqual(['#parent']);
+});
+
+it('retains a real nested control inside a custom interactive card', () => {
+  document.body.innerHTML = '<div role="button" id="card"><button id="separate">Separate action</button></div>';
+  document.querySelectorAll('*').forEach(el => measurable(el));
+  expect(collectMetrics(document, window).elements.filter(e => e.isInteractive).map(e => e.selector)).toEqual(['#card', '#separate']);
+});
+
+it('recognizes inline prose in divs without exempting standalone or navigation links', () => {
+  document.body.innerHTML = '<div>Need a custom plan? <a id="prose" href="/quote" style="display:inline">Request a quote</a></div><p><a id="alone" href="/buy" style="display:inline">Buy now</a></p><nav>Languages: <a id="nav" href="/tr" style="display:inline">TR</a></nav>';
+  document.querySelectorAll('*').forEach(el => measurable(el));
+  const m = collectMetrics(document, window);
+  expect(m.elements.find(e => e.selector === '#prose')?.inlineTextLink).toBe(true);
+  expect(m.elements.find(e => e.selector === '#alone')?.inlineTextLink).toBe(false);
+  expect(m.elements.find(e => e.selector === '#nav')?.inlineTextLink).toBe(false);
 });

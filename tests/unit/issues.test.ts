@@ -72,7 +72,7 @@ describe('issue detectors', () => {
     expect(out[0]!.selector).toBe('a.buy');
   });
 
-  it('flags small tap targets (<24px) as minor', () => {
+  it('flags crowded sub-24px controls for review', () => {
     const m = metrics({
       elements: [
         { selector: 'button', tag: 'button', rect: { x: 0, y: 0, width: 16, height: 16 }, isInteractive: true },
@@ -81,7 +81,8 @@ describe('issue detectors', () => {
     });
     const out = detectSmallTapTargets(m);
     expect(out).toHaveLength(1);
-    expect(out[0]!.severity).toBe('minor');
+    expect(out[0]!.severity).toBe('major');
+    expect(out[0]!.rule).toBe('target-spacing');
   });
 
   it('runs the full core detector pack', () => {

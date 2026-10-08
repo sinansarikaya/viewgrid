@@ -7,15 +7,15 @@ describe('reviewable issue counts', () => {
   it('groups the same finding across devices and deduplicates one device', () => {
     const groups = groupIssues([issue('phone'), issue('phone'), issue('tablet')]);
     expect(groups).toHaveLength(1); expect(groups[0]!.occurrences).toHaveLength(2);
-    expect(issueReport(groups, id => id)).toContain('1 unique findings · 2 viewport occurrences');
+    expect(issueReport(groups, id => id)).toContain('1 finding groups · 2 element/viewport observations');
     expect(issueReport(groups, id => id)).toContain('#buy');
   });
   it('does not combine different pages or selectors', () => {
     expect(groupIssues([issue('a'), { ...issue('b'), data: { url: 'https://other.test' } }, { ...issue('c'), selector: '#cancel' }])).toHaveLength(3);
   });
-  it('excludes intentional clipping and inline link target advice', () => {
+  it('excludes decorative clipping and inline link target advice', () => {
     const m: PageMetrics = { innerWidth: 390, innerHeight: 844, scrollWidth: 390, scrollHeight: 900, elements: [
-      { selector: '#map', tag: 'a', rect: { x: 500, y: 0, width: 20, height: 20 }, isInteractive: true, intentionallyClipped: true },
+      { selector: '#map', tag: 'a', rect: { x: 500, y: 0, width: 20, height: 20 }, isInteractive: false, intentionallyClipped: true },
       { selector: '#prose', tag: 'a', rect: { x: 0, y: 0, width: 30, height: 16 }, isInteractive: true, inlineTextLink: true },
       { selector: '#buy', tag: 'button', rect: { x: 0, y: 100, width: 30, height: 30 }, isInteractive: true },
     ] };
@@ -27,7 +27,7 @@ describe('reviewable issue counts', () => {
 it('exports zero findings, incomplete status and escapes site-controlled HTML', () => {
   const report = reportDocument([], id => id, { version: '1.0.3', url: '<script>alert(1)</script>', scannedAt: 12345, devices: ['phone'], failed: ['tablet'], truncated: [], filtered: false });
   expect(report).toContain('Incomplete scan');
-  expect(report).toContain('0 unique findings');
+  expect(report).toContain('0 finding groups');
   expect(report).toContain('&lt;script&gt;');
   expect(report).not.toContain('<script>');
 });

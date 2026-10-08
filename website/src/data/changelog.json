@@ -45,6 +45,37 @@
       "version": "1.0.3",
       "date": "2026-10-08",
       "en": {
+        "title": "Fewer distractions. Better reasons to act.",
+        "points": [
+          "Potential 24px target-spacing concerns are separated from ergonomic 44px recommendations. Neighboring controls and native input labels are considered.",
+          "Near-threshold advice is optional and hidden by default, with a visible count and switch to include it.",
+          "Repeated controls are grouped by component, while every element/device measurement and selector remains accessible. Readable control names improve reports.",
+          "HTML reports now include observation tables and detailed evidence. All exports state filters and omitted optional advice. Findings remain review suggestions, not automatic accessibility certification."
+        ]
+      },
+      "tr": {
+        "title": "Daha az gürültü. Daha anlamlı bulgular.",
+        "points": [
+          "Olası 24 px hedef mesafesi sorunları, ergonomik 44 px önerilerinden ayrılır. Komşu kontroller ve giriş alanlarının etiketleri hesaba katılır.",
+          "Sınıra yakın öneriler isteğe bağlıdır ve başlangıçta gizlidir. Sayıları ve gösterme seçeneği açıkça sunulur.",
+          "Tekrarlanan kontroller bileşenlere göre gruplanır; her öğenin cihaz ölçümü ve seçicisi korunur. Okunabilir kontrol adları raporu anlaşılır kılar.",
+          "HTML raporları ölçüm tabloları ve ayrıntılı kanıt içerir. Tüm dışa aktarımlar filtreleri ve gizlenen isteğe bağlı önerileri belirtir. Bulgular incelenecek önerilerdir; otomatik erişilebilirlik sertifikası değildir."
+        ]
+      },
+      "no": {
+        "title": "Mindre støy. Bedre grunnlag for handling.",
+        "points": [
+          "Mulige problemer med 24px-målavstand skilles fra ergonomiske 44px-råd. Nabokontroller og etiketter for inndata tas med.",
+          "Råd nær grensen er valgfrie og skjult som standard, med synlig antall og bryter for å vise dem.",
+          "Gjentatte kontroller grupperes etter komponent, mens hver element-/enhetsmåling og selektor bevares. Lesbare kontrollnavn gjør rapportene tydeligere.",
+          "HTML-rapporter viser målingstabeller og detaljert dokumentasjon. Alle eksporter oppgir filtre og utelatte valgfrie råd. Funn krever vurdering og er ikke automatisk tilgjengelighetssertifisering."
+        ]
+      }
+    },
+    {
+      "version": "1.0.3",
+      "date": "2026-10-08",
+      "en": {
         "title": "More precise scans. Reports you can share.",
         "points": [
           "Small controls inside overflow containers remain measurable instead of being silently excluded. Completely clipped off-canvas content is excluded. Tiny differences caused by rounding are ignored.",

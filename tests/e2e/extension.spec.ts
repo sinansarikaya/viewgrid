@@ -1,10 +1,10 @@
 import { test, expect, chromium, type BrowserContext, type Page, type Frame } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 let server: Server, context: BrowserContext, page: Page, profile: string, base: string, extensionId: string;
-const fixture = `<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:0;font:16px sans-serif}button{width:60px;height:44px}#small{width:30px;height:30px}#clipped{width:100px;overflow:hidden;white-space:nowrap}#intentional{width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{height:1800px}</style><h1>ViewGrid fixture</h1><input id="name"><button id="action" onclick="document.querySelector('#count').textContent=Number(document.querySelector('#count').textContent)+1">Count</button><span id="count">0</span><button id="small">Tiny</button><p id="clipped">This long text is accidentally clipped</p><p id="intentional">This long text is intentionally clipped</p><a id="next" href="/next">Next</a><button id="spa" onclick="history.pushState({},'', '/spa')">SPA</button><div style="overflow:hidden"><button id="wrapped-small" style="width:25px;height:25px">S</button><p id="vertical-clip" style="height:10px;width:80px;overflow:hidden">This wrapped text has several hidden lines</p></div><div class="spacer"></div><footer>End</footer>`;
+const fixture = `<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:0;font:16px sans-serif}button{width:60px;height:44px}#small{width:30px;height:30px}#clipped{width:100px;overflow:hidden;white-space:nowrap}#intentional{width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{height:1800px}</style><h1>ViewGrid fixture</h1><input id="name"><button id="action" onclick="document.querySelector('#count').textContent=Number(document.querySelector('#count').textContent)+1">Count</button><span id="count">0</span><button id="small">Tiny</button><p id="clipped">This long text is accidentally clipped</p><p id="intentional">This long text is intentionally clipped</p><a id="next" href="/next">Next</a><button id="spa" onclick="history.pushState({},'', '/spa')">SPA</button><div style="overflow:hidden"><button id="wrapped-small" style="width:25px;height:25px">S</button><p id="vertical-clip" style="height:10px;width:80px;overflow:hidden">This wrapped text has several hidden lines</p></div><div id="crowded-row" style="display:flex;gap:0;margin-top:40px"><button id="crowded-a" class="crowded" style="width:16px;height:16px"><span>A</span></button><button id="crowded-b" class="crowded" style="width:16px;height:16px" aria-label="B">B</button></div><button id="optional" style="width:160px;height:42px;margin:40px 0">Optional target</button><div class="spacer"></div><footer>End</footer>`;
 const frames = () => page.frames().filter(f => f.parentFrame() === page.mainFrame());
 async function measureScrollSync(label: string) {
   const previews = frames();
@@ -129,7 +129,7 @@ test('scan groups repeated findings, shows evidence and exports a structured rep
   await page.locator('button').filter({ hasText: '🔍' }).click();
   const drawer = page.getByRole('complementary');
   await expect(drawer).toBeVisible();
-  await expect(drawer.getByText('viewport occurrences', { exact: false })).toBeVisible();
+  await expect(drawer.getByText('element/viewport observations', { exact: false })).toBeVisible();
   await expect(drawer.locator('article')).not.toHaveCount(0);
   await expect(drawer.locator('code').filter({ hasText: '#intentional' })).toHaveCount(0);
   await drawer.getByRole('button', { name: 'Copy report', exact: true }).click();
@@ -145,6 +145,13 @@ test('scan groups repeated findings, shows evidence and exports a structured rep
   expect(report.findings.some((g: any) => g.issue.selector === '#small')).toBe(true);
   expect(report.findings.some((g: any) => g.occurrences.length > 1)).toBe(true);
   expect(report.findings.some((g: any) => g.issue.selector === '#wrapped-small')).toBe(true);
+  expect(report.findings.some((g: any) => g.issue.rule === 'target-spacing')).toBe(true);
+  expect(report.findings.some((g: any) => g.occurrences.some((i: any) => i.selector === '#crowded-a') && g.occurrences.some((i: any) => i.selector === '#crowded-b'))).toBe(true);
+  expect(report.findings.some((g: any) => g.issue.data.category === 'optional')).toBe(false);
+  expect(report.excludedOptionalGroups).toBeGreaterThan(0);
+  await drawer.getByRole('checkbox', { name: 'Include optional ergonomic advice', exact: false }).check();
+  await expect(drawer.getByText('Optional target: 160×42 CSS px; optional 44px touch-target recommendation', { exact: true })).toBeVisible();
+
   expect(report.findings.some((g: any) => g.issue.rule === 'vertical-text-clipping')).toBe(true);
   expect(Object.values(report.coverage).every(count => Number(count) > 0)).toBe(true);
   const htmlDownload = page.waitForEvent('download');
@@ -259,6 +266,20 @@ test('CastPost loads from a worker-warmed profile, reopens and survives a browse
         const drawer = page.getByRole('complementary');
         await expect(drawer.getByText('Last scan', { exact: false })).toBeVisible();
         await expect(drawer.getByText('Inspected DOM elements', { exact: false })).toBeVisible();
+
+        const download = page.waitForEvent('download');
+        await drawer.getByRole('button', { name: 'Export JSON' }).click();
+        const file = await download;
+        const stream = await file.createReadStream();
+        const chunks: Buffer[] = []; for await (const chunk of stream!) chunks.push(chunk);
+        const scan = JSON.parse(Buffer.concat(chunks).toString());
+        await writeFile('test-results/castpost-reviewed-report.json', JSON.stringify(scan, null, 2));
+        expect(scan.failedViewports).toEqual([]);
+        expect(scan.findings.every((g: any) => g.issue.data.category !== 'optional')).toBe(true);
+        expect(scan.findings.every((g: any) => g.occurrences.every((i: any) => String(i.data.label || '').trim().length > 0))).toBe(true);
+        expect(scan.findings.some((g: any) => new Set(g.occurrences.map((i: any) => i.selector)).size > 1)).toBe(true);
+        console.log('CASTPOST ASSESSED SCAN', JSON.stringify({ groups: scan.findings.length, optionalExcluded: scan.excludedOptionalGroups, findings: scan.findings.map((g: any) => ({ rule: g.issue.rule, category: g.issue.data.category, elements: [...new Set(g.occurrences.map((i: any) => i.selector))], labels: [...new Set(g.occurrences.map((i: any) => i.data.label))] })) }));
+        await page.screenshot({ path: 'test-results/castpost-reviewed-scan.png' });
         console.log('CASTPOST SCAN', await drawer.innerText());
         await drawer.getByRole('button', { name: 'Close issues' }).click();
       }
