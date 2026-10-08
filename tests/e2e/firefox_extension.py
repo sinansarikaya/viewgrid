@@ -12,6 +12,7 @@ import time
 import zipfile
 
 from selenium import webdriver
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchFrameException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -47,7 +48,7 @@ options.add_argument('-headless')
 options.set_preference('extensions.webextensions.uuids', json.dumps({'viewgrid@viewgrid.dev': uuid}))
 driver = webdriver.Firefox(options=options)
 driver.set_window_size(1280, 900)
-wait = WebDriverWait(driver, 25)
+wait = WebDriverWait(driver, 25, ignored_exceptions=(StaleElementReferenceException, NoSuchFrameException))
 out = Path('test-results/firefox')
 out.mkdir(parents=True, exist_ok=True)
 
@@ -96,6 +97,7 @@ try:
     bar.send_keys(base + '/protected')
     from selenium.webdriver.common.keys import Keys
     bar.send_keys(Keys.ENTER)
+    wait.until(lambda _: all(frame_script('return location.href', i) == base + '/protected' for i in range(4)))
     wait.until(lambda _: all('ViewGrid Firefox fixture' in frame_text(i) for i in range(4)))
     print('PASS Firefox: protected preview response loads', flush=True)
     frame_script('location.assign(arguments[0])', 0, base + '/protected-next')
