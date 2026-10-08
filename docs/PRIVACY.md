@@ -1,4 +1,4 @@
-# ViewGrid privacy — version 1.0.2
+# ViewGrid privacy — version 1.0.3
 
 ViewGrid does not send analytics, crash reports, screenshots, issue results or workspace settings to a ViewGrid server. There is no cloud proxy, account service or AI provider integration in this release.
 
@@ -13,11 +13,11 @@ Previews load your selected websites directly. Those sites make ordinary browsin
 
 ## Permissions and isolation
 
-Host access allows the content agent to synchronize and inspect preview frames. Storage saves preferences; tabs identifies workspaces; downloads exports files; context menus opens a selected page/link. Framing permissions are used for direct previews in verified workspace tabs.
+Host access allows the content agent to synchronize and inspect preview frames. Storage saves preferences; tabs identifies workspaces; downloads exports files; context menus opens a selected page/link. Framing permissions are used within verified workspace tabs.
 
-Firefox removes XFO and CSP frame-ancestors while retaining other response policy directives. Chromium cannot edit an individual CSP directive using DNR, so CSP response headers are removed only on direct preview documents. Normal tabs and nested third-party frames are outside the exception.
+Firefox removes XFO and CSP frame-ancestors while retaining other response policy directives. Chromium cannot edit an individual CSP directive using DNR, so CSP response headers are removed on subframes in workspace tabs, including nested frames and page-initiated navigations. Normal tabs are outside the exception. Firefox scopes its exceptions to direct previews.
 
-Cookies, localStorage, sessionStorage, service workers and CacheStorage belonging to tested sites are not automatically deleted or rewritten. Browser third-party cookie and authentication policies still apply.
+Chromium defers worker registration until the preview agent verifies its workspace tab, then disables registration and unregisters workers visible in that preview storage partition. Existing controlled previews reload once after unregistering. Normal tabs are untouched; cookies, localStorage, sessionStorage and CacheStorage are retained. Browser third-party cookie and authentication policies still apply.
 
 Delete saved workspaces through the workspace menu; uninstalling the extension clears its browser-managed extension storage. Exported downloads and clipboard contents are under your control and are not removed by uninstalling.
 

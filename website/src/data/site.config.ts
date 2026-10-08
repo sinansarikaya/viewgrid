@@ -37,7 +37,7 @@ export const siteConfig = {
     tagline: 'Test every breakpoint at once.',
     subheading: 'View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Stop resizing your browser.',
     description: 'ViewGrid is a developer-focused browser extension for Chrome and Firefox that provides a multi-viewport responsive testing workspace. Render phone, tablet, and desktop layouts side-by-side, synchronize scrolling and click interactions, compare breakpoints with split and optical curtain diff sliders, overlay Figma mockups, and automatically unblock X-Frame-Options and CSP headers for sub_frames.',
-    version: '1.0.1',
+    version: '1.0.3',
     canonicalUrl: 'https://viewgrid.sinansarikaya.dev',
     repositoryUrl: 'https://github.com/sinansarikaya/viewgrid',
     issuesUrl: 'https://github.com/sinansarikaya/viewgrid/issues',
@@ -81,7 +81,7 @@ export const siteConfig = {
       id: 'framing-engine',
       title: 'Smart Header Relaxer',
       tagline: 'Test sites blocked by X-Frame-Options & CSP',
-      description: 'Framing exceptions apply only to direct workspace previews. Chromium removes preview CSP headers; Firefox preserves other CSP directives. Normal tabs and nested frames retain their protections.',
+      description: 'Framing exceptions apply only within workspace tabs, including page navigation and reload. Chromium includes nested frames and removes CSP headers; Firefox handles direct previews and preserves other CSP directives. Normal browsing tabs retain their protections.',
       icon: '🛡️',
       highlight: 'Chromium DNR & Firefox webRequest',
     },
@@ -201,7 +201,7 @@ export const siteConfig = {
     },
     {
       question: 'Which browsers does ViewGrid support?',
-      answer: 'ViewGrid provides first-class support for both Chromium (Manifest V3 Service Worker + DeclarativeNetRequest) and Mozilla Firefox (Manifest V3 Event Page + webRequest). Each browser receives a dedicated build package optimized for its extension runtime architecture.',
+      answer: 'ViewGrid provides first-class support for both Chromium (Manifest V3 Service Worker + DeclarativeNetRequest) and Mozilla Firefox (Manifest V2 Background Page + webRequest). Each browser receives a dedicated build package optimized for its extension runtime architecture.',
     },
     {
       question: 'Can ViewGrid test websites with X-Frame-Options or strict CSP?',

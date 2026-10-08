@@ -9,7 +9,7 @@ export function Hero() {
         <div className="hero-badge-row">
           <span className="badge badge-cyan">
             <span className="status-pulse" />
-            BROWSER EXTENSION · CHROMIUM & FIREFOX MV3
+            BROWSER EXTENSION · CHROMIUM & FIREFOX
           </span>
           <span className="badge badge-emerald">
             100% LOCAL & PRIVATE · ZERO TELEMETRY

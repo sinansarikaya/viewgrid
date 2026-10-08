@@ -63,11 +63,11 @@ Under repository **Settings → General → Social preview**:
 
 ## 📦 Releases
 
-Ensure the latest release matches `v1.0.1`:
-- **Tag:** `v1.0.1`
-- **Release Title:** `ViewGrid v1.0.1 — PWA & Service Worker Framing Isolation, DNR Priority & Host Access Polish`
+Ensure the latest release matches `v1.0.3`:
+- **Tag:** `v1.0.3`
+- **Release Title:** `ViewGrid v1.0.3 — Chrome Reload Regression, Firefox Framing & Current Browser Builds`
 - **Attached Binaries:**
-  - `viewgrid-1.0.1-chromium.zip`
-  - `viewgrid-1.0.1-firefox.zip`
-  - `viewgrid-1.0.1-source.zip`
+  - `viewgrid-1.0.3-chromium.zip`
+  - `viewgrid-1.0.3-firefox.zip`
+  - `viewgrid-1.0.3-source.zip`
   - `SHA256SUMS`

@@ -56,6 +56,9 @@ function validatePackage(dir, browser) {
 // Validate manifest fields per browser
 function validateManifest(dir, browser) {
   const m = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+  if (m.version !== version) {
+    throw new Error(`${browser} dist is stale: manifest ${m.version}, package ${version}. Run build:all.`);
+  }
   if (browser === 'chromium') {
     if (!m.background?.service_worker) {
       console.error('[viewgrid] BLOCKED: Chromium manifest missing background.service_worker'); process.exit(1);
@@ -65,6 +68,9 @@ function validateManifest(dir, browser) {
     }
   }
   if (browser === 'firefox') {
+    if (m.manifest_version !== 2 || !m.browser_action || m.action || m.host_permissions) {
+      throw new Error('Firefox requires the MV2 browser_action and host permissions in permissions.');
+    }
     if (!m.background?.scripts) {
       console.error('[viewgrid] BLOCKED: Firefox manifest missing background.scripts'); process.exit(1);
     }
@@ -111,7 +117,7 @@ with zipfile.ZipFile("${zipFile.replace(/\\/g, '/')}", "w", zipfile.ZIP_DEFLATED
   }
 }
 
-// Packaging source code for AMO review (excluding node_modules, dist, release, .git, etc.)
+// Packaging source code for AMO review (including installable dist builds; excluding dependencies and temporary artifacts)
 const sourceZip = path.join(releaseDir, `viewgrid-${version}-source.zip`);
 console.log(`\n[viewgrid] Packaging source code (${path.basename(sourceZip)})...`);
 if (fs.existsSync(sourceZip)) fs.rmSync(sourceZip);
@@ -120,7 +126,7 @@ try {
   const pySourceScript = `import zipfile, os
 
 ignored_dirs = {
-    'node_modules', 'dist', 'release', '.git', '.npm', '.config',
+    'node_modules', 'release', '.git', '.npm', '.config', '__pycache__',
     '.ai-rules', 'audits', 'audit', 'test-results', 'playwright-report', '.turbo', '.cache'
 }
 ignored_exts = {'.DS_Store'}

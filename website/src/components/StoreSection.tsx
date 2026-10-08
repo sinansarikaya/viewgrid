@@ -11,7 +11,7 @@ export function StoreSection() {
           <span className="section-tag">INSTALLATION & DOWNLOADS</span>
           <h2 className="section-title">Get ViewGrid for your preferred browser</h2>
           <p className="section-desc">
-            Native Manifest V3 packages compiled and optimized independently for Chromium and Mozilla Firefox.
+            Dedicated browser packages compiled and optimized independently for Chromium and Mozilla Firefox.
           </p>
         </div>
 
@@ -77,11 +77,11 @@ export function StoreSection() {
             </div>
 
             <p className="store-desc">
-              Native Firefox WebExtension implementation utilizing persistent Event Pages and blocking webRequest framing filters.
+              Native Firefox WebExtension implementation utilizing a Manifest V2 background page and blocking webRequest framing filters.
             </p>
 
             <div className="store-features">
-              <span>✓ Firefox MV3 Event Pages</span>
+              <span>✓ Firefox MV2 Background Page</span>
               <span>✓ Blocking webRequest Header Relaxer</span>
               <span>✓ Mozilla Gecko strict ID verified</span>
             </div>

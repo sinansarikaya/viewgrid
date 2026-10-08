@@ -1,6 +1,6 @@
 {
   "name": "viewgrid",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "ViewGrid \u2014 multi-viewport responsive testing workspace for Firefox (WebExtension)",
   "type": "module",

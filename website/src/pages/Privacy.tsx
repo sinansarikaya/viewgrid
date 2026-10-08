@@ -60,7 +60,7 @@ export function Privacy() {
                 <div className="perm-row">
                   <code>declarativeNetRequestWithHostAccess</code>
                   <span>Chromium</span>
-                  <span>Framing exceptions apply only to direct previews in verified workspace tabs. Chromium removes XFO and CSP response headers for those previews; Firefox removes XFO and only the frame-ancestors directive. Normal tabs and nested third-party frames retain their protections. Site cookies, storage and service worker registrations are not automatically erased or rewritten.</span>
+                  <span>Framing exceptions apply only within verified workspace tabs. Chromium removes XFO and CSP response headers for workspace subframes, including nested frames and page-initiated navigation/reload; Firefox handles direct previews and removes XFO and only the frame-ancestors directive. Normal browsing tabs retain their protections. Chromium defers worker registration until the preview agent verifies its workspace tab, then disables registration and unregisters workers visible in that preview storage partition. Existing controlled previews reload once after unregistering. Normal tabs are untouched; cookies, localStorage, sessionStorage and CacheStorage are retained.</span>
                 </div>
                 <div className="perm-row">
                   <code>webRequest & webRequestBlocking</code>

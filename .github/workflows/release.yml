@@ -66,6 +66,9 @@ jobs:
       - name: Build extension packages
         run: pnpm run build:all
 
+      - name: Verify committed browser builds are current
+        run: git diff --exit-code -- dist
+
       - name: Validate Firefox package
         run: pnpm run lint:web-ext
 
@@ -74,6 +77,18 @@ jobs:
 
       - name: Browser regression tests
         run: pnpm run test:e2e
+
+      - name: Install Firefox
+        uses: browser-actions/setup-firefox@v1
+
+      - name: Install GeckoDriver
+        uses: browser-actions/setup-geckodriver@fac5b0424c584257f32cf12c5eb4ba86014c34f8
+
+      - name: Install Firefox test driver
+        run: python -m pip install selenium==4.36.0
+
+      - name: Firefox browser regression tests
+        run: python tests/e2e/firefox_extension.py
 
       - name: Package Release ZIPs & Generate SHA256SUMS
         run: pnpm run package:release

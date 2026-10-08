@@ -6,9 +6,9 @@ ViewGrid is a local browser extension for Chrome/Chromium and Firefox, with sync
 
 [Website](https://viewgrid.sinansarikaya.dev/) · [Chrome Web Store](https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef) · [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/) · [GitHub releases](https://github.com/sinansarikaya/viewgrid/releases)
 
-## Version 1.0.2
+## Version 1.0.3
 
-This release fixes framing-rule isolation, synchronization after iframe reloads, independent navigation synchronization, destructive refresh behavior and incomplete viewport captures. The Issues panel now distinguishes unique findings from occurrences across devices and provides filters, element highlighting, copy and JSON export. See [CHANGELOG.md](CHANGELOG.md).
+Version 1.0.3 fixes a regression where protected previews stopped loading after their own navigation or reload. Both installable browser builds are included in dist/ and in the source ZIP; manifest versions come from package.json. The Issues panel now distinguishes unique findings from occurrences across devices and provides filters, element highlighting, copy and JSON export. See [CHANGELOG.md](CHANGELOG.md).
 
 GitHub release packages and browser-store submissions are separate distribution channels. The store links above may offer an older version until review is complete.
 
@@ -26,7 +26,7 @@ GitHub release packages and browser-store submissions are separate distribution 
 
 A count such as **61** in older releases meant raw detector results across all viewports, including repeats. It did not prove 61 distinct bugs.
 
-Version 1.0.2 groups findings by page URL, rule and selector. The panel shows **unique findings** and **viewport occurrences** separately. The same element/rule on one device is counted once. Hidden controls, intentionally clipped/scrollable containers, ellipsis and small inline prose links are excluded where detectable.
+Version 1.0.2 and later group findings by page URL, rule and selector. The panel shows **unique findings** and **viewport occurrences** separately. The same element/rule on one device is counted once. Hidden controls, intentionally clipped/scrollable containers, ellipsis and small inline prose links are excluded where detectable.
 
 Use the panel to:
 
@@ -40,16 +40,18 @@ Findings are **heuristic suggestions**, not confirmed defects or a WCAG conforma
 
 ## Preview security and browser limitations
 
-Framing exceptions apply only to **direct previews in verified ViewGrid workspace tabs**. Normal browsing tabs and nested third-party frames retain their protections. Obsolete globally scoped rules from 1.0.1 are removed on background initialization.
+Framing exceptions are confined to **verified ViewGrid workspace tabs**. Normal browsing tabs retain their protections. Firefox scopes exceptions to direct previews; Chromium scopes them to subframes in the workspace tab, including nested frames, because DNR cannot select a parent frame ID. Obsolete globally scoped rules from 1.0.1 are removed on background initialization.
 
-- **Firefox:** removes X-Frame-Options and only the `frame-ancestors` directive from CSP response headers, preserving other directives and cookies.
-- **Chromium:** DeclarativeNetRequest cannot rewrite an individual CSP directive. Direct workspace preview responses have XFO and CSP headers removed; this affects security behavior inside those previews. Normal tabs are outside the exception.
-- Site cookies, localStorage, sessionStorage, service worker registrations and CacheStorage are **not automatically erased or rewritten**. Hard refresh reloads the workspace using the browser's bypass-cache option.
+- **Firefox (Manifest V2):** removes X-Frame-Options and only the `frame-ancestors` directive from CSP response headers, preserving other directives and cookies. Firefox MV3 does not permit these headers to be relaxed, so the Firefox package uses MV2.
+- **Chromium:** DeclarativeNetRequest cannot rewrite an individual CSP directive. Workspace subframe responses have XFO and CSP headers removed, including during page-initiated navigation and reload; this affects security behavior inside workspace previews and their nested frames. Normal tabs are outside the exception.
+- Chromium defers worker registration until the preview agent verifies its workspace tab, then disables registration and unregisters workers visible in that preview storage partition. Existing controlled previews reload once after unregistering. Normal tabs are untouched; cookies, localStorage, sessionStorage and CacheStorage are retained. Hard refresh reloads the workspace using the browser's bypass-cache option.
 - Third-party cookie policies, sandbox restrictions, service-worker-served responses and login flows can prevent a site from working in an iframe. ViewGrid is not an isolated authentication browser or a substitute for testing security headers in a normal tab.
 - Device profiles set CSS viewport dimensions. Their DPR/UA metadata does not emulate real phone hardware, mobile browser engines or network user agents. Synthetic key events reach application handlers but cannot reproduce browser-reserved or trusted default actions.
 - Previews load the sites you select and those sites make their usual network requests. ViewGrid has no telemetry or cloud proxy. RAM, frame rate and latency depend on page content, hardware and viewport count; no fixed RAM/FPS guarantee is made.
 
 ## Install a GitHub package
+
+For a source checkout or source ZIP, use `dist/chromium` in Chrome and `dist/firefox/manifest.json` in Firefox. Do not select the parent `dist` folder. After updating a local checkout, rebuild with `pnpm run build:all` if needed.
 
 Download the Chromium or Firefox package and `SHA256SUMS` from [Releases](https://github.com/sinansarikaya/viewgrid/releases). Verify checksums before sideloading.
 
@@ -72,7 +74,7 @@ pnpm run build:website
 pnpm run package:release
 ```
 
-CI runs unit/DOM integration tests and real Chromium extension flows using a deterministic local fixture, including iframe isolation, reload synchronization, Issues export and complete screenshot dimensions. Firefox packages also receive manifest validation; real Firefox/ESR and Windows/macOS smoke testing remain part of the release checklist.
+CI runs unit/DOM integration tests and real Chromium extension flows using a deterministic local fixture, including iframe isolation, reload synchronization, Issues export, complete screenshot dimensions and preview worker isolation. CI also installs the real Firefox extension and checks protected navigation/reload, synchronization, normal-tab isolation and the reported CastPost page. Firefox/ESR and Windows/macOS manual smoke testing remain part of the release checklist.
 
 ## Default keyboard shortcuts
 

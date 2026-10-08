@@ -1,4 +1,4 @@
-# Store submission copy — 1.0.2
+# Store submission copy — 1.0.3
 
 These are prepared descriptions; updating this file does not submit a store release.
 
@@ -16,7 +16,7 @@ The responsive scanner flags potential overflow, text clipping, offscreen contro
 
 No extension telemetry or cloud proxy. Your preview sites make their normal network requests. Workspace settings stay in browser storage; screenshots and reports leave only when you export/share them.
 
-Framing exceptions are limited to direct previews in verified workspace tabs. Firefox retains CSP directives other than frame-ancestors; Chromium removes the direct preview's CSP response headers because its DNR API cannot rewrite individual directives. Normal tabs and nested third-party frames retain their protections. Site cookies and storage are not automatically erased or rewritten.
+Framing exceptions are limited to verified workspace tabs. Firefox handles direct previews and retains CSP directives other than frame-ancestors. Chromium handles workspace subframes (including nested frames and page-initiated navigation/reload) and removes CSP response headers because DNR cannot rewrite individual directives or select a parent frame ID. Normal tabs retain their protections. Chromium defers worker registration until the preview agent verifies its workspace tab, then disables registration and unregisters workers visible in that preview storage partition. Existing controlled previews reload once after unregistering. Normal tabs are untouched; cookies, localStorage, sessionStorage and CacheStorage are retained.
 
 Device profiles simulate viewport sizes, not mobile hardware or browser engines. Third-party cookie, login, sandbox and service-worker restrictions can prevent some sites from working in an iframe. Memory and speed vary by page and device; no fixed RAM/FPS guarantee is made.
 
@@ -27,6 +27,6 @@ Duyarlı tasarımları yan yana test edin: senkron etkileşim, tasarım katmanı
 ## Submission checklist
 
 - Upload the matching browser artifact and, for AMO review, the source ZIP.
-- Confirm version 1.0.2 and compare SHA256SUMS.
+- Confirm version 1.0.3 and compare SHA256SUMS.
 - Link the updated privacy policy; retain a record of manual Firefox/ESR and OS smoke checks.
 - Store publication/review is separate from the GitHub release.

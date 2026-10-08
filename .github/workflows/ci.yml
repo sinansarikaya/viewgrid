@@ -44,6 +44,9 @@ jobs:
       - name: Build All Extension Packages
         run: pnpm run build:all
 
+      - name: Verify committed browser builds are current
+        run: git diff --exit-code -- dist
+
       - name: Validate Firefox Extension (web-ext lint)
         run: pnpm run lint:web-ext
 

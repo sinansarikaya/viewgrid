@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2026-10-08
+
+### Fixed
+
+- Protected Chromium previews now continue loading after page-initiated navigation and reload. Removed the extension-only initiator filter while retaining verified workspace-tab scoping. Chromium exceptions include nested workspace frames; normal browsing tabs retain their protections.
+- Firefox uses Manifest V2: Firefox MV3 does not allow webRequest or DNR to relax X-Frame-Options/CSP. The Firefox build removes XFO and only CSP frame-ancestors on direct workspace previews, preserving other directives and cookies.
+- Build manifests read the version from package.json. Packaging rejects stale manifests instead of shipping a mismatched build.
+
+### Distribution and regression coverage
+
+- Committed both ready-to-load builds under dist/chromium and dist/firefox; source ZIPs now include them. dist/README.md identifies the correct installation folder for each browser.
+- Added real Firefox extension tests, protected document navigation/reload, normal-tab isolation, click synchronization, preview worker isolation and live CastPost checks. Chromium also covers protected navigation and preview-scoped worker registration blocking.
+- Updated README, privacy/store text and website browser architecture. GitHub ZIPs remain separate from browser store approval; the Firefox ZIP supports temporary testing, not signed permanent installation.
+
+Service-worker cached or synthetic responses and iframe authentication policies remain browser limitations. Chromium defers worker registration until the preview agent verifies its workspace tab, then disables registration and unregisters workers visible in that preview storage partition. Existing controlled previews reload once after unregistering. Normal tabs are untouched; cookies, localStorage, sessionStorage and CacheStorage are retained.
+
+---
+
 ## [1.0.2] - 2026-10-08
 
 This maintenance release fixes preview isolation and reload synchronization, improves screenshot completeness, and turns raw responsive detections into reviewable findings.

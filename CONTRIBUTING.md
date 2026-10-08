@@ -9,7 +9,7 @@ Thank you for your interest in contributing to **ViewGrid**! We welcome bug repo
 ### Prerequisites
 - **Node.js**: v18+ or v20+ recommended
 - **pnpm**: `npm i -g pnpm`
-- **Firefox** or **Chromium** browser for testing MV3 WebExtensions
+- **Firefox** or **Chromium** browser for testing browser-specific WebExtensions (Chromium MV3 / Firefox MV2)
 
 ### Setup
 ```bash

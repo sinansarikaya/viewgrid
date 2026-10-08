@@ -30,7 +30,7 @@ export function Footer() {
             </p>
             <div className="footer-badges">
               <span className="badge badge-cyan">Chromium MV3</span>
-              <span className="badge badge-cyan">Firefox MV3</span>
+              <span className="badge badge-cyan">Firefox MV2</span>
               <span className="badge badge-emerald">Local Only</span>
             </div>
           </div>
