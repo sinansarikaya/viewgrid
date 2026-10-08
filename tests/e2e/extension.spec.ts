@@ -147,13 +147,18 @@ test('protected previews retain framing exceptions after their own navigation an
   await expect(source.locator('h1')).toHaveText('ViewGrid fixture');
 });
 
-test('a service-worker controlled preview can navigate to a protected network document', async () => {
+test('preview worker registration is blocked without changing ordinary-tab workers', async () => {
   const source = frames()[0]!;
-  await source.evaluate(async () => { await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready; });
-  await expect.poll(() => source.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  const result = await source.evaluate(async () => { try { await navigator.serviceWorker.register('/sw.js'); return 'registered'; } catch (e) { return (e as Error).name; } });
+  expect(result).toBe('SecurityError');
   await source.evaluate(url => location.assign(url), base + '/protected-worker');
   await expect.poll(() => source.url()).toBe(base + '/protected-worker');
   await expect(source.locator('h1')).toHaveText('ViewGrid fixture');
+  const ordinary = await context.newPage();
+  await ordinary.goto(base + '/site');
+  await ordinary.evaluate(async () => { await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready; });
+  await expect.poll(() => ordinary.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  await ordinary.close();
 });
 
 test('reported CastPost URL loads and survives reload in actual Chrome', async () => {

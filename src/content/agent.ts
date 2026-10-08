@@ -86,7 +86,10 @@ function initAgent(viewportId: string) {
 
   // Re-register after document replacement; the document epoch changes after reload.
   const reloadKey = `viewgrid:remote-reload:${viewportId}`;
-  const hello = () => extBrowser?.runtime?.sendMessage?.({ type: 'vg/agent-hello', viewportId })?.catch?.(() => {});
+  const hello = () => {
+    const result = extBrowser?.runtime?.sendMessage?.({ type: 'vg/agent-hello', viewportId });
+    result?.then?.((reply: any) => window.postMessage({ type: 'vg/preview-worker-context', verified: reply?.ok === true }, location.origin))?.catch?.(() => {});
+  };
   void hello();
   window.addEventListener('pageshow', hello);
   let remoteReload = false;

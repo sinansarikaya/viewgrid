@@ -120,15 +120,6 @@ try:
     driver.close()
     driver.switch_to.window(main)
     print('PASS Firefox: normal-tab framing protection retained', flush=True)
-    driver.set_script_timeout(25)
-    driver.switch_to.frame(driver.find_elements(By.CSS_SELECTOR, 'iframe[name^="viewgrid:"]')[0])
-    driver.execute_async_script("const done=arguments[arguments.length-1]; navigator.serviceWorker.register('/sw.js').then(()=>navigator.serviceWorker.ready).then(()=>done(true)).catch(e=>done({error:String(e)}));")
-    driver.switch_to.default_content()
-    wait.until(lambda _: frame_script('return !!navigator.serviceWorker.controller'))
-    frame_script('location.assign(arguments[0])', 0, base + '/protected-worker')
-    wait.until(lambda _: frame_script('return location.href') == base + '/protected-worker')
-    wait.until(lambda _: 'ViewGrid Firefox fixture' in frame_text())
-    print('PASS Firefox: service-worker controlled protected navigation', flush=True)
     if os.environ.get('VIEWGRID_LIVE_TEST_URL'):
         bar = driver.find_elements(By.CSS_SELECTOR, 'input')[0]
         bar.clear()

@@ -75,6 +75,7 @@ export function buildManifest(target, iconFiles) {
   // Chromium (Chrome Web Store / Edge Add-ons)
   return {
     ...base,
+    content_scripts: [...base.content_scripts, { matches: ['<all_urls>'], js: ['world-inject.js'], run_at: 'document_start', all_frames: true, world: 'MAIN' }],
     permissions: [
       'storage',
       'tabs',
