@@ -1,1 +1,2811 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Changelog — ViewGrid</title><meta name="description" content="ViewGrid release history and corrections to version 1.0.3."><link rel="canonical" href="https://viewgrid.sinansarikaya.dev/changelog/"><link rel="icon" href="/favicon.svg"></head><body><div id="root"></div><script type="module" src="/src/main-changelog.tsx"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:;" />
+  <title>Changelog — ViewGrid</title>
+  <meta name="description" content="View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Free browser extension for Chrome & Firefox with Figma diffing and zero telemetry." />
+  <link rel="canonical" href="https://viewgrid.sinansarikaya.dev/changelog/" />
+  
+  <!-- Hreflang language alternates -->
+  <link rel="alternate" hreflang="en" href="https://viewgrid.sinansarikaya.dev/changelog/" />
+  <link rel="alternate" hreflang="tr" href="https://viewgrid.sinansarikaya.dev/changelog/?lang=tr" />
+  <link rel="alternate" hreflang="no" href="https://viewgrid.sinansarikaya.dev/changelog/?lang=no" />
+  <link rel="alternate" hreflang="x-default" href="https://viewgrid.sinansarikaya.dev/changelog/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://viewgrid.sinansarikaya.dev/changelog/" />
+  <meta property="og:title" content="ViewGrid — Test Every Breakpoint at Once" />
+  <meta property="og:description" content="View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Live on Chrome Web Store & Firefox AMO." />
+  <meta property="og:image" content="https://viewgrid.sinansarikaya.dev/icon128.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ViewGrid — Test Every Breakpoint at Once" />
+  <meta name="twitter:description" content="View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Live on Chrome Web Store & Firefox AMO." />
+  <meta name="twitter:image" content="https://viewgrid.sinansarikaya.dev/icon128.png" />
+
+  <!-- JSON-LD Structured Data -->
+  
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/icon128.png" />
+
+  <!-- Typography: Fraunces (Variable Display Serif), Instrument Sans (Humanist Text Sans), JetBrains Mono (Numbers/Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..800,0..100,0..1;1,9..144,400..700,0..100,0..1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* -------------------------------------------------------------
+       DESIGN SYSTEM & DUAL THEMES
+       LIGHT THEME (Warm Pastel Paper & Muted Slate Ink)
+       DARK THEME  (Harmonious Velvet Slate & Pastel Lilac Bone)
+       ------------------------------------------------------------- */
+    :root {
+      --color-scheme: light;
+      --bg: #F8F6F1;
+      --bg-surface: #EFEBE2;
+      --bg-card: #FFFFFF;
+      --text: #2B2825;
+      --text-muted: #6E685F;
+      --text-faint: #9E978C;
+      --border: #DFD8CC;
+      --border-dark: #2B2825;
+      --accent: #D66853;
+      --accent-soft: #FAF0EC;
+      --accent-secondary: #517594;
+      --accent-secondary-soft: #EDF3F8;
+      
+      --font-display: "Fraunces", Georgia, serif;
+      --font-sans: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+      --container: 1220px;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-theme: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    [data-theme="dark"] {
+      --color-scheme: dark;
+      --bg: #18191F;
+      --bg-surface: #20222B;
+      --bg-card: #272A36;
+      --text: #ECE8F2;
+      --text-muted: #A0A5B7;
+      --text-faint: #6B7184;
+      --border: #333847;
+      --border-dark: #ECE8F2;
+      --accent: #E88372;
+      --accent-soft: rgba(232, 131, 114, 0.16);
+      --accent-secondary: #81A8D6;
+      --accent-secondary-soft: rgba(129, 168, 214, 0.16);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: var(--transition-theme);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: clip;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    /* Accessibility: Skip to Content */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 16px;
+      padding: 8px 14px;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 600;
+      z-index: 1000;
+      text-decoration: none;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+      outline: 2px solid var(--accent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--container);
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 28px;
+      padding-right: 28px;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+    }
+
+    /* Typography & Hierarchy */
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      color: var(--text);
+      letter-spacing: -0.025em;
+      line-height: 1.05;
+      text-wrap: balance;
+    }
+
+    .serif-label {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .mono-num {
+      font-family: var(--font-mono);
+      font-feature-settings: "tnum" 1;
+    }
+
+    /* -------------------------------------------------------------
+       HEADER & NAVIGATION
+       ------------------------------------------------------------- */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: var(--bg);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition-theme);
+    }
+
+    .nav-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 72px;
+    }
+
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      margin-right: 28px;
+    }
+
+    .brand-logo-svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .brand-logo-svg circle {
+      fill: var(--text);
+      transition: transform 0.3s var(--ease-out), fill 0.2s ease;
+    }
+    .brand-logo-svg .dot-accent {
+      fill: var(--accent);
+    }
+
+    .brand-link:hover .brand-logo-svg circle:nth-child(even) {
+      transform: scale(1.3);
+      transform-origin: center;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-item {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color 0.15s ease;
+    }
+    .nav-item:hover {
+      color: var(--text);
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Language Switcher */
+    .lang-switcher {
+      display: flex;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      border-radius: 4px;
+      padding: 2px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    .lang-btn {
+      background: none;
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-radius: 2px;
+      transition: all 0.15s ease;
+    }
+    .lang-btn.active {
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 600;
+    }
+
+    /* Theme Toggle Button */
+    .theme-toggle-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text);
+      transition: background-color 0.2s, transform 0.2s;
+    }
+    .theme-toggle-btn:hover {
+      transform: scale(1.06);
+    }
+    .theme-toggle-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @media (max-width: 860px) {
+      .nav-links {
+        display: none;
+      }
+    }
+
+    /* -------------------------------------------------------------
+       HERO SECTION WITH CANVAS DOT FIELD MOTIF
+       ------------------------------------------------------------- */
+    .hero-section {
+      padding: 72px 0 60px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Dot grid canvas motif reacting to mouse */
+    #hero-dot-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.45;
+      z-index: 1;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-header {
+      max-width: 980px;
+      margin-bottom: 36px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.8rem, 7.5vw, 6.2rem);
+      font-weight: 800;
+      line-height: 0.96;
+      letter-spacing: -0.035em;
+      margin-bottom: 24px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: clamp(1.15rem, 2vw, 1.45rem);
+      line-height: 1.45;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin-bottom: 32px;
+    }
+
+    /* Redesigned Compact Store Buttons */
+    .hero-store-group {
+      margin-bottom: 40px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .store-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: all 0.2s var(--ease-out);
+      text-align: left;
+    }
+
+    .store-btn:hover {
+      border-color: var(--text);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .store-btn:hover .btn-arrow-icon {
+      transform: translateX(4px);
+    }
+
+    .store-btn-logo {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: block;
+      object-fit: contain;
+    }
+
+    .store-btn-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .store-btn-sup {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      line-height: 1.1;
+    }
+
+    .store-btn-main {
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+
+    .btn-arrow-icon {
+      font-size: 1.1rem;
+      color: var(--text-faint);
+      transition: transform 0.2s ease;
+      margin-left: 4px;
+    }
+
+    /* Hero Slogan Kicker Pill */
+    .hero-slogan-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 14px;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    /* Small Quiet Store Review Pending Line (Fallback) */
+    .store-pending-note {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* Store Live Status Note */
+    .store-live-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+    .store-badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 999px;
+      padding: 2px 9px;
+    }
+
+    /* Keyboard Shortcut Badges & Hints */
+    kbd {
+      display: inline-block;
+      padding: 2px 7px;
+      font-family: var(--font-mono);
+      font-size: 0.78em;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      line-height: 1.3;
+      vertical-align: middle;
+    }
+
+    .hero-shortcut-banner {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      padding: 7px 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s var(--ease-out);
+    }
+    .hero-shortcut-banner:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .hero-shortcut-banner .shortcut-keys {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-shortcut-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .nav-shortcut-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Interactive Keyboard Shortcuts Cheatsheet Modal */
+    .shortcuts-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(35, 31, 28, 0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    [data-theme="dark"] .shortcuts-modal {
+      background: rgba(12, 13, 17, 0.72);
+    }
+    .shortcuts-modal.active {
+      display: flex;
+    }
+    .shortcuts-modal-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 620px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: 0 20px 48px rgba(0,0,0,0.3);
+      position: relative;
+      animation: modalFadeIn 0.2s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .shortcuts-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+    .shortcuts-table {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg-surface);
+      border-radius: 4px;
+      font-size: 0.88rem;
+    }
+    .shortcut-row.group-header {
+      background: transparent;
+      padding: 12px 4px 4px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .shortcuts-footer-note {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      line-height: 1.5;
+    }
+
+    /* Framework & Port Tags */
+    .frameworks-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .framework-chip {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Hero Live Miniature / Screenshot slot */
+    .hero-visual-slot {
+      margin-top: 24px;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      border-radius: 6px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .hero-screenshot-frame {
+      border: 1.5px solid var(--border-dark);
+      background: var(--bg-card);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      cursor: zoom-in;
+      transition: transform 0.2s ease;
+    }
+    .hero-screenshot-frame:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Section Dot Transition Marks Motif */
+    .dot-transition-mark {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 28px 0;
+      user-select: none;
+    }
+    .mark-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--border-dark);
+      transition: all 0.3s ease;
+    }
+    .mark-dot.active {
+      background: var(--accent);
+      transform: scale(1.4);
+    }
+
+    /* How It Works Keyframe Animations */
+    @keyframes frameDraw {
+      0% { stroke-dashoffset: 320; opacity: 0; }
+      30% { opacity: 1; }
+      100% { stroke-dashoffset: 0; opacity: 1; }
+    }
+    @keyframes chipPop {
+      0% { transform: scale(0.6); opacity: 0; }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes rippleWave {
+      0% { transform: translateY(0); opacity: 0.35; }
+      50% { transform: translateY(8px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 0.35; }
+    }
+    @keyframes rippleIndicator {
+      0% { left: 8%; opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { left: 90%; opacity: 0; }
+    }
+    .draw-stroke-1 { animation: frameDraw 1.2s ease forwards; }
+    .draw-stroke-2 { animation: frameDraw 1.2s ease forwards 0.25s; }
+    .draw-stroke-3 { animation: frameDraw 1.2s ease forwards 0.5s; }
+    .chip-pop { animation: chipPop 0.4s var(--ease-out) both; }
+    .ripple-sweep-line {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: rippleIndicator 2.4s infinite ease-in-out;
+    }
+    .ripple-1 .ripple-content { animation: rippleWave 2.4s infinite ease-in-out 0.1s; }
+    .ripple-2 .ripple-content { animation: rippleWave 2.4s infinite ease-in-out 0.5s; }
+    .ripple-3 .ripple-content { animation: rippleWave 2.4s infinite ease-in-out 0.9s; }
+
+    /* -------------------------------------------------------------
+       SECTION: REBUILT SYNCHRONIZED SCROLL DEMO
+       ------------------------------------------------------------- */
+    .sim-slider-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+    }
+
+    .sync-dial-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .sync-slider {
+      flex: 1;
+      height: 5px;
+      background: var(--border);
+      -webkit-appearance: none;
+      appearance: none;
+      outline: none;
+      cursor: ew-resize;
+    }
+    .sync-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border: 2px solid var(--border-dark);
+      cursor: ew-resize;
+    }
+    .sync-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border: 2px solid var(--border-dark);
+      cursor: ew-resize;
+    }
+
+    .sync-stage-grid {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 10px 0;
+      min-height: 380px;
+    }
+
+    /* Live Playground URL Bar */
+    .hero-url-simulator-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 6px;
+      padding: 6px 12px;
+      margin-bottom: 12px;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.05);
+    }
+    .sim-url-badge {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .playground-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-primary);
+    }
+    .playground-test-btn {
+      background: var(--accent);
+      color: #fff;
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+    }
+    .playground-test-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* =============================================================
+       SECTION: BENCHMARK & LOW-MEMORY ARCHITECTURE
+       ============================================================= */
+    .section-benchmark {
+      padding: 72px 0;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition-theme);
+    }
+    .benchmark-header {
+      max-width: 800px;
+      margin-bottom: 36px;
+    }
+    .benchmark-header h2 {
+      font-size: 2.5rem;
+      margin: 10px 0 14px;
+      line-height: 1.1;
+    }
+    .benchmark-sub {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .benchmark-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 960px) {
+      .benchmark-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .bench-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 6px;
+      padding: 28px 24px;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .bench-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 6px 6px 0 rgba(0,0,0,0.08);
+    }
+    .bench-stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 14px;
+    }
+    .bench-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .bench-metric {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .bench-card h4 {
+      font-size: 1.2rem;
+      margin: 0;
+      color: var(--text);
+    }
+    .bench-card p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      flex-grow: 1;
+    }
+    .bench-bar-track {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      height: 24px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .bench-bar-fill {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      white-space: nowrap;
+      border-radius: 3px;
+    }
+    .viewgrid-fill {
+      background: var(--accent);
+      color: #fff;
+    }
+    .electron-fill {
+      background: var(--border-dark);
+      color: var(--bg);
+      opacity: 0.8;
+    }
+    .bench-pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .bench-pill {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    /* =============================================================
+       SECTION: DESIGN HANDOFF & FIGMA PIXEL-DIFF
+       ============================================================= */
+    .section-handoff {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      transition: var(--transition-theme);
+    }
+    .handoff-header-row {
+      max-width: 800px;
+      margin-bottom: 36px;
+    }
+    .handoff-header-row h2 {
+      font-size: 2.6rem;
+      margin: 8px 0 14px;
+    }
+    .handoff-lead {
+      font-size: 1.08rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .handoff-showcase-box {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .handoff-stage {
+      padding: 24px;
+      background: var(--bg-surface);
+      border-bottom: 1.5px solid var(--border-dark);
+    }
+    .handoff-comparison-preview {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: stretch;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      min-height: 260px;
+    }
+    @media (max-width: 768px) {
+      .handoff-comparison-preview {
+        grid-template-columns: 1fr;
+      }
+    }
+    .handoff-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pane-tag {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--accent);
+      padding: 4px 8px;
+      background: var(--accent-soft);
+      border-radius: 4px;
+      align-self: flex-start;
+    }
+    .pane-content-mockup {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg);
+    }
+    .pane-content-mockup.figma-style {
+      border: 1px dashed var(--accent);
+      background: rgba(214, 104, 83, 0.03);
+    }
+    .mock-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .mock-logo {
+      color: var(--text);
+    }
+    .mock-menu-btn {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+    .mock-hero {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+    .mock-title {
+      font-size: 1.15rem;
+      margin: 0;
+      color: var(--text);
+    }
+    .mock-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .mock-btn-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .mock-primary-btn {
+      background: var(--border-dark);
+      color: var(--bg);
+      font-size: 0.76rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .spec-ruler {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px dashed var(--accent);
+      padding: 1px 6px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .spec-match-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid #10b981;
+      padding: 1px 6px;
+      border-radius: 3px;
+      display: inline-block;
+      font-weight: 700;
+    }
+    .handoff-divider-curtain {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .handoff-divider-curtain::before {
+      content: '';
+      position: absolute;
+      width: 2px;
+      top: 0;
+      bottom: 0;
+      background: var(--border);
+    }
+    .curtain-grip {
+      position: relative;
+      z-index: 2;
+      background: var(--accent);
+      color: #fff;
+      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .handoff-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 24px;
+    }
+    @media (max-width: 800px) {
+      .handoff-feature-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .handoff-feature-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .hf-icon {
+      font-size: 1.5rem;
+    }
+    .handoff-feature-card h4 {
+      font-size: 1.05rem;
+      margin: 0;
+      color: var(--text);
+    }
+    .handoff-feature-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Design Handoff Pill in Tour */
+    .design-handoff-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      padding: 6px 14px;
+      margin-top: 14px;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .design-handoff-pill:hover {
+      opacity: 0.9;
+    }
+    .handoff-icon { font-size: 0.95rem; }
+    .handoff-title { font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+    .handoff-text { color: var(--text-muted); }
+
+    .sync-device-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 4px;
+      box-shadow: 3px 3px 0 rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: relative;
+      cursor: grab;
+      user-select: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .sync-device-card:active {
+      cursor: grabbing;
+    }
+    .sync-device-card.is-dragging {
+      opacity: 0.4;
+      transform: scale(0.98);
+      border-style: dashed;
+    }
+
+    .sync-drop-skeleton {
+      border: 2px dashed var(--accent);
+      background: var(--accent-soft);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      min-height: 350px;
+      box-sizing: border-box;
+      padding: 16px;
+      animation: pulseSkeleton 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes pulseSkeleton {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+    .sync-drop-skeleton .skeleton-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .sync-drop-skeleton .skeleton-icon {
+      font-size: 1.4rem;
+    }
+
+    .sync-device-card.is-leader {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft), 3px 3px 0 rgba(0,0,0,0.1);
+    }
+
+    .sync-header-tag {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .leader-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: var(--accent);
+      color: #FFFFFF;
+      padding: 2px 5px;
+      border-radius: 2px;
+      display: none;
+    }
+    .sync-device-card.is-leader .leader-pill {
+      display: inline-block;
+    }
+
+    /* Fixed Frame Height with Taller Overflow Hidden Content */
+    .sync-viewport-window {
+      height: 320px;
+      overflow: hidden;
+      position: relative;
+      background: var(--bg-card);
+    }
+
+    .fake-page-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 800px; /* Clearly taller (2.5x) */
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      will-change: transform;
+    }
+
+    /* Believable simulated websites */
+    .sim-nav {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sim-logo {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .sim-hero-banner {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 2px;
+    }
+    .sim-hero-banner h5 {
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+    }
+    .sim-hero-banner p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .sim-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .sim-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .sim-box {
+      border: 1px dashed var(--border);
+      background: var(--bg);
+      padding: 10px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      border-radius: 2px;
+    }
+    .sim-footer-bar {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      font-size: 0.68rem;
+      color: var(--text-faint);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 1: PRODUCT SHOWCASE ("Interface tour")
+       ------------------------------------------------------------- */
+    .section-tour {
+      padding: 90px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tour-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .tour-tabs-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .tour-tab-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tour-tab-btn.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Framed Showcase 16:10 */
+    .tour-frame {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 4px 4px 0px rgba(0,0,0,0.06);
+    }
+
+    .tour-frame-header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tour-dots-icon {
+      display: flex;
+      gap: 5px;
+    }
+    .tour-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .tour-frame-url {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .tour-aspect-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      min-height: 420px;
+      background: var(--bg-surface);
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+
+    .tour-screenshot-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s var(--ease-out), opacity 0.3s ease;
+    }
+
+    /* Fallback Tasteful Placeholder */
+    .tour-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      background: radial-gradient(circle at 50% 50%, var(--bg) 0%, var(--bg-surface) 100%);
+    }
+
+    .placeholder-schematic {
+      width: 80%;
+      max-width: 540px;
+      border: 1px dashed var(--border);
+      background: var(--bg-card);
+      padding: 24px;
+      border-radius: 4px;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+
+    .tour-frame-meta {
+      padding: 20px 24px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .tour-meta-caption {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .tour-meta-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 520px;
+    }
+
+    /* Lightbox Modal */
+    .tour-lightbox {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 14, 13, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      cursor: zoom-out;
+    }
+    .tour-lightbox.active {
+      display: flex;
+    }
+    .lightbox-inner {
+      max-width: 1100px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: default;
+    }
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 4px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .lightbox-close-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 2: "WHY" — HONEST, SINGLE COLUMN PARAGRAPH
+       ------------------------------------------------------------- */
+    .section-why {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .why-content {
+      max-width: 820px;
+    }
+
+    .why-title {
+      font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+      margin-bottom: 28px;
+      line-height: 1.1;
+    }
+
+    .why-text {
+      font-size: 1.25rem;
+      line-height: 1.65;
+      color: var(--text);
+      margin-bottom: 48px;
+    }
+
+    /* Before vs After Comparison */
+    .compare-cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .compare-cards-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .compare-side-card {
+      border: 1px solid var(--border);
+      padding: 24px;
+      background: var(--bg-card);
+      border-radius: 2px;
+    }
+    .card-before {
+      border-left: 3px solid var(--text-faint);
+    }
+    .card-after {
+      border-left: 3px solid var(--accent);
+    }
+
+    .compare-side-card h4 {
+      font-size: 1.15rem;
+      margin-bottom: 10px;
+    }
+
+    .compare-side-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 3: "HOW IT WORKS" — DYNAMIC ANIMATED ILLUSTRATION
+       ------------------------------------------------------------- */
+    .section-how {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .how-grid {
+        grid-template-columns: 1fr;
+      }
+      .how-sticky-col {
+        display: none;
+      }
+    }
+
+    .how-step {
+      padding: 44px 0;
+      border-bottom: 1px solid var(--border);
+      opacity: 0.45;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+    }
+    .how-step.active {
+      opacity: 1;
+    }
+
+    .step-number {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .step-title {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .step-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .how-sticky-col {
+      position: sticky;
+      top: 110px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-dark);
+      padding: 28px;
+      min-height: 380px;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .how-illus-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+    }
+
+    /* Dynamic SVG / Canvas visual for each step */
+    .illus-step-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION: FULL-BLEED STATEMENT BAND (PERSONALITY)
+       ------------------------------------------------------------- */
+    .statement-band {
+      background: var(--text);
+      color: var(--bg);
+      padding: 80px 0;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .statement-band h2 {
+      color: var(--bg);
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      line-height: 1.05;
+      max-width: 1000px;
+      letter-spacing: -0.03em;
+    }
+
+    .statement-band em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent);
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 4: FEATURES — HERO CAPABILITY + TYPOGRAPHIC INDEX
+       ------------------------------------------------------------- */
+    .section-features {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-index-list {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    .feature-index-item {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 240px 1fr 1fr;
+      gap: 24px;
+      align-items: baseline;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .feature-index-item:hover {
+      background-color: var(--bg-surface);
+    }
+    @media (max-width: 860px) {
+      .feature-index-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+
+    .item-name {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .item-detail {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .item-diagram {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 5: OPTICAL SPLIT-DIFF COMPARISON
+       ------------------------------------------------------------- */
+    .section-compare {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .diff-stage-wrap {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      border: 1.5px solid var(--border-dark);
+      background: var(--bg-card);
+      overflow: hidden;
+      margin-top: 36px;
+      user-select: none;
+    }
+
+    .diff-pane {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      overflow: hidden;
+    }
+
+    .diff-pane-left {
+      left: 0;
+      background: var(--bg-card);
+      border-right: 1px dashed var(--accent);
+    }
+
+    .diff-pane-right {
+      right: 0;
+      background: var(--bg-surface);
+    }
+
+    .diff-divider-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      transform: translateX(-50%);
+      cursor: ew-resize;
+      z-index: 20;
+    }
+
+    .diff-handle-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      color: #FFFFFF;
+      border: 2px solid var(--border-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      box-shadow: 2px 2px 0 var(--border-dark);
+    }
+
+    .diff-mock-page {
+      padding: 32px;
+      min-width: 700px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 6: WORKS ON SITES THAT BLOCK IFRAMES (OFF-GRID HEADER)
+       ------------------------------------------------------------- */
+    .section-iframes {
+      padding: 90px 0;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg-surface);
+    }
+
+    .iframe-asymmetric-wrap {
+      display: flex;
+      gap: 36px;
+      align-items: stretch;
+      position: relative;
+    }
+
+    .sideways-spine-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--border);
+      padding-right: 20px;
+      user-select: none;
+    }
+
+    .sideways-spine-text {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .offgrid-headline {
+      margin-left: -12px;
+    }
+
+    .iframe-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      flex: 1;
+    }
+    @media (max-width: 880px) {
+      .sideways-spine-col {
+        display: none;
+      }
+      .offgrid-headline {
+        margin-left: 0;
+      }
+      .iframe-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .iframe-diagram-box {
+      border: 1.5px solid var(--border-dark);
+      background: var(--bg-card);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    .diagram-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+    }
+    .diagram-row.blocked {
+      border-left: 3px solid #C93B2B;
+    }
+    .diagram-row.passed {
+      border-left: 3px solid #2B8A3E;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 7: USE CASES (HORIZONTAL SCROLL STRIP)
+       ------------------------------------------------------------- */
+    .section-usecases {
+      padding: 90px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .horizontal-strip {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 24px 0 16px;
+      scrollbar-width: thin;
+    }
+
+    .usecase-card {
+      min-width: 300px;
+      max-width: 320px;
+      flex-shrink: 0;
+      border: 1.5px solid var(--border-dark);
+      background: var(--bg-card);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 3px 3px 0 var(--border-dark);
+    }
+
+    .usecase-card h4 {
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+    }
+
+    .usecase-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .usecase-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-top: 20px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 8: INSTALL (LIGHTER PRESENTATION + CHROME/FIREFOX)
+       ------------------------------------------------------------- */
+    .section-install {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .install-layout-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 48px;
+      align-items: center;
+      margin-bottom: 48px;
+    }
+    @media (max-width: 768px) {
+      .install-layout-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .install-lead-col h2 {
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      margin-bottom: 16px;
+    }
+
+    .install-lead-col p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .install-buttons-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .supported-browsers-note {
+      font-size: 0.85rem;
+      color: var(--text-faint);
+      margin-top: 8px;
+    }
+
+    /* Quiet Manual Sideloading */
+    .quiet-manual-box {
+      border: 1px dashed var(--border);
+      background: var(--bg-surface);
+      padding: 24px 28px;
+      max-width: 720px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      border-radius: 4px;
+    }
+
+    .quiet-manual-box h5 {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .quiet-manual-box ol {
+      padding-left: 20px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 9: FAQ (NATIVE DETAILS ACCORDION)
+       ------------------------------------------------------------- */
+    .section-faq {
+      padding: 100px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-wrapper {
+      max-width: 840px;
+      margin-top: 36px;
+    }
+
+    details.faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      cursor: pointer;
+    }
+
+    details.faq-item summary {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    details.faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.faq-item summary::after {
+      content: "+";
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    details.faq-item[open] summary::after {
+      content: "−";
+      color: var(--accent);
+    }
+
+    details.faq-item p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    /* -------------------------------------------------------------
+       SECTION 10: FOOTER WITH PERSONALITY
+       ------------------------------------------------------------- */
+    .site-footer {
+      padding: 80px 0 60px;
+      background: var(--bg);
+    }
+
+    .footer-split {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 48px;
+      margin-bottom: 56px;
+    }
+
+    .maker-note {
+      max-width: 440px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .footer-links-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .footer-links-list a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .footer-base {
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-faint);
+    }
+
+    /* Floating Back-to-Top Button */
+    .back-to-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(12px);
+      transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.2s, background-color 0.2s;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      z-index: 999;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .back-to-top:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+    }
+
+    /* Keep version, navigation and controls in separate, non-overlapping tracks. */
+    .nav-inner { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:24px; min-height:72px; height:auto; padding-top:12px; padding-bottom:12px; }
+    .brand-link { margin-right:0; gap:8px; flex-shrink:0; white-space:nowrap; }
+    .site-version { font:10px var(--font-mono); padding:4px 6px; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); letter-spacing:0; }
+    .nav-links { min-width:0; justify-content:center; gap:16px; }
+    .nav-item { white-space:nowrap; font-size:0.86rem; }
+    .nav-controls { gap:12px; white-space:nowrap; }
+    @media(max-width:1150px) {
+      .nav-inner { grid-template-columns:1fr auto; gap:12px 20px; }
+      .nav-links { display:flex; grid-column:1/-1; grid-row:2; justify-content:flex-start; overflow-x:auto; padding:6px 0; gap:24px; }
+      .nav-controls { grid-column:2; grid-row:1; }
+    }
+    @media(max-width:540px) {
+      .nav-inner { gap:8px; }
+      .nav-shortcut-btn { display:none; }
+      .brand-title { font-size:1.2rem; }
+      .brand-logo-svg { width:24px; height:24px; }
+      .nav-controls { gap:6px; }
+      .lang-btn { padding:4px 6px; }
+      .nav-links { gap:20px; }
+    }
+    @media(max-width:380px) {
+      .nav-inner { grid-template-columns:1fr; justify-items:center; }
+      .nav-controls { grid-column:1; grid-row:2; }
+      .nav-links { grid-row:3; width:100%; }
+    }
+
+    .change-hero { padding:72px 0 48px; display:grid; grid-template-columns:minmax(0,1fr) 280px; gap:48px; align-items:end; }
+    .change-hero h1 { font-family:var(--font-display); font-size:clamp(40px,5vw,76px); line-height:1.06; letter-spacing:-.045em; max-width:760px; margin:20px 0; }
+    .change-hero p { color:var(--text-muted); line-height:1.7; max-width:680px; }
+    .change-eyebrow { font:12px var(--font-mono); letter-spacing:.12em; color:var(--accent); }
+    .current-release { border:1px solid var(--border); background:var(--bg-surface); padding:24px; border-radius:16px; }
+    .current-release strong { display:block; font:36px var(--font-display); margin:12px 0; }
+    .current-release p { font-size:13px; }
+    .change-links { display:flex; flex-wrap:wrap; gap:12px 24px; margin-top:24px; }
+    .change-links a { color:var(--accent); font-size:14px; }
+    .change-history { padding-bottom:80px; }
+    .change-history > h2 { font:13px var(--font-mono); color:var(--text-muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:28px; }
+    .change-entry { display:grid; grid-template-columns:150px minmax(0,1fr); gap:36px; border-top:1px solid var(--border); padding:32px 0; }
+    .change-entry time { display:block; color:var(--text-muted); font:12px var(--font-mono); margin-top:12px; }
+    .change-version { font:24px var(--font-display); }
+    .change-entry h3 { font:clamp(24px,3vw,32px) var(--font-display); line-height:1.3; margin-bottom:16px; }
+    .change-entry ul { padding-left:20px; color:var(--text-muted); line-height:1.8; }
+    .change-entry li { padding-left:4px; margin:10px 0; }
+    .change-latest { display:inline-block; color:var(--accent); font:10px var(--font-mono); margin-bottom:12px; letter-spacing:.05em; }
+    @media(max-width:760px) { .change-hero { grid-template-columns:1fr; gap:24px; padding-top:40px; } .change-entry { grid-template-columns:1fr; gap:16px; } .change-entry time { display:inline-block; margin-left:16px; } }
+  </style>
+</head>
+<body><a href="#main-content" class="skip-link">Skip to main content</a>  <header class="site-nav">
+    <div class="container nav-inner">
+      <a href="/" class="brand-link" id="brand-easter-egg" title="Click to cycle dot pattern">
+        <svg class="brand-logo-svg" viewBox="0 0 28 28" aria-hidden="true">
+          <circle cx="5" cy="5" r="2.5" />
+          <circle cx="14" cy="5" r="2.5" />
+          <circle cx="23" cy="5" r="2.5" />
+          <circle cx="5" cy="14" r="2.5" />
+          <circle cx="14" cy="14" r="3.5" class="dot-accent" />
+          <circle cx="23" cy="14" r="2.5" />
+          <circle cx="5" cy="23" r="2.5" />
+          <circle cx="14" cy="23" r="2.5" />
+          <circle cx="23" cy="23" r="2.5" />
+        </svg>
+        <span class="brand-title">ViewGrid</span><span class="site-version">v1.0.3</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="/#features" class="nav-item" data-i18n="navFeatures">Features</a>
+        <a href="/#compare" class="nav-item" data-i18n="navCompare">Compare</a>
+        <a href="/#install" class="nav-item" data-i18n="navInstall">Install</a>
+        <a href="/changelog/" aria-current="page" class="nav-item" data-i18n="navChangelog">Changelog</a>
+        <a href="/#walkthrough" class="nav-item" data-i18n="navVideo">Video</a>
+        <a href="/#faq" class="nav-item" data-i18n="navFaq">FAQ</a>
+      </nav>
+
+      <div class="nav-controls">
+        <button type="button" class="nav-shortcut-btn" onclick="openShortcutsModal()" title="View Keyboard Shortcuts">
+          ⌨ <span data-i18n="shortcutNav">Shortcuts</span>
+        </button>
+
+        <div class="lang-switcher" role="group" aria-label="Language">
+          <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+          <button type="button" class="lang-btn" data-lang="tr" onclick="setLang('tr')">TR</button>
+          <button type="button" class="lang-btn" data-lang="no" onclick="setLang('no')">NO</button>
+        </div>
+
+        <button type="button" class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle Theme">
+          <svg id="theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header><main id="main-content" class="container"><section class="change-hero"><div><span class="change-eyebrow"><span data-i18n="changeeyebrow">CHANGELOG</span></span><h1><span data-i18n="changetitle">Every update. Every detail.</span></h1><p><span data-i18n="changeintro">Improvements, fixes and the decisions behind them. The current extension version remains 1.0.3.</span></p><div class="change-links"><a href="https://github.com/sinansarikaya/viewgrid/releases/tag/v1.0.3"><span data-i18n="changedownload">Get the latest tested build</span> ↗</a><a href="https://github.com/sinansarikaya/viewgrid/blob/main/CHANGELOG.md"><span data-i18n="changesource">Full changelog on GitHub</span> ↗</a></div></div><aside class="current-release"><span data-i18n="changecurrent">Current version</span><strong>1.0.3</strong><p><span data-i18n="changesame">Same version. Improved build.</span></p><p><span data-i18n="changebuild">The build ID in the workspace identifies the installed package.</span></p></aside></section><section class="change-history"><h2><span data-i18n="changehistory">Release history</span></h2><article class="change-entry"><div><span class="change-latest"><span data-i18n="changelatest">LATEST CORRECTIONS</span></span><br><span class="change-version">1.0.3</span><time datetime="2026-10-08">2026-10-08</time></div><div><h3 data-i18n="change0Title">More precise scans. Reports you can share.</h3><ul><li data-i18n="change0Point0">Small controls inside overflow containers remain measurable instead of being silently excluded. Completely clipped off-canvas content is excluded.</li><li data-i18n="change0Point1">New vertical text-clipping checks catch wrapped text cut off by fixed heights; explicit ellipsis and line clamping are treated separately.</li><li data-i18n="change0Point2">Per-device DOM counts make scan coverage visible. Failed frames and scans limited to 5,000 elements are clearly marked.</li><li data-i18n="change0Point3">Export JSON or a standalone HTML report, including zero-finding scans. HTML reports include scope, filters and failures and can be printed to PDF.</li><li data-i18n="change0Point4">Updated website version, multilingual changelog and English/Turkish walkthrough videos. Norwegian uses the English video.</li></ul></div></article>
+<article class="change-entry"><div><span class="change-version">1.0.3</span><time datetime="2026-10-08">2026-10-08</time></div><div><h3 data-i18n="change1Title">CastPost opens reliably. Scrolling follows faster.</h3><ul><li data-i18n="change1Point0">Preview loading waits for framing rules and removal of the selected site’s existing worker registration. This can affect that site’s normal tabs; cookies and login storage are retained.</li><li data-i18n="change1Point1">Validated real CastPost with an existing worker in Chromium and Firefox, workspace reopening and a Chromium restart.</li><li data-i18n="change1Point2">Direct scroll relay avoids the background round trip and overrides smooth scrolling on receiving previews. Exact simultaneous painting is not guaranteed.</li><li data-i18n="change1Point3">Extension version and source build ID are visible inside the workspace.</li></ul></div></article>
+<article class="change-entry"><div><span class="change-version">1.0.3</span><time datetime="2026-10-08">2026-10-08</time></div><div><h3 data-i18n="change2Title">Firefox compatibility and preview protection.</h3><ul><li data-i18n="change2Point0">Firefox background compatibility and prevention of worker re-registration in verified previews.</li></ul></div></article>
+<article class="change-entry"><div><span class="change-version">1.0.2</span><time datetime="2026-10-08">2026-10-08</time></div><div><h3 data-i18n="change3Title">A more dependable workspace.</h3><ul><li data-i18n="change3Point0">Preview isolation, reload synchronization and complete device captures. Grouped findings with measurements, filters and copy/export tools.</li></ul></div></article>
+<article class="change-entry"><div><span class="change-version">1.0.1</span><time datetime="2026-09-24">2026-09-24</time></div><div><h3 data-i18n="change4Title">Framing and permissions improvements.</h3><ul><li data-i18n="change4Point0">Earlier service-worker and redirect handling fixes, persistent workspace state, source packages and host-permission guidance. Later 1.0.3 corrections refine worker cleanup and preview scoping.</li></ul></div></article>
+<article class="change-entry"><div><span class="change-version">1.0.0</span><time datetime="2026-09-21">2026-09-21</time></div><div><h3 data-i18n="change5Title">The first ViewGrid workspace.</h3><ul><li data-i18n="change5Point0">Multi-viewport layouts, device presets, synchronized interaction, comparison tools and local responsive checks.</li></ul></div></article><a href="/">← <span data-i18n="changeback">Back to ViewGrid</span></a></section></main>  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-split">
+        <div>
+          <div style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; margin-bottom: 8px;">ViewGrid.</div>
+          <p class="maker-note" data-i18n="footerNote">
+            Built by Sinan Sarıkaya for developers who care about pixel precision and clean workflows. No corporate venture backing, no tracking scripts.
+          </p>
+        </div>
+
+        <div>
+          <ul class="footer-links-list">
+            <li><a href="/changelog/" data-i18n="navChangelog">Changelog</a></li>
+            <li><a href="/#tour" data-i18n="navTour">Tour</a></li>
+            <li><a href="/#features" data-i18n="navFeatures">Features</a></li>
+            <li><a href="/#install" data-i18n="navInstall">Install</a></li>
+            <li><a href="https://github.com/sinansarikaya/viewgrid" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+            <li><a href="https://github.com/sponsors/sinansarikaya" target="_blank" rel="noopener noreferrer" style="color: var(--accent); font-weight: 600;">💖 GitHub Sponsors</a></li>
+            <li><a href="/privacy/" data-i18n="navPrivacy">Privacy Policy</a></li>
+            <li><a href="mailto:contact@sinansarikaya.dev">Contact Maker</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-base">
+        <span>&copy; 2026 Sinan Sarıkaya &bull; ViewGrid Extension</span>
+        <span>NO TELEMETRY &bull; LOCAL CLIENT EXECUTION</span>
+        <span>PRODUCTION CANONICAL: viewgrid.sinansarikaya.dev</span>
+      </div>
+    </div>
+  </footer>  <div class="shortcuts-modal" id="shortcuts-modal" onclick="closeShortcutsModal(event)" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
+    <div class="shortcuts-modal-card" onclick="event.stopPropagation()">
+      <div class="shortcuts-modal-header">
+        <div>
+          <span class="mono-num" style="color: var(--accent); font-size: 0.76rem; letter-spacing: 0.06em;">KEYBOARD CHEATSHEET</span>
+          <h3 id="shortcuts-modal-title" style="font-size: 1.4rem; margin: 4px 0 0;">ViewGrid Shortcuts</h3>
+        </div>
+        <button type="button" class="lightbox-close-btn" onclick="closeShortcutsModal()" aria-label="Close shortcuts">&times;</button>
+      </div>
+
+      <div class="shortcuts-table">
+        <div class="shortcut-row group-header">GLOBAL BROWSER LAUNCH</div>
+        <div class="shortcut-row">
+          <span>Open current tab in ViewGrid workspace</span>
+          <span><kbd class="kbd-mod">Alt</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Linux friendly alternatives</span>
+          <span><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> &bull; <kbd>Alt</kbd> + <kbd>V</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Alternative Mac command</span>
+          <span><kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></span>
+        </div>
+
+        <div class="shortcut-row group-header">WORKSPACE WORKFLOW</div>
+        <div class="shortcut-row">
+          <span>Toggle Split-Diff comparison mode</span>
+          <span><kbd>D</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Toggle scroll & click synchronization</span>
+          <span><kbd>S</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Add new custom viewport frame</span>
+          <span><kbd>A</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Rotate viewport orientation (Portrait / Landscape)</span>
+          <span><kbd>O</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Cycle alignment grid / snap layout</span>
+          <span><kbd>G</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Capture workspace full-canvas screenshot</span>
+          <span><kbd>C</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Fit all viewports to screen (Zoom to fit)</span>
+          <span><kbd>F</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Inspect breakpoint media queries</span>
+          <span><kbd>I</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Focus device viewport (1 to 9)</span>
+          <span><kbd>1</kbd> &hellip; <kbd>9</kbd></span>
+        </div>
+
+        <div class="shortcut-row group-header">DIALOGS & NAVIGATION</div>
+        <div class="shortcut-row">
+          <span>Show keyboard shortcuts toast</span>
+          <span><kbd>?</kbd></span>
+        </div>
+        <div class="shortcut-row">
+          <span>Close modal / reset active inspection</span>
+          <span><kbd>Esc</kbd></span>
+        </div>
+      </div>
+
+      <div class="shortcuts-footer-note">
+        <strong>Pro-tip:</strong> In Chrome or Firefox, visit <code>chrome://extensions/shortcuts</code> or <code>about:addons</code> to customize your global workspace activation key combination at any time.
+      </div>
+    </div>
+  </div>
+
+<script>    const translations = {
+      en: {
+        navTour: "Tour",
+        navWhy: "Why",
+        navHow: "How it works",
+        navFeatures: "Features",
+        navCompare: "Compare",
+        navInstall: "Install",
+        navFaq: "FAQ",
+        navPrivacy: "Privacy Policy",
+        shortcutNav: "Shortcuts",
+        heroSlogan: "Stop resizing your browser.",
+        heroTitle: "Test every breakpoint at once.",
+        heroSub: "View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction.",
+        shortcutHero: "Launch instantly on any page &bull; <u>View all shortcuts</u>",
+        tourLabel: "Interface tour",
+        whyLabel: "Why",
+        whyTitle: "Testing one screen at a time is why responsive bugs make it to production.",
+        whyBody: "You open browser DevTools, switch to device mode, drag the window handle, and squint at 375 pixels. You fix a broken header on mobile, push your commit, and only later realize that your fix pushed the navigation off-screen at 840 pixels. Nobody has the patience to manually click through eight presets for every CSS change. When you test screens one by one, you miss the transitions where layouts actually break.",
+        beforeTitle: "DevTools Device Mode",
+        beforeText: "One screen at a time. Dragging the window border breaks your focus. You check phone, forget tablet, and miss the mid-tier breakpoint bugs.",
+        afterTitle: "ViewGrid Workspace",
+        afterText: "Phone, tablet and desktop stay side by side. Scroll once, and all three follow. Layout shifts and alignment bugs are impossible to miss.",
+        howLabel: "How it works",
+        step1Title: "Open the workspace",
+        step1Desc: "Click ViewGrid in your browser toolbar from any tab you want to inspect. A dedicated, distraction-free workspace opens immediately.",
+        step2Title: "Type any URL or localhost",
+        step2Desc: "Test live production websites, staging links, or your local dev server at localhost:3000. No tunnels, cloud proxies, or server setup required.",
+        step3Title: "Pick device presets",
+        step3Desc: "Choose standard phones, tablets, and laptops, or specify custom pixel bounds. Flip orientations between portrait and landscape with one click.",
+        step4DescHead: "Scroll and click once",
+        step4Desc: "Interact with any device. Every other viewport replicates your scroll and click coordinates in real time without feedback loops or echo lag.",
+        featLabel: "Features",
+        idxPresets: "Device presets",
+        idxPresetsDesc: "Curated dimensions for popular phones, tablets, and laptops, plus freeform custom pixel inputs.",
+        idxCurtain: "Split-diff curtain",
+        idxCurtainDesc: "Superimpose two viewports and drag an optical divider to detect 1-pixel font jumps or wrapping shifts.",
+        idxUA: "Per-viewport user-agent",
+        idxUADesc: "Spoof mobile and tablet User-Agent strings per frame so server-rendered mobile HTML and assets load correctly.",
+        idxIframes: "Works on protected sites",
+        idxIframesDesc: "Safely strips X-Frame-Options and CSP headers solely for sub-frames inside the ViewGrid tab.",
+        idxScreenshots: "Full-canvas screenshots",
+        idxScreenshotsDesc: "Capture individual viewports or the entire multi-device workspace into full-resolution PNG files.",
+        idxLocal: "100% Local processing",
+        idxLocalDesc: "Zero analytical tracking, zero external beacons, zero remote servers. Works offline and on private VPNs.",
+        idxShortcuts: "Keyboard-first workflow",
+        idxShortcutsDesc: "Open workspace with Alt+Shift+V / ⌥⇧V, toggle compare diff with D, show cheatsheet with ?",
+        compareLabel: "Compare",
+        compareTitle: "Catch layout bugs between breakpoints.",
+        compareSub: "Drag the curtain handle below to compare how the layout renders at 375px versus 1280px. Notice where text drops awkwardly or buttons misalign.",
+        iframeLabel: "Header handling",
+        iframeTitle: "Works on sites that block iframes.",
+        iframeText: "Production websites usually send X-Frame-Options: DENY headers to prevent clickjacking. Standard iframe testing tools fail completely and show blank boxes. ViewGrid is built with a security-focused browser extension architecture, safely stripping these blocking headers strictly for the sub-frames inside your active ViewGrid workspace tab. Your other browsing tabs remain fully protected.",
+        usecaseLabel: "Use cases",
+        usecaseTitle: "Built for daily frontend rhythm.",
+        usecaseSub: "Scroll through the scenarios where ViewGrid replaces manual browser gymnastics.",
+        installLabel: "Install",
+        installTitle: "Add ViewGrid to your browser.",
+        pricingNote: "ViewGrid is free to install. Everything executes locally in your browser sandbox.",
+        faqLabel: "FAQ",
+        faqTitle: "Frequently asked questions.",
+        faqQ1: "Does ViewGrid collect any personal data?",
+        faqA1: "ViewGrid doesn't collect, transmit or store your data. Everything runs in your browser. We have zero servers, zero analytics trackers, and zero telemetry.",
+        faqQ2: "Can I test local development servers?",
+        faqA2: "Yes. ViewGrid works directly with localhost:3000, 127.0.0.1, internal VPN addresses, and staging environments without requiring reverse proxies or tunnels.",
+        faqQ3: "Why doesn't synchronized scrolling get stuck in loops?",
+        faqA3: "ViewGrid stamps scroll events with sequence identifiers and an active suppression window. When frame A broadcasts a scroll offset, frames B and C apply it without echoing the event back.",
+        faqQ4: "Which browsers are supported?",
+        faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera, and Mozilla Firefox / Firefox Developer Edition.",
+        faqQ5: "Can I take screenshots of my viewports?",
+        faqA5: "Yes. You can capture individual viewports or the entire multi-device canvas into full-resolution PNG files with a single click.",
+        faqQ6: "Is ViewGrid free to use?",
+        faqA6: "Yes. ViewGrid is currently free to install and use. The core extension is fully open source under the MIT license, with no ads, no trackers, and no mandatory subscriptions.",
+        navBenchmark: "Benchmark",
+        navHandoff: "Figma Diff",
+        benchLabel: "Architecture & Memory",
+        benchTitle: "Native browser performance. No heavy desktop runtime.",
+        benchSub: "Previews run inside your browser. Resource use depends on page content and viewport count.",
+        benchBadgeRam: "RAM FOOTPRINT",
+        benchRamHead: "Native browser runtime",
+        benchRamDesc: "No separate desktop runtime. Measure your own workload in browser task tools; memory varies by website.",
+        benchBadgeSync: "SCROLL SYNC",
+        benchSyncHead: "Synchronized interactions",
+        benchSyncDesc: "Scroll, clicks, navigation and optional form/key events are mirrored locally. Latency depends on page and device.",
+        benchBadgeLocal: "100% PRIVATE",
+        benchLocalHead: "Local-first & privacy safe",
+        benchLocalDesc: "No remote proxy servers, no telemetry, no tracking pixels. Test staging servers, localhost, and authenticated sessions behind VPNs with complete peace of mind.",
+        handoffPillTitle: "Design Handoff & Pixel-Diff:",
+        handoffPillText: "Compare live breakpoints against Figma mockups with zero pixel drift →",
+        handoffLabel: "Design Handoff & Pixel-Diff",
+        handoffTitle: "Zero pixel drift between Figma and production.",
+        handoffLead: "Stop eyeballing padding and font weights. Overlay your Figma mockups directly over live responsive breakpoints to inspect sub-pixel alignment, typography baselines, and element sizing.",
+        handoffFigmaTag: "🎨 Figma Design Spec (375px)",
+        handoffDomTag: "💻 Live Rendered DOM (375px)",
+        hfCard1Title: "Pixel-Diff Curtain & Opacity",
+        hfCard1Desc: "Drag the split handle or adjust overlay opacity from 0% to 100% to catch minute kerning differences, line-height discrepancies, or 1px margin misalignments.",
+        hfCard2Title: "Figma Frame Import & Overlays",
+        hfCard2Desc: "Load PNG or SVG design mockups directly into any viewport frame as a translucent guide layer while interacting with your live code.",
+        hfCard3Title: "Faster Design QA Cycles",
+        hfCard3Desc: "Take screenshot comparisons that designers can verify in seconds. Eliminate endless back-and-forth Slack messages about button alignment and font sizes.",
+        footerNote: "Built by Sinan Sarıkaya for developers who care about pixel precision and clean workflows. No corporate venture backing, no tracking scripts."
+      },
+      tr: {
+        navBenchmark: "Performans",
+        navHandoff: "Figma Karşılaştırma",
+        benchLabel: "Mimari & Düşük Bellek",
+        benchTitle: "Yerel tarayıcı performansı. Hantal masaüstü uygulaması değil.",
+        benchSub: "Önizlemeler tarayıcınızda çalışır. Kaynak kullanımı sayfa içeriğine ve ekran sayısına bağlıdır.",
+        benchBadgeRam: "RAM TÜKETİMİ",
+        benchRamHead: "Yerel tarayıcı çalışma ortamı",
+        benchRamDesc: "Ayrı masaüstü çalışma ortamı yok. Bellek kullanımı siteye bağlıdır; kendi iş yükünüzü tarayıcı araçlarıyla ölçün.",
+        benchBadgeSync: "KAYDIRMA SENKRONU",
+        benchSyncHead: "Senkron etkileşimler",
+        benchSyncDesc: "Kaydırma, tıklama, gezinme ve isteğe bağlı form/tuş olayları yerel olarak yansıtılır. Gecikme sayfaya ve cihaza bağlıdır.",
+        benchBadgeLocal: "%100 GİZLİ",
+        benchLocalHead: "Yerel öncelikli & tam gizlilik",
+        benchLocalDesc: "Harici bulut ve proxy sunucusu yok, telemetri yok, takip kodu yok. Şirket içi VPN ve localhost üzerindeki korumalı oturumlarınızı güvenle test edin.",
+        handoffPillTitle: "Tasarım Handoff & Figma Pixel-Diff:",
+        handoffPillText: "Figma mockupları ile canlı kırılma noktalarını sıfır sapmayla karşılaştırın →",
+        handoffLabel: "Tasarım Handoff & Figma Pixel-Diff",
+        handoffTitle: "Figma tasarımı ile canlı kod arasında sıfır piksel sapma.",
+        handoffLead: "Padding ve font kalınlıklarını göz kararı tahmin etmeyi bırakın. Figma mockuplarınızı doğrudan responsive kırılma noktalarının üzerine katmanlayarak alt-piksel hizalamaları ve tipografi çizgilerini anında denetleyin.",
+        handoffFigmaTag: "🎨 Figma Tasarım Özellikleri (375px)",
+        handoffDomTag: "💻 Canlı DOM Render (375px)",
+        hfCard1Title: "Optik Perde & Opaklık Ayarı",
+        hfCard1Desc: "Bölücü perdeyi sürükleyin veya %0 - %100 arasında opaklığı ayarlayarak en küçük harf aralığı, satır yüksekliği veya 1 piksellik kenar boşluğu kaymalarını yakalayın.",
+        hfCard2Title: "Figma Katmanı İçe Aktarma",
+        hfCard2Desc: "Figma'dan aldığınız PNG veya SVG tasarımları doğrudan herhangi bir cihaz çerçevesine yarı saydam rehber katman olarak yerleştirin ve canlı kodunuzla etkileşime girin.",
+        hfCard3Title: "Hızlı Tasarım QA Süreçleri",
+        hfCard3Desc: "Tasarımcıların saniyeler içinde doğrulayabileceği karşılaştırmalı ekran görüntüleri alın. Hizalama ve boyutlandırma konusundaki bitmek bilmeyen mesajlaşmaları sonlandırın.",
+        navTour: "Tur",
+        navWhy: "Neden",
+        navHow: "Nasıl Çalışır",
+        navFeatures: "Özellikler",
+        navCompare: "Karşılaştırma",
+        navInstall: "Yükle",
+        navFaq: "SSS",
+        navPrivacy: "Gizlilik Politikası",
+        shortcutNav: "Kısayollar",
+        heroSlogan: "Tarayıcınızı çekiştirmeyi bırakın.",
+        heroTitle: "Tüm kırılma noktalarını aynı anda test edin.",
+        heroSub: "Telefon, tablet ve masaüstü düzenlerini tek bir sekmede yan yana görüntüleyin; eşzamanlı kaydırma ve etkileşimle kırılma noktası hatalarını kaçırmayın.",
+        shortcutHero: "Herhangi bir sayfada anında başlatın &bull; <u>Tüm kısayolları gör</u>",
+        tourLabel: "Arayüz turu",
+        whyLabel: "Neden",
+        whyTitle: "Ekranları tek tek test etmek, arayüz hatalarının canlıya çıkmasının asıl nedenidir.",
+        whyBody: "Geliştirici konsolunu açar, cihaz moduna geçer, pencere kenarını sürükler ve 375 piksele bakarsınız. Mobildeki başlığı düzeltip kodunuzu gönderir, ancak sonradan bu değişikliğin 840 pikselde menüyü ekran dışına ittiğini fark edersiniz. Kimse her CSS satırında 8 farklı çözünürlüğe tek tek tıklayacak sabra sahip değildir.",
+        beforeTitle: "Konsol Cihaz Modu",
+        beforeText: "Tek seferde tek ekran. Pencere kenarını çekiştirmek dikkatinizi dağıtır. Mobili kontrol edip tableti unutursunuz.",
+        afterTitle: "ViewGrid Çalışma Alanı",
+        afterText: "Telefon, tablet ve masaüstü yan yana kalır. Birini kaydırın, hepsi takip etsin. Düzen kaymaları asla gözden kaçmaz.",
+        howLabel: "Nasıl Çalışır",
+        step1Title: "Çalışma alanını açın",
+        step1Desc: "İncelemek istediğiniz herhangi bir sekmeden araç çubuğundaki ViewGrid simgesine tıklayın. Temiz çalışma alanı hemen açılır.",
+        step2Title: "Herhangi bir URL veya localhost girin",
+        step2Desc: "Canlı web sitelerini veya localhost:3000 yerel geliştirme sunucunuzu test edin. Tünel veya bulut sunucusu gerekmez.",
+        step3Title: "Cihaz kalıplarını seçin",
+        step3Desc: "Standart telefon, tablet ve masaüstü boyutlarını seçin veya özel piksel değerleri girin. Tek tıkla yatay/dikey çevirin.",
+        step4DescHead: "Bir kez kaydırın veya tıklayın",
+        step4Desc: "Herhangi bir ekranda işlem yapın. Diğer tüm pencereler kaydırma ve tıklama koordinatlarınızı anında ve döngüsüz tekrarlar.",
+        featLabel: "Özellikler",
+        idxPresets: "Cihaz hazır kalıpları",
+        idxPresetsDesc: "Popüler telefon, tablet ve dizüstü bilgisayarlar için optimize edilmiş boyutlar ve özel piksel girişi.",
+        idxCurtain: "Optik perde karşılaştırması",
+        idxCurtainDesc: "İki pencereyi üst üste bindirin ve aradaki perdeyi sürükleyerek 1 piksellik kaymaları anında tespit edin.",
+        idxUA: "Pencere başına User-Agent",
+        idxUADesc: "Her ekranda farklı mobil veya tablet User-Agent başlığı göndererek sunucu taraflı mobil HTML çıktılarını doğru test edin.",
+        idxIframes: "Korumalı sitelerde çalışır",
+        idxIframesDesc: "X-Frame-Options ve CSP başlıklarını yalnızca ViewGrid sekmesi içindeki alt çerçeveler için güvenle temizler.",
+        idxScreenshots: "Tam tuval ekran görüntüsü",
+        idxScreenshotsDesc: "İster tek bir cihazı, ister tüm cihaz tuvalini tek tıkla tam çözünürlüklü PNG olarak kaydedin.",
+        idxLocal: "%100 Yerel işleme",
+        idxLocalDesc: "Sıfır analitik takip, sıfır dış sunucu. Çevrimdışı ve şirket içi özel VPN'lerde tam güvenlik sağlar.",
+        idxShortcuts: "Klavye odaklı iş akışı",
+        idxShortcutsDesc: "Alt+Shift+V / ⌥⇧V ile çalışma alanını açın, D ile optik karşılaştırmayı açıp kapatın, ? ile kısayolları listeleyin",
+        compareLabel: "Karşılaştırma",
+        compareTitle: "Kırılma noktaları arasındaki hataları yakalayın.",
+        compareSub: "Aşağıdaki perde tutamacını sürükleyerek 375px ve 1280px arasındaki tasarım farklarını karşılaştırın.",
+        iframeLabel: "Başlık filtreleme",
+        iframeTitle: "İframe engelleyen sitelerde çalışır.",
+        iframeText: "Modern siteler clickjacking engellemek için X-Frame-Options başlığı gönderir ve normal önizleme araçlarında açılmaz. ViewGrid tarayıcı izinlerini kullanarak bu engelleri yalnızca kendi sekmesi içindeki alt çerçeveler için güvenle filtreler.",
+        usecaseLabel: "Kullanım alanları",
+        usecaseTitle: "Günlük frontend ritmi için tasarlandı.",
+        usecaseSub: "ViewGrid'in gereksiz pencere çekiştirmelerini ortadan kaldırdığı durumları inceleyin.",
+        installLabel: "Yükle",
+        installTitle: "ViewGrid'i tarayıcınıza ekleyin.",
+        pricingNote: "ViewGrid tamamen ücretsizdir. Her şey yerel tarayıcı ortamınızda çalışır.",
+        faqLabel: "SSS",
+        faqTitle: "Sıkça sorulan sorular.",
+        faqQ1: "ViewGrid kişisel veri toplar mı?",
+        faqA1: "ViewGrid verilerinizi toplamaz, iletmez ve saklamaz. Her şey tarayıcınızda çalışır. Sıfır sunucu, sıfır analitik, sıfır telemetri.",
+        faqQ2: "Yerel geliştirme sunucularını test edebilir miyim?",
+        faqA2: "Evet. ViewGrid doğrudan localhost:3000, 127.0.0.1, şirket içi VPN ve test adresleriyle doğrudan çalışır.",
+        faqQ3: "Eşzamanlı kaydırma neden kilitlenip döngüye girmez?",
+        faqA3: "ViewGrid olaylara sıralı zaman kimlikleri uygular. A ekranından gelen kaydırma B ve C'ye uygulanırken geri bildirim yankısı filtrelenir.",
+        faqQ4: "Hangi tarayıcılar desteklenir?",
+        faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera ve Mozilla Firefox.",
+        faqQ5: "Pencerelerin ekran görüntüsünü alabilir miyim?",
+        faqA5: "Evet. Tek bir cihazın veya tüm cihaz tuvalinin tam çözünürlüklü PNG görüntüsünü tek tıkla alabilirsiniz.",
+        faqQ6: "ViewGrid'i kullanmak ücretsiz mi?",
+        faqA6: "Evet. ViewGrid şu anda tamamen ücretsiz olarak yüklenip kullanılabilir. MIT lisanslı açık kaynak kodludur; reklam, telemetri veya zorunlu abonelik içermez.",
+        footerNote: "Sinan Sarıkaya tarafından piksel hassasiyetine önem veren geliştiriciler için geliştirilmiştir. Şirket fonu veya takip kodu içermez."
+      },
+      no: {
+        navBenchmark: "Ytelse",
+        navHandoff: "Figma Diff",
+        benchLabel: "Arkitektur & Lavt Minnebruk",
+        benchTitle: "Ekte nettleserytelse. Ingen tung skrivebordsapp.",
+        benchSub: "Forhåndsvisninger kjører i nettleseren. Ressursbruk avhenger av innhold og antall visninger.",
+        benchBadgeRam: "RAM-BRUK",
+        benchRamHead: "Nettleserens egen kjøretid",
+        benchRamDesc: "Ingen separat skrivebordskjøretid. Mål eget arbeidssett i nettleseren; minnebruk varierer per nettsted.",
+        benchBadgeSync: "RULLE-SYNKRONISERING",
+        benchSyncHead: "Synkroniserte handlinger",
+        benchSyncDesc: "Rulling, klikk, navigasjon og valgfrie skjema-/tastehendelser speiles lokalt. Forsinkelse avhenger av side og enhet.",
+        benchBadgeLocal: "100% PRIVAT",
+        benchLocalHead: "Lokalt og personvernvennlig",
+        benchLocalDesc: "Ingen eksterne proxy-tjenere, ingen sporing. Test localhost og interne VPN-sider trygt.",
+        handoffPillTitle: "Design Handoff & Figma Diff:",
+        handoffPillText: "Sammenlign levende skjermer med Figma-skisser uten pikselavvik →",
+        handoffLabel: "Design Handoff & Figma Pixel-Diff",
+        handoffTitle: "Null pikselavvik mellom Figma og produksjon.",
+        handoffLead: "Slutt å gjette på avstander og fonter. Legg Figma-skisser direkte over responsive skjermer for å kontrollere pikseljustering.",
+        handoffFigmaTag: "🎨 Figma Design (375px)",
+        handoffDomTag: "💻 Live DOM (375px)",
+        hfCard1Title: "Optisk Skillevegg & Gjennomsiktighet",
+        hfCard1Desc: "Dra skillelinjen eller juster gjennomsiktigheten fra 0% til 100% for å oppdage selv 1-piksels skjevheter.",
+        hfCard2Title: "Figma-lag Import",
+        hfCard2Desc: "Last opp PNG/SVG fra Figma direkte over visningsvinduet som en gjennomsiktig mal.",
+        hfCard3Title: "Raskere Design-QA",
+        hfCard3Desc: "Ta sammenligningsbilder som designere godkjenner på sekunder.",
+        navTour: "Tur",
+        navWhy: "Hvorfor",
+        navHow: "Hvordan det fungerer",
+        navFeatures: "Egenskaper",
+        navCompare: "Sammenlign",
+        navInstall: "Installer",
+        navFaq: "FAQ",
+        navPrivacy: "Personvern",
+        shortcutNav: "Snarveier",
+        heroSlogan: "Slutt å endre størrelse på nettleseren.",
+        heroTitle: "Test alle knekkpunkter samtidig.",
+        heroSub: "Se mobil-, nettbrett- og desktop-oppsett side om side i én nettleserfane, med synkronisert rulling og interaksjon.",
+        shortcutHero: "Start umiddelbart på hvilken som helst side &bull; <u>Vis alle snarveier</u>",
+        tourLabel: "Grensesnitt-tur",
+        whyLabel: "Hvorfor",
+        whyTitle: "Å teste én skjerm av gangen er grunnen til at responsive feil når produksjon.",
+        whyBody: "Du åpner DevTools, drar i vinduskanten og stirrer på 375 piksler. Du fikser mobildesignet, committer, og innser senere at endringen ødela navigasjonen på 840 piksler. Ingen har tålmodighet til å klikke gjennom åtte forhåndsinnstillinger for hver eneste CSS-endring.",
+        beforeTitle: "DevTools Enhetsmodus",
+        beforeText: "Én skjerm om gangen. Å dra i kanten bryter flyten din. Du sjekker telefon, glemmer nettbrett og overser feil.",
+        afterTitle: "ViewGrid Arbeidsflate",
+        afterText: "Mobil, nettbrett og desktop står side om side. Rull én gang, og alle tre følger etter.",
+        howLabel: "Hvordan det fungerer",
+        step1Title: "Åpne arbeidsområdet",
+        step1Desc: "Klikk på ViewGrid i verktøylinjen fra hvilken som helst fane du vil inspisere. Arbeidsflaten åpnes umiddelbart.",
+        step2Title: "Skriv inn URL eller localhost",
+        step2Desc: "Test produksjonssider, testmiljøer eller localhost:3000 uten behov for tunneler eller skyservere.",
+        step3Title: "Velg enhetsstørrelser",
+        step3Desc: "Velg standardtelefoner og nettbrett, eller angi egne pikselmål. Vri mellom stående og liggende format.",
+        step4DescHead: "Rull og klikk én gang",
+        step4Desc: "Bruk én enhet; alle de andre gjenspeiler rulling og klikk i sanntid uten forsinkelse eller ekkoløkker.",
+        featLabel: "Egenskaper",
+        idxPresets: "Enhetsinnstillinger",
+        idxPresetsDesc: "Optimaliserte mål for vanlige telefoner, nettbrett og bærbare datamaskiner.",
+        idxCurtain: "Optisk skille-gardin",
+        idxCurtainDesc: "Legg to skjermer over hverandre og dra gardinen for å oppdage 1-piksel forskyvninger.",
+        idxUA: "Brukeragent per skjerm",
+        idxUADesc: "Send ekte mobile User-Agent headere per ramme slik at mobil HTML lastes riktig.",
+        idxIframes: "Fungerer på beskyttede sider",
+        idxIframesDesc: "Fjerner X-Frame-Options og CSP-headere trygt kun inne i ViewGrid-fanen.",
+        idxScreenshots: "Full-lerret skjermbilder",
+        idxScreenshotsDesc: "Ta høyoppløselige PNG-skjermbilder av enkeltvisninger eller hele enhetslerretet.",
+        idxLocal: "100% Lokal behandling",
+        idxLocalDesc: "Null sporing, null eksterne servere. Fungerer helt trygt på interne VPN-nettverk.",
+        idxShortcuts: "Tastatur-først arbeidsflyt",
+        idxShortcutsDesc: "Åpne arbeidsområdet med Alt+Shift+V / ⌥⇧V, veksle diff med D, vis hurtigtaster med ?",
+        compareLabel: "Sammenlign",
+        compareTitle: "Oppdag layoutfeil mellom skjermstørrelser.",
+        compareSub: "Dra gardinen under for å sammenligne hvordan designet oppfører seg på 375px kontra 1280px.",
+        iframeLabel: "Header-håndtering",
+        iframeTitle: "Fungerer på sider som blokkerer iframes.",
+        iframeText: "Mange nettsteder blokkerer iframes for å hindre clickjacking. ViewGrid fjerner disse headerne sikkert utelukkende for sine egne underrammer.",
+        usecaseLabel: "Bruksområder",
+        usecaseTitle: "Bygget for den daglige frontend-flyten.",
+        usecaseSub: "Se hvordan ViewGrid forenkler hverdagen for designere og utviklere.",
+        installLabel: "Installer",
+        installTitle: "Legg til ViewGrid i nettleseren.",
+        pricingNote: "ViewGrid er gratis å installere. Alt kjører lokalt i nettleseren din.",
+        faqLabel: "FAQ",
+        faqTitle: "Ofte stilte spørsmål.",
+        faqQ1: "Samler ViewGrid inn personopplysninger?",
+        faqA1: "ViewGrid samler ikke inn, overfører ikke og lagrer ikke dataene dine. Alt kjører lokalt i nettleseren din.",
+        faqQ2: "Kan jeg teste lokale servere?",
+        faqA2: "Ja. ViewGrid fungerer sømløst med localhost:3000, 127.0.0.1 og interne bedriftsnettverk.",
+        faqQ3: "Hvorfor låser ikke synkronisert rulling seg?",
+        faqA3: "ViewGrid stempler rullehendelser med sekvens-IDer slik at ekkosignaler filtreres bort.",
+        faqQ4: "Hvilke nettlesere støttes?",
+        faqA4: "Google Chrome, Microsoft Edge, Brave, Arc, Opera og Mozilla Firefox.",
+        faqQ5: "Kan jeg ta skjermbilder av visningene?",
+        faqA5: "Ja. Du kan ta PNG-skjermbilde av enkeltrammer eller hele lerretet med ett klikk.",
+        faqQ6: "Er ViewGrid gratis å bruke?",
+        faqA6: "Ja. ViewGrid er for øyeblikket helt gratis å installere og bruke. Kjerneapplikasjonen er åpen kildekode under MIT-lisens uten reklame eller abonnementer.",
+        footerNote: "Utviklet av Sinan Sarıkaya for utviklere som bryr seg om pikselpresisjon. Ingen sporing, ingen selskapsstøtte."
+      }
+    };
+
+    /* -------------------------------------------------------------
+       3. LANGUAGE MANAGER (Browser Detection & LocalStorage)
+       ------------------------------------------------------------- */
+    function detectLanguage() {
+      try {
+        const stored = localStorage.getItem('viewgrid_lang');
+        if (stored && ['en', 'tr', 'no'].includes(stored)) return stored;
+      } catch (e) {}
+
+      const navLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+      if (navLang.startsWith('tr')) return 'tr';
+      if (navLang.startsWith('no') || navLang.startsWith('nb') || navLang.startsWith('nn')) return 'no';
+      return 'en';
+    }
+
+    Object.assign(translations.en, { navChangelog: 'Changelog', navVideo: 'Video', videoTitle: 'See ViewGrid in action', videoDescription: 'A short walkthrough of synchronized previews, comparison tools and responsive findings.', videoNote: 'English walkthrough', scanUpdate: 'Version 1.0.3: improved overflow and text-clipping checks, touch-target measurements and printable scan reports. Findings are review suggestions, not a complete accessibility audit.', latestBuild: 'Download the latest tested 1.0.3 build' });
+    Object.assign(translations.tr, { navChangelog: 'Değişiklikler', navVideo: 'Video', videoTitle: 'ViewGrid’i çalışırken görün', videoDescription: 'Eş zamanlı önizlemeler, karşılaştırma araçları ve duyarlı tasarım bulgularını keşfedin.', videoNote: 'Türkçe tanıtım videosu', scanUpdate: 'Sürüm 1.0.3: geliştirilmiş taşma ve metin kırpılması kontrolleri, dokunma alanı ölçümleri ve yazdırılabilir tarama raporları. Bulgular incelenecek önerilerdir; tam erişilebilirlik denetimi değildir.', latestBuild: 'Test edilmiş güncel 1.0.3 paketini indir' });
+    Object.assign(translations.no, { navChangelog: 'Endringslogg', navVideo: 'Video', videoTitle: 'Se ViewGrid i bruk', videoDescription: 'En kort gjennomgang av synkroniserte visninger, sammenligning og responsive funn.', videoNote: 'Videoen vises på engelsk', scanUpdate: 'Versjon 1.0.3: forbedrede kontroller for overløp, avklippet tekst og berøringsmål, samt utskrivbare rapporter. Funn er forslag til vurdering, ikke en full tilgjengelighetskontroll.', latestBuild: 'Last ned den nyeste testede 1.0.3-pakken' });
+
+Object.assign(translations.en, {"changetitle":"Every update. Every detail.","changeeyebrow":"CHANGELOG","changeintro":"Improvements, fixes and the decisions behind them. The current extension version remains 1.0.3.","changecurrent":"Current version","changesame":"Same version. Improved build.","changebuild":"The build ID in the workspace identifies the installed package.","changedownload":"Get the latest tested build","changesource":"Full changelog on GitHub","changelatest":"LATEST CORRECTIONS","changehistory":"Release history","changeback":"Back to ViewGrid","change0Title":"More precise scans. Reports you can share.","change0Point0":"Small controls inside overflow containers remain measurable instead of being silently excluded. Completely clipped off-canvas content is excluded.","change0Point1":"New vertical text-clipping checks catch wrapped text cut off by fixed heights; explicit ellipsis and line clamping are treated separately.","change0Point2":"Per-device DOM counts make scan coverage visible. Failed frames and scans limited to 5,000 elements are clearly marked.","change0Point3":"Export JSON or a standalone HTML report, including zero-finding scans. HTML reports include scope, filters and failures and can be printed to PDF.","change0Point4":"Updated website version, multilingual changelog and English/Turkish walkthrough videos. Norwegian uses the English video.","change1Title":"CastPost opens reliably. Scrolling follows faster.","change1Point0":"Preview loading waits for framing rules and removal of the selected site’s existing worker registration. This can affect that site’s normal tabs; cookies and login storage are retained.","change1Point1":"Validated real CastPost with an existing worker in Chromium and Firefox, workspace reopening and a Chromium restart.","change1Point2":"Direct scroll relay avoids the background round trip and overrides smooth scrolling on receiving previews. Exact simultaneous painting is not guaranteed.","change1Point3":"Extension version and source build ID are visible inside the workspace.","change2Title":"Firefox compatibility and preview protection.","change2Point0":"Firefox background compatibility and prevention of worker re-registration in verified previews.","change3Title":"A more dependable workspace.","change3Point0":"Preview isolation, reload synchronization and complete device captures. Grouped findings with measurements, filters and copy/export tools.","change4Title":"Framing and permissions improvements.","change4Point0":"Earlier service-worker and redirect handling fixes, persistent workspace state, source packages and host-permission guidance. Later 1.0.3 corrections refine worker cleanup and preview scoping.","change5Title":"The first ViewGrid workspace.","change5Point0":"Multi-viewport layouts, device presets, synchronized interaction, comparison tools and local responsive checks."});
+Object.assign(translations.tr, {"changetitle":"Her güncelleme. Her ayrıntı.","changeeyebrow":"DEĞİŞİKLİK GÜNLÜĞÜ","changeintro":"İyileştirmeler, düzeltmeler ve bunların arkasındaki kararlar. Güncel eklenti sürümü 1.0.3 olarak kalıyor.","changecurrent":"Güncel sürüm","changesame":"Aynı sürüm. İyileştirilmiş derleme.","changebuild":"Çalışma alanındaki derleme kimliği, yüklediğiniz paketi gösterir.","changedownload":"Test edilmiş güncel paketi indir","changesource":"GitHub’da tüm değişiklikler","changelatest":"SON DÜZELTMELER","changehistory":"Sürüm geçmişi","changeback":"ViewGrid’e dön","change0Title":"Daha hassas tarama. Paylaşılabilir raporlar.","change0Point0":"Taşma kapsayıcılarının içindeki küçük kontroller artık sessizce elenmez. Tamamen kırpılmış, ekran dışı içerik taramaya dahil edilmez.","change0Point1":"Yeni dikey metin kırpılması kontrolü, sabit yüksekliğin kestiği çok satırlı metni bulur. Kasıtlı üç nokta ve satır sınırlaması ayrı değerlendirilir.","change0Point2":"Cihaz başına DOM öğesi sayıları taramanın kapsamını gösterir. Taranamayan ekranlar ve 5.000 öğe sınırına ulaşan taramalar açıkça belirtilir.","change0Point3":"Sıfır bulgulu taramalar dahil JSON ve bağımsız HTML raporu indirin. HTML raporu kapsamı, filtreleri ve eksikleri içerir; PDF olarak yazdırılabilir.","change0Point4":"Web sitesi sürümü, çok dilli değişiklik günlüğü ve Türkçe/İngilizce tanıtım videoları güncellendi. Norveççe seçimde İngilizce video gösterilir.","change1Title":"CastPost güvenilir açılır. Kaydırma daha hızlı takip edilir.","change1Point0":"Önizleme yüklenmeden önce çerçeve kuralları ve seçilen sitenin mevcut worker kaydının kaldırılması beklenir. Bu işlem aynı sitenin normal sekmelerini etkileyebilir; çerezler ve giriş verileri korunur.","change1Point1":"Gerçek CastPost, Chromium ve Firefox’ta mevcut worker kaydıyla, çalışma alanını yeniden açarak ve Chromium’u yeniden başlatarak doğrulandı.","change1Point2":"Doğrudan kaydırma aktarımı, arka plan turunu kaldırır ve alıcı önizlemelerde yumuşak kaydırmayı geçersiz kılar. Tam eş zamanlı çizim garanti edilmez.","change1Point3":"Eklenti sürümü ve kaynak derleme kimliği çalışma alanında görünür.","change2Title":"Firefox uyumluluğu ve önizleme koruması.","change2Point0":"Firefox arka plan uyumluluğu ve doğrulanmış önizlemelerde worker’ın yeniden kaydolmasının engellenmesi.","change3Title":"Daha güvenilir bir çalışma alanı.","change3Point0":"Önizleme izolasyonu, yenileme senkronizasyonu ve tam cihaz görüntüleri. Ölçüm, filtreleme, kopyalama ve dışa aktarma araçlarıyla gruplanmış bulgular.","change4Title":"Çerçeveleme ve izin iyileştirmeleri.","change4Point0":"İlk worker ve yönlendirme düzeltmeleri, kalıcı çalışma alanı durumu, kaynak paketleri ve site erişim izni rehberi. Sonraki 1.0.3 düzeltmeleri worker temizliğini ve önizleme kapsamını iyileştirir.","change5Title":"İlk ViewGrid çalışma alanı.","change5Point0":"Çoklu ekran düzenleri, cihaz şablonları, eş zamanlı etkileşim, karşılaştırma araçları ve yerel duyarlı tasarım kontrolleri."});
+Object.assign(translations.no, {"changetitle":"Hver oppdatering. Hver detalj.","changeeyebrow":"ENDRINGSLOGG","changeintro":"Forbedringer, rettelser og valgene bak dem. Gjeldende utvidelsesversjon er fortsatt 1.0.3.","changecurrent":"Gjeldende versjon","changesame":"Samme versjon. Forbedret bygg.","changebuild":"Bygg-ID-en i arbeidsområdet viser hvilken pakke du har installert.","changedownload":"Last ned nyeste testede bygg","changesource":"Full endringslogg på GitHub","changelatest":"NYESTE RETTELSER","changehistory":"Versjonshistorikk","changeback":"Tilbake til ViewGrid","change0Title":"Mer presise skanninger. Rapporter du kan dele.","change0Point0":"Små kontroller i overløpsbeholdere måles fortsatt i stedet for å bli utelatt. Fullstendig avklippet innhold utenfor skjermen utelates.","change0Point1":"Ny kontroll av vertikalt avklippet tekst finner linjer som kuttes av fast høyde. Tilsiktet ellipse og linjebegrensning behandles separat.","change0Point2":"DOM-antall per enhet viser skanningens omfang. Mislykkede visninger og grensen på 5 000 elementer markeres tydelig.","change0Point3":"Eksporter JSON eller en selvstendig HTML-rapport, også uten funn. HTML-rapporten viser omfang, filtre og mangler og kan skrives ut til PDF.","change0Point4":"Oppdatert nettstedversjon, flerspråklig endringslogg og engelske/tyrkiske videoer. Norsk bruker den engelske videoen.","change1Title":"CastPost åpnes stabilt. Rulling følger raskere.","change1Point0":"Forhåndsvisning venter på ramme-regler og fjerning av nettstedets eksisterende worker-registrering. Dette kan påvirke vanlige faner på samme nettsted; informasjonskapsler og innloggingsdata beholdes.","change1Point1":"Testet ekte CastPost med eksisterende worker i Chromium og Firefox, gjenåpning av arbeidsområdet og omstart av Chromium.","change1Point2":"Direkte rulleformidling unngår bakgrunnsrunden og overstyrer jevn rulling i mottakende visninger. Helt samtidig tegning kan ikke garanteres.","change1Point3":"Utvidelsesversjon og kildebygg-ID vises i arbeidsområdet.","change2Title":"Firefox-kompatibilitet og beskyttelse av visninger.","change2Point0":"Firefox-bakgrunnskompatibilitet og blokkering av ny worker-registrering i bekreftede forhåndsvisninger.","change3Title":"Et mer pålitelig arbeidsområde.","change3Point0":"Isolerte visninger, synkronisert omlasting og komplette enhetsbilder. Grupperte funn med målinger, filtre og kopierings-/eksportverktøy.","change4Title":"Forbedringer av rammer og tillatelser.","change4Point0":"Tidligere rettelser for workers og omdirigering, vedvarende arbeidsområde, kildepakker og veiledning for nettstedstillatelser. Senere 1.0.3-rettelser forbedrer worker-opprydding og avgrensning av visninger.","change5Title":"Det første ViewGrid-arbeidsområdet.","change5Point0":"Flere visninger, enhetsforvalg, synkroniserte handlinger, sammenligningsverktøy og lokale responsive kontroller."});
+    let currentLang = detectLanguage();
+
+    function setLang(lang) {
+      if (!['en', 'tr', 'no'].includes(lang)) lang = 'en';
+      currentLang = lang;
+      try {
+        localStorage.setItem('viewgrid_lang', lang);
+      } catch (e) {}
+      document.documentElement.lang = lang;
+      document.title = (lang === 'tr' ? 'Değişiklikler' : lang === 'no' ? 'Endringslogg' : 'Changelog') + ' — ViewGrid';
+      document.querySelectorAll('.change-entry time').forEach(time => { time.textContent = new Date(time.getAttribute('datetime') + 'T12:00:00Z').toLocaleDateString(lang === 'no' ? 'nb-NO' : lang, {year:'numeric',month:'long',day:'numeric'}); });
+      const source = document.getElementById('promo-source');
+      const video = document.getElementById('promo-video');
+      const url = '/videos/viewgrid-promo-' + (lang === 'tr' ? 'tr' : 'en') + '.mp4';
+      if (source && source.getAttribute('src') !== url) {
+        video.pause(); source.setAttribute('src', url); video.load();
+      }
+      const download = document.getElementById('promo-download');
+      if (download) download.setAttribute('href', url);
+
+
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+      });
+
+      const dict = translations[lang] || translations.en;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerHTML = dict[key];
+      });
+    }
+
+    /* -------------------------------------------------------------
+       4. THEME MANAGER (Light / Dark with Sun/Moon Icon)
+       ------------------------------------------------------------- */
+    function detectTheme() {
+      try {
+        const stored = localStorage.getItem('viewgrid_theme');
+        if (stored && ['light', 'dark'].includes(stored)) return stored;
+      } catch (e) {}
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    let currentTheme = detectTheme();
+
+    function applyTheme(theme) {
+      currentTheme = theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      try {
+        localStorage.setItem('viewgrid_theme', theme);
+      } catch (e) {}
+
+      const icon = document.getElementById('theme-icon');
+      if (icon) {
+        if (theme === 'dark') {
+          icon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+        } else {
+          icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+        }
+      }
+    }
+
+    function toggleTheme() {
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    }
+
+
+function openShortcutsModal(){document.getElementById('shortcuts-modal').classList.add('active');}
+function closeShortcutsModal(event){if(!event || event.target.id === 'shortcuts-modal' || event.target.closest('.lightbox-close-btn'))document.getElementById('shortcuts-modal').classList.remove('active');}
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closeShortcutsModal();});
+setLang(currentLang); applyTheme(currentTheme);</script></body></html>

@@ -44,3 +44,12 @@ it('excludes fully clipped off-canvas controls but detects clipped nested text',
   expect(result.elements.some(e => e.selector === '#offscreen')).toBe(false);
   expect(result.elements.find(e => e.selector === '#nested')?.text).toBe('Nested text');
 });
+
+it('does not mistake decorative overflow on a section for text clipping', () => {
+  document.body.innerHTML = '<section id="decorative" style="overflow-y:hidden"><div>Decorative card</div></section>';
+  document.querySelectorAll('*').forEach(el => measurable(el));
+  const section = document.querySelector('#decorative')!;
+  Object.defineProperty(section, 'scrollHeight', { value: 200 });
+  Object.defineProperty(section, 'clientHeight', { value: 20 });
+  expect(collectMetrics(document, window).elements.find(e => e.selector === '#decorative')?.text).toBeUndefined();
+});

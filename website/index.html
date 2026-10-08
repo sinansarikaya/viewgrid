@@ -2218,6 +2218,33 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
     }
+
+    /* Keep version, navigation and controls in separate, non-overlapping tracks. */
+    .nav-inner { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:24px; min-height:72px; height:auto; padding-top:12px; padding-bottom:12px; }
+    .brand-link { margin-right:0; gap:8px; flex-shrink:0; white-space:nowrap; }
+    .site-version { font:10px var(--font-mono); padding:4px 6px; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); letter-spacing:0; }
+    .nav-links { min-width:0; justify-content:center; gap:16px; }
+    .nav-item { white-space:nowrap; font-size:0.86rem; }
+    .nav-controls { gap:12px; white-space:nowrap; }
+    @media(max-width:1150px) {
+      .nav-inner { grid-template-columns:1fr auto; gap:12px 20px; }
+      .nav-links { display:flex; grid-column:1/-1; grid-row:2; justify-content:flex-start; overflow-x:auto; padding:6px 0; gap:24px; }
+      .nav-controls { grid-column:2; grid-row:1; }
+    }
+    @media(max-width:540px) {
+      .nav-inner { gap:8px; }
+      .nav-shortcut-btn { display:none; }
+      .brand-title { font-size:1.2rem; }
+      .brand-logo-svg { width:24px; height:24px; }
+      .nav-controls { gap:6px; }
+      .lang-btn { padding:4px 6px; }
+      .nav-links { gap:20px; }
+    }
+    @media(max-width:380px) {
+      .nav-inner { grid-template-columns:1fr; justify-items:center; }
+      .nav-controls { grid-column:1; grid-row:2; }
+      .nav-links { grid-row:3; width:100%; }
+    }
   </style>
 </head>
 <body>
@@ -2239,20 +2266,16 @@
           <circle cx="14" cy="23" r="2.5" />
           <circle cx="23" cy="23" r="2.5" />
         </svg>
-        <span class="brand-title">ViewGrid <small style="font:12px monospace">v1.0.3</small></span>
+        <span class="brand-title">ViewGrid</span><span class="site-version">v1.0.3</span>
       </a>
 
       <nav class="nav-links" aria-label="Main Navigation">
-        <a href="#benchmark" class="nav-item" data-i18n="navBenchmark">Benchmark</a>
-        <a href="#tour" class="nav-item" data-i18n="navTour">Tour</a>
         <a href="#features" class="nav-item" data-i18n="navFeatures">Features</a>
         <a href="#compare" class="nav-item" data-i18n="navCompare">Compare</a>
         <a href="#install" class="nav-item" data-i18n="navInstall">Install</a>
         <a href="/changelog/" class="nav-item" data-i18n="navChangelog">Changelog</a>
         <a href="#walkthrough" class="nav-item" data-i18n="navVideo">Video</a>
         <a href="#faq" class="nav-item" data-i18n="navFaq">FAQ</a>
-        <a href="https://github.com/sinansarikaya/viewgrid" target="_blank" rel="noopener noreferrer" class="nav-item">GitHub</a>
-        <a href="https://github.com/sponsors/sinansarikaya" target="_blank" rel="noopener noreferrer" class="nav-item" style="color: var(--accent); font-weight: 600;">💖 Sponsor</a>
       </nav>
 
       <div class="nav-controls">

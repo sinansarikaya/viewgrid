@@ -219,7 +219,7 @@
       const interactive = el.matches('a[href],button,input:not([type="hidden"]),select,textarea,summary,[role="button"],[role="link"],[tabindex]:not([tabindex="-1"])') && !el.matches(":disabled");
       const directText = Array.from(el.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent ?? "").join(" ").trim();
       const clipsText = ["hidden", "clip"].includes(cs.overflowX) && el.scrollWidth > el.clientWidth + 2 || ["hidden", "clip"].includes(cs.overflowY) && el.scrollHeight > el.clientHeight + 2;
-      const measuredText = directText || (clipsText ? el.textContent?.trim() || "" : "");
+      const measuredText = directText || (clipsText && el.matches("p,h1,h2,h3,h4,h5,h6,button,a,label,span,strong,em,small,code,pre") ? el.textContent?.trim() || "" : "");
       if (!interactive && !measuredText && rect.right <= win.innerWidth + 1) continue;
       elements.push({
         selector: selectorPath(el),

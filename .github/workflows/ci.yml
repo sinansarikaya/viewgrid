@@ -76,6 +76,12 @@ jobs:
         env:
           VIEWGRID_LIVE_TEST_URL: https://castpost.app/en
 
+      - name: Build Marketing Website (Vite)
+        run: pnpm run build:website
+
+      - name: Verify website video languages and changelog
+        run: node scripts/check-website.mjs
+
       - name: Upload browser test report
         if: always()
         uses: actions/upload-artifact@v4
@@ -84,12 +90,6 @@ jobs:
           path: |
             playwright-report/
             test-results/
-
-      - name: Build Marketing Website (Vite)
-        run: pnpm run build:website
-
-      - name: Verify website video languages and changelog
-        run: node scripts/check-website.mjs
 
       - name: Package Release ZIPs & Checksums
         run: pnpm run package:release

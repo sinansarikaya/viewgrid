@@ -1,0 +1,198 @@
+{
+  "labels": {
+    "en": {
+      "title": "Every update. Every detail.",
+      "eyebrow": "CHANGELOG",
+      "intro": "Improvements, fixes and the decisions behind them. The current extension version remains 1.0.3.",
+      "current": "Current version",
+      "same": "Same version. Improved build.",
+      "build": "The build ID in the workspace identifies the installed package.",
+      "download": "Get the latest tested build",
+      "source": "Full changelog on GitHub",
+      "latest": "LATEST CORRECTIONS",
+      "history": "Release history",
+      "back": "Back to ViewGrid"
+    },
+    "tr": {
+      "title": "Her güncelleme. Her ayrıntı.",
+      "eyebrow": "DEĞİŞİKLİK GÜNLÜĞÜ",
+      "intro": "İyileştirmeler, düzeltmeler ve bunların arkasındaki kararlar. Güncel eklenti sürümü 1.0.3 olarak kalıyor.",
+      "current": "Güncel sürüm",
+      "same": "Aynı sürüm. İyileştirilmiş derleme.",
+      "build": "Çalışma alanındaki derleme kimliği, yüklediğiniz paketi gösterir.",
+      "download": "Test edilmiş güncel paketi indir",
+      "source": "GitHub’da tüm değişiklikler",
+      "latest": "SON DÜZELTMELER",
+      "history": "Sürüm geçmişi",
+      "back": "ViewGrid’e dön"
+    },
+    "no": {
+      "title": "Hver oppdatering. Hver detalj.",
+      "eyebrow": "ENDRINGSLOGG",
+      "intro": "Forbedringer, rettelser og valgene bak dem. Gjeldende utvidelsesversjon er fortsatt 1.0.3.",
+      "current": "Gjeldende versjon",
+      "same": "Samme versjon. Forbedret bygg.",
+      "build": "Bygg-ID-en i arbeidsområdet viser hvilken pakke du har installert.",
+      "download": "Last ned nyeste testede bygg",
+      "source": "Full endringslogg på GitHub",
+      "latest": "NYESTE RETTELSER",
+      "history": "Versjonshistorikk",
+      "back": "Tilbake til ViewGrid"
+    }
+  },
+  "entries": [
+    {
+      "version": "1.0.3",
+      "date": "2026-10-08",
+      "en": {
+        "title": "More precise scans. Reports you can share.",
+        "points": [
+          "Small controls inside overflow containers remain measurable instead of being silently excluded. Completely clipped off-canvas content is excluded.",
+          "New vertical text-clipping checks catch wrapped text cut off by fixed heights; explicit ellipsis and line clamping are treated separately.",
+          "Per-device DOM counts make scan coverage visible. Failed frames and scans limited to 5,000 elements are clearly marked.",
+          "Export JSON or a standalone HTML report, including zero-finding scans. HTML reports include scope, filters and failures and can be printed to PDF.",
+          "Updated website version, multilingual changelog and English/Turkish walkthrough videos. Norwegian uses the English video."
+        ]
+      },
+      "tr": {
+        "title": "Daha hassas tarama. Paylaşılabilir raporlar.",
+        "points": [
+          "Taşma kapsayıcılarının içindeki küçük kontroller artık sessizce elenmez. Tamamen kırpılmış, ekran dışı içerik taramaya dahil edilmez.",
+          "Yeni dikey metin kırpılması kontrolü, sabit yüksekliğin kestiği çok satırlı metni bulur. Kasıtlı üç nokta ve satır sınırlaması ayrı değerlendirilir.",
+          "Cihaz başına DOM öğesi sayıları taramanın kapsamını gösterir. Taranamayan ekranlar ve 5.000 öğe sınırına ulaşan taramalar açıkça belirtilir.",
+          "Sıfır bulgulu taramalar dahil JSON ve bağımsız HTML raporu indirin. HTML raporu kapsamı, filtreleri ve eksikleri içerir; PDF olarak yazdırılabilir.",
+          "Web sitesi sürümü, çok dilli değişiklik günlüğü ve Türkçe/İngilizce tanıtım videoları güncellendi. Norveççe seçimde İngilizce video gösterilir."
+        ]
+      },
+      "no": {
+        "title": "Mer presise skanninger. Rapporter du kan dele.",
+        "points": [
+          "Små kontroller i overløpsbeholdere måles fortsatt i stedet for å bli utelatt. Fullstendig avklippet innhold utenfor skjermen utelates.",
+          "Ny kontroll av vertikalt avklippet tekst finner linjer som kuttes av fast høyde. Tilsiktet ellipse og linjebegrensning behandles separat.",
+          "DOM-antall per enhet viser skanningens omfang. Mislykkede visninger og grensen på 5 000 elementer markeres tydelig.",
+          "Eksporter JSON eller en selvstendig HTML-rapport, også uten funn. HTML-rapporten viser omfang, filtre og mangler og kan skrives ut til PDF.",
+          "Oppdatert nettstedversjon, flerspråklig endringslogg og engelske/tyrkiske videoer. Norsk bruker den engelske videoen."
+        ]
+      }
+    },
+    {
+      "version": "1.0.3",
+      "date": "2026-10-08",
+      "en": {
+        "title": "CastPost opens reliably. Scrolling follows faster.",
+        "points": [
+          "Preview loading waits for framing rules and removal of the selected site’s existing worker registration. This can affect that site’s normal tabs; cookies and login storage are retained.",
+          "Validated real CastPost with an existing worker in Chromium and Firefox, workspace reopening and a Chromium restart.",
+          "Direct scroll relay avoids the background round trip and overrides smooth scrolling on receiving previews. Exact simultaneous painting is not guaranteed.",
+          "Extension version and source build ID are visible inside the workspace."
+        ]
+      },
+      "tr": {
+        "title": "CastPost güvenilir açılır. Kaydırma daha hızlı takip edilir.",
+        "points": [
+          "Önizleme yüklenmeden önce çerçeve kuralları ve seçilen sitenin mevcut worker kaydının kaldırılması beklenir. Bu işlem aynı sitenin normal sekmelerini etkileyebilir; çerezler ve giriş verileri korunur.",
+          "Gerçek CastPost, Chromium ve Firefox’ta mevcut worker kaydıyla, çalışma alanını yeniden açarak ve Chromium’u yeniden başlatarak doğrulandı.",
+          "Doğrudan kaydırma aktarımı, arka plan turunu kaldırır ve alıcı önizlemelerde yumuşak kaydırmayı geçersiz kılar. Tam eş zamanlı çizim garanti edilmez.",
+          "Eklenti sürümü ve kaynak derleme kimliği çalışma alanında görünür."
+        ]
+      },
+      "no": {
+        "title": "CastPost åpnes stabilt. Rulling følger raskere.",
+        "points": [
+          "Forhåndsvisning venter på ramme-regler og fjerning av nettstedets eksisterende worker-registrering. Dette kan påvirke vanlige faner på samme nettsted; informasjonskapsler og innloggingsdata beholdes.",
+          "Testet ekte CastPost med eksisterende worker i Chromium og Firefox, gjenåpning av arbeidsområdet og omstart av Chromium.",
+          "Direkte rulleformidling unngår bakgrunnsrunden og overstyrer jevn rulling i mottakende visninger. Helt samtidig tegning kan ikke garanteres.",
+          "Utvidelsesversjon og kildebygg-ID vises i arbeidsområdet."
+        ]
+      }
+    },
+    {
+      "version": "1.0.3",
+      "date": "2026-10-08",
+      "en": {
+        "title": "Firefox compatibility and preview protection.",
+        "points": [
+          "Firefox background compatibility and prevention of worker re-registration in verified previews."
+        ]
+      },
+      "tr": {
+        "title": "Firefox uyumluluğu ve önizleme koruması.",
+        "points": [
+          "Firefox arka plan uyumluluğu ve doğrulanmış önizlemelerde worker’ın yeniden kaydolmasının engellenmesi."
+        ]
+      },
+      "no": {
+        "title": "Firefox-kompatibilitet og beskyttelse av visninger.",
+        "points": [
+          "Firefox-bakgrunnskompatibilitet og blokkering av ny worker-registrering i bekreftede forhåndsvisninger."
+        ]
+      }
+    },
+    {
+      "version": "1.0.2",
+      "date": "2026-10-08",
+      "en": {
+        "title": "A more dependable workspace.",
+        "points": [
+          "Preview isolation, reload synchronization and complete device captures. Grouped findings with measurements, filters and copy/export tools."
+        ]
+      },
+      "tr": {
+        "title": "Daha güvenilir bir çalışma alanı.",
+        "points": [
+          "Önizleme izolasyonu, yenileme senkronizasyonu ve tam cihaz görüntüleri. Ölçüm, filtreleme, kopyalama ve dışa aktarma araçlarıyla gruplanmış bulgular."
+        ]
+      },
+      "no": {
+        "title": "Et mer pålitelig arbeidsområde.",
+        "points": [
+          "Isolerte visninger, synkronisert omlasting og komplette enhetsbilder. Grupperte funn med målinger, filtre og kopierings-/eksportverktøy."
+        ]
+      }
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-09-24",
+      "en": {
+        "title": "Framing and permissions improvements.",
+        "points": [
+          "Earlier service-worker and redirect handling fixes, persistent workspace state, source packages and host-permission guidance. Later 1.0.3 corrections refine worker cleanup and preview scoping."
+        ]
+      },
+      "tr": {
+        "title": "Çerçeveleme ve izin iyileştirmeleri.",
+        "points": [
+          "İlk worker ve yönlendirme düzeltmeleri, kalıcı çalışma alanı durumu, kaynak paketleri ve site erişim izni rehberi. Sonraki 1.0.3 düzeltmeleri worker temizliğini ve önizleme kapsamını iyileştirir."
+        ]
+      },
+      "no": {
+        "title": "Forbedringer av rammer og tillatelser.",
+        "points": [
+          "Tidligere rettelser for workers og omdirigering, vedvarende arbeidsområde, kildepakker og veiledning for nettstedstillatelser. Senere 1.0.3-rettelser forbedrer worker-opprydding og avgrensning av visninger."
+        ]
+      }
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-09-21",
+      "en": {
+        "title": "The first ViewGrid workspace.",
+        "points": [
+          "Multi-viewport layouts, device presets, synchronized interaction, comparison tools and local responsive checks."
+        ]
+      },
+      "tr": {
+        "title": "İlk ViewGrid çalışma alanı.",
+        "points": [
+          "Çoklu ekran düzenleri, cihaz şablonları, eş zamanlı etkileşim, karşılaştırma araçları ve yerel duyarlı tasarım kontrolleri."
+        ]
+      },
+      "no": {
+        "title": "Det første ViewGrid-arbeidsområdet.",
+        "points": [
+          "Flere visninger, enhetsforvalg, synkroniserte handlinger, sammenligningsverktøy og lokale responsive kontroller."
+        ]
+      }
+    }
+  ]
+}
