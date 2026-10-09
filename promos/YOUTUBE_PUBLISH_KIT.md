@@ -6,11 +6,13 @@ Bu doküman, ViewGrid tanıtım videosunu **[@sinansarikaya_dev](https://www.you
 
 ## 🎬 Video ve Kapak Dosyaları
 
-* **Ana Video (Türkçe):** [`viewgrid-promo-tr.mp4`](viewgrid-promo-tr.mp4) (66 saniye, 1080p 16:9, H.264/AAC, 10.7 MB)
-* **İngilizce Video:** [`viewgrid-promo-en.mp4`](viewgrid-promo-en.mp4) (56 saniye, 1080p 16:9, H.264/AAC, 9.8 MB)
-* **Küçük Resim (Thumbnail / Kapak):**
-  * **Türkçe Kapak:** [`ViewGrid-tr.png`](ViewGrid-tr.png) (1672×941 Master PNG, YouTube uyumlu)
-  * **İngilizce Kapak:** [`ViewGrid-en.png`](ViewGrid-en.png) (1672×941 Master PNG, YouTube uyumlu)
+* **Ana Video (Türkçe Yatay 16:9):** [`viewgrid-promo-tr.mp4`](viewgrid-promo-tr.mp4) (66 saniye, 1080p 16:9, H.264/AAC, 10.7 MB)
+* **İngilizce Video (Yatay 16:9):** [`viewgrid-promo-en.mp4`](viewgrid-promo-en.mp4) (56 saniye, 1080p 16:9, H.264/AAC, 9.8 MB)
+* **Dikey Video (Shorts / Reels / TikTok 9:16):** [`viewgrid-shorts-tr.mp4`](viewgrid-shorts-tr.mp4) (57 saniye, 1080×1920 9:16, H.264/AAC, 10.6 MB)
+* **Küçük Resimler & Kapaklar:**
+  * **Yatay Türkçe Kapak:** [`ViewGrid-tr.png`](ViewGrid-tr.png) (1672×941 Master PNG, YouTube uyumlu)
+  * **Yatay İngilizce Kapak:** [`ViewGrid-en.png`](ViewGrid-en.png) (1672×941 Master PNG, YouTube uyumlu)
+  * **Dikey Shorts Kapağı:** [`viewgrid-shorts-tr-cover.jpg`](viewgrid-shorts-tr-cover.jpg) (1080×1920 JPG)
 
 ---
 
@@ -105,7 +107,36 @@ ViewGrid, responsive web design, responsive test, frontend development, web geli
 
 ---
 
-## 5. 🔍 Video İçinde Düzeltilmesi Gerekenler (Kod & Varlık Denetim Raporu)
+## 5. 📱 YouTube Shorts / Instagram Reels / TikTok Yayını (9:16 Dikey Format)
+
+* **Video Dosyası:** [`viewgrid-shorts-tr.mp4`](viewgrid-shorts-tr.mp4) (57 saniye, 1080×1920 9:16, H.264/AAC, 10.6 MB)
+* **Kapak Görseli:** [`viewgrid-shorts-tr-cover.jpg`](viewgrid-shorts-tr-cover.jpg) (1080×1920 JPG)
+
+### 📌 Shorts Başlığı (Kısa & Yüksek Merak):
+```text
+Tek Sekmede 3 Cihaz Yan Yana! #Shorts #WebGeliştirme #ViewGrid
+```
+
+### 📝 Shorts Açıklama Metni:
+```markdown
+Responsive test yaparken tarayıcı penceresi daraltmaktan sıkıldınız mı?
+
+Chrome ve Firefox için geliştirdiğim açık kaynaklı ViewGrid ile telefon, tablet ve masaüstü ekranlarını tek bir sekmede yan yana inceleyebilirsiniz. Eşzamanlı kaydırma yapın ve dışa aktardığınız tasarımları canlı sayfanın üzerine yerleştirerek farkları görün.
+
+⚡ 100% Yerel Çalışma • Sıfır Telemetri • Tamamen Ücretsiz!
+
+⬇️ ÜCRETSİZ İNDİRİN:
+🔹 Chrome: https://chromewebstore.google.com/detail/viewgrid-%E2%80%94-responsive-vie/hmlhooeamfmhdeichnghcklahfgimgef
+🔹 Firefox: https://addons.mozilla.org/en-US/firefox/addon/viewgrid-responsive-viewer/
+🌐 Web Sitesi: https://viewgrid.sinansarikaya.dev
+⭐ GitHub: https://github.com/sinansarikaya/viewgrid
+
+#Shorts #ViewGrid #WebGeliştirme #Frontend #CSS #WebDeveloper #AçıkKaynak #SinanSarıkaya
+```
+
+---
+
+## 6. 🔍 Video İçinde Düzeltilmesi Gerekenler (Kod & Varlık Denetim Raporu)
 
 Video kaynak kodları (`ViewGridPromoVideo.tsx`), sahne planı (`checkpoint_script.json`) ve ses dosyaları incelenmiş olup, videolarda yer alan eski iddialar ve düzeltme önerileri aşağıda zaman kodlarıyla listelenmiştir:
 

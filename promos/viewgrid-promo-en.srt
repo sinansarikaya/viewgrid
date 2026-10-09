@@ -1,0 +1,48 @@
+1
+00:00:00,250 --> 00:00:05,787
+Still resizing your browser window back and forth to test responsive layouts?
+
+2
+00:00:05,788 --> 00:00:10,688
+Checking screens one by one is slow and makes it easy to miss visual bugs.
+
+3
+00:00:11,867 --> 00:00:13,092
+Meet ViewGrid.
+
+4
+00:00:13,092 --> 00:00:20,454
+A unified workspace that brings mobile, tablet, and desktop viewports side by side inside a single browser tab.
+
+5
+00:00:21,533 --> 00:00:25,733
+Scroll on one screen, and see every device follow along.
+
+6
+00:00:25,733 --> 00:00:30,245
+Test interactions across all breakpoints simultaneously.
+
+7
+00:00:31,367 --> 00:00:37,255
+Overlay exported design mockups onto the live page to compare alignment and spacing.
+
+8
+00:00:39,200 --> 00:00:45,475
+Use curated device presets and the issue scanner to spot potential responsive problems.
+
+9
+00:00:47,200 --> 00:00:50,075
+Built local-first with zero telemetry.
+
+10
+00:00:50,075 --> 00:00:55,625
+It runs directly inside your browser with full privacy on localhost and staging.
+
+11
+00:00:56,867 --> 00:00:58,842
+Stop dragging your browser window.
+
+12
+00:00:58,842 --> 00:01:02,529
+Install ViewGrid free for Chrome and Firefox.
+
