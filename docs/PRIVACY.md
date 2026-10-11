@@ -2,6 +2,16 @@
 
 ViewGrid does not send analytics, crash reports, screenshots, issue results or workspace settings to a ViewGrid server. There is no cloud proxy, account service or AI provider integration in this release.
 
+## 2026-10-11 geliştirme profili: isteğe bağlı analiz
+
+Temel responsive çalışma alanı sunucusuz çalışır. Yeni Performance eylemi yalnız kullanıcının açık onayıyla hedef herkese açık URL'yi, seçilen mobile/desktop profilini ve dili Google PageSpeed Insights'a gönderir. Google ayrıca isteğin IP/ağ metadatasını görebilir; kullanıcı sitesi kendi ağ isteklerini üretir. Workspace çerezleri, oturum credential'ları veya API anahtarı gönderilmez. Local/private hedefler desteklenmez; hostname denetimi DNS çözümlemesi yapmaz ve internet domaininin özel IP'ye çözülmesini garantiyle tespit edemez. Hassas query parametrelerini göndermeden önce URL'yi temizleyin.
+
+Hiçbir zorunlu ücretli servis, ViewGrid proxy/SaaS, telemetri veya dış AI sağlayıcısı eklenmez. Anahtar girme/saklama ekranı yok; anahtar paket, istemci, Git, log veya görsele yazılmaz. İsteğe bağlı gelecekteki kullanıcı sunucusu profilinin anahtarı yalnız sunucu environment'ında tutulmalıdır.
+
+Analiz geçmişi cihazdaki extension storage içinde en fazla20 kayıt ve256KiB sınırıyla saklanır. Geçmiş/analiz dışa aktarımında query/fragment, kullanıcı ajanı ve etkilenen öğenin metin/selector/snippet içeriği çıkarılır; raporda redaction bilgisi tutulur. Başarısız/iptal sonuçlar sıfır puan yapılmaz. Geçmiş silme ile bu kayıtlar kaldırılır; indirilen HTML/JSON/PDF dosyaları ayrıca kullanıcı tarafından silinmelidir. Eski Issues raporu ve viewport capture çıktıları farklıdır; paylaşmadan içerik/URL kontrolü gerektirir.
+
+Gerçek Google ölçümü bu ortamda kota/anahtar engellidir. Kontrollü test örnekleri mock olarak etiketlidir. Kurulum/servis seçenekleri ve maliyet sınırları: [Analiz kurulumu](ANALYSIS_SETUP.md).
+
 ## Data on your device
 
 - `storage.local`: workspace URLs, saved workspaces, custom devices, language, theme and shortcut preferences.

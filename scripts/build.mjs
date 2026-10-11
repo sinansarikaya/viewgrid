@@ -74,6 +74,7 @@ fingerprint(path.join(root, 'src'));
 for (const file of ['scripts/manifest.mjs', 'scripts/build.mjs', 'scripts/gen-icons.mjs', 'vite.ui.config.ts']) hash.update(fs.readFileSync(path.join(root, file)));
 hash.update(fs.readFileSync(path.join(root, 'package.json')));
 fs.writeFileSync(path.join(targetDir, 'build-info.json'), JSON.stringify({ version: buildManifest(target, iconFiles).version, build: hash.digest('hex').slice(0, 12) }, null, 2) + '\n');
+fs.copyFileSync(path.join(root, 'THIRD_PARTY_NOTICES.md'), path.join(targetDir, 'THIRD_PARTY_NOTICES.md'));
 
 // NOTE: each browser build lands exclusively in dist/<target>/.
 // Use --source-dir dist/firefox or dist/chromium explicitly.
