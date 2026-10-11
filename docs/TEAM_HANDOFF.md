@@ -2,6 +2,8 @@
 
 ## Güncel durum (önceki kronolojik satırların önüne geçer)
 
+- Yerel ürün checkpoint commit `8bedbd4` (98görev dosyası; kaynak/test/doküman ve iki üretilmiş dist). Önceki ücretsiz mimari checkpoint `7086eee`. Branch `feat/viewgrid-workspace-evolution`; commit sonrası yalnız `output/` örnek dosyaları untracked, test logları ignored. Bu devir satırı ayrıca belge commit'iyle kaydedilir. Sürüm1.0.3, hiçbir mağaza yayını/push/merge yapılmadı.
+
 - Final checkpoint: Chromium30geçti/1isteğe bağlı canlıskip (`chromium-final-checkpoint.log`), typecheck ve web-ext geçti (`typecheck-final-checkpoint.log`, `web-ext-final-checkpoint.log`;3uyarı). Son kaynak/build koruma ve kontrollü analiz/rapor kanıtları incelenebilir yerel commit'e alınır; output/pdf örnekleri yerel untracked teslim artefaktı, test-results ignored. Push/merge/deploy yok. Devirde sıradaki somut adım: FEATURE_TEST_MATRIX K-07/K-08/K-13/K-16 henüz çalıştırılmamış alt senaryoları ve cihaz model kaynaklarını tamamla; yapılmamış test başarı değildir. Google429/CrUXanahtar yokluğu ücretli servisle aşılmayacak; temel sunucusuz profil korunur.
 
 - UI-NARROW-FOOTER tamam: ilk yeni heightassert81px buldu (CSS max-heightcontentbox + padding/border); lider border-box ile düzeltti, beklenti gevşetilmedi. İki shell/layout E2E yeniden geçti (`footer-layout-final.log`),320screenshot görsel incelendi: footer kompakt, metinler silinmedi, scroll ile erişilebilir. Son build iki target geçti (`build-footer-final.log`), lint geçti (`lint-footer.log`). Final checkpoint tam suite koşuyor; sıradaki bağımsız iş kalan koruma matrisi ve doğrulanmamış cihaz kaynaklarıdır. Google başarısı gerçek429/anahtar eksikliği nedeniyle engelli, satınalma/hesap gereksinimi eklenmedi.
