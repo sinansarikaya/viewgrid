@@ -113,6 +113,21 @@ laptop widths per product spec). Per-model source verification table lands in v0
 
 ## 6. Import / Export & Versioning
 
+### Geliştirme doğrulama kaydı — 2026-10-11
+
+Önceki v0.1/v0.2 beyanları tarihsel plandır; güncel kabul kanıtı değildir. Mevcut kayıtları bozacak ölçü değişikliği yapılmadı.
+
+| Preset | CSS ölçü / DPR | Kaynak ve durum |
+| --- | --- | --- |
+| iPhone 13 / 14 | 390×844 / 3 | Playwright 1.58.2 iPhone 13 ve iPhone 14 screen kayıtlarıyla eşleşir; donanım testi değildir |
+| iPhone 15 Pro | 393×852 / 3 | Playwright screen kaydıyla eşleşir |
+| iPhone 15 Pro Max | 430×932 / 3 | Playwright screen kaydıyla eşleşir |
+| Diğer telefon/tablet | Eski preset değerleri korunur | Bağımsız model ölçüsü doğrulanmadı; v1.2 kaynak kapısı açık |
+| Laptop/desktop | Katalogdaki CSS çalışma alanları | Donanım modeli değil, layout preset |
+| Özel | Kullanıcının belirlediği | Donanım doğrulaması yok |
+
+[Sürümlenmiş birincil descriptor kaynağı](https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/server/deviceDescriptorsSource.json). Burada **screen** ölçüsü referans alınır; browser chrome çıkarılmış **viewport** farklıdır. ViewGrid tam CSS layout alanı oluşturur; gerçek cihaz, donanım DPR veya Safari emülasyonu iddiası yok. Genel Apple/Google/Samsung kurum adları ölçü doğrulama kaynağı sayılmadı; katalogda doğrulama durumu ve tarih ayrı tutulur.
+
 - Device DB ships with the bundle (`schemaVersion` field).
 - User custom devices live in `storage.local` under their own `schemaVersion`;
   merged at runtime: `picker = BUILTINS ⊕ USER(custom)`.

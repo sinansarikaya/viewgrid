@@ -1,0 +1,325 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.searchBar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.searchInput {
+  flex: 1;
+  font-size: 13px;
+  padding: 8px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+
+.categoryTabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.tabBtn {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 5px 10px !important;
+  white-space: nowrap !important;
+}
+
+.tabBtnActive {
+  background: var(--accent) !important;
+  color: var(--accent-text) !important;
+  border-color: var(--accent) !important;
+}
+
+.brandFilters {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.brandLabel {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-right: 4px;
+  font-weight: 600;
+}
+
+.brandChip {
+  font-size: 10px !important;
+  padding: 3px 8px !important;
+  border-radius: 999px !important;
+}
+
+.brandChipActive {
+  background: var(--accent-2) !important;
+  color: var(--accent-text) !important;
+  border-color: var(--accent-2) !important;
+}
+
+.slotInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 2px 4px;
+}
+
+.slotWarning {
+  color: var(--major, #fb923c);
+  font-weight: 600;
+}
+
+.deviceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.deviceCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  transition: border-color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.deviceCard:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.deviceCardSelected {
+  border-color: var(--accent) !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+
+.cardSelectArea {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.checkbox {
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cardHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.deviceName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deviceMeta {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.orientationMeta {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* Verification badges */
+.verifBadge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.verifDescriptor {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--ok, #34d399);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.verifLayoutPreset {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent, #38bdf8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.verifUnverified {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--minor, #fbbf24);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.verifUserDefined {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-dim, #94a3b8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.favBtn {
+  font-size: 13px !important;
+  padding: 2px 5px !important;
+  color: var(--text-dim) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.favBtnActive {
+  color: var(--minor) !important;
+}
+
+.emptyList {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 24px 0;
+  font-size: 12px;
+  grid-column: 1 / -1;
+}
+
+.actionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+}
+
+.directionControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.directionSelect {
+  font-size: 11px;
+  padding: 4px 6px;
+}
+
+.customSection {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionHeader {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.customFormRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.inputName {
+  flex: 2;
+  min-width: 130px;
+}
+
+.inputNum {
+  flex: 1;
+  min-width: 70px;
+}
+
+.validationError {
+  font-size: 11px;
+  color: var(--crit, #f43f5e);
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.groupsSection {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupRow {
+  display: flex;
+  gap: 6px;
+}
+
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.groupItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.disclaimer {
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.3;
+}

@@ -1,5 +1,6 @@
 import { test, expect, chromium, type BrowserContext, type Page, type Frame } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
+import { readFileSync } from 'node:fs';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -76,6 +77,162 @@ test.beforeAll(async () => {
 test.afterAll(async () => { await context?.close(); server?.close(); if(profile) await rm(profile,{recursive:true,force:true}); });
 test.beforeEach(reset);
 
+test('custom device rejects invalid values instead of silently substituting defaults', async () => {
+  await page.getByRole('button', { name: '+ Add Device', exact: true }).click();
+  const picker = page.getByRole('dialog', { name: 'Add Devices' });
+  await picker.getByRole('button', { name: 'Add Custom Device', exact: true }).click();
+  await expect(picker.getByRole('alert')).toHaveText('Device name cannot be empty.');
+  await picker.getByRole('textbox', { name: 'Device Name', exact: true }).fill('QA custom');
+  await picker.getByRole('spinbutton', { name: 'Width (px)', exact: true }).fill('');
+  await picker.getByRole('button', { name: 'Add Custom Device', exact: true }).click();
+  await expect(picker.getByRole('alert')).toHaveText('Width must be a valid number between 100 and 10000 px.');
+  await expect(page.locator('[data-viewport-id]')).toHaveCount(4);
+  await picker.getByRole('spinbutton', { name: 'Width (px)', exact: true }).fill('540');
+  await picker.getByRole('spinbutton', { name: 'Height (px)', exact: true }).fill('720');
+  await picker.getByRole('spinbutton', { name: 'DPR', exact: true }).fill('2');
+  await picker.getByRole('button', { name: 'Add Custom Device', exact: true }).click();
+  await expect(picker).toHaveCount(0);
+  await expect(page.locator('[data-viewport-id]')).toHaveCount(5);
+  await expect.poll(() => frames().at(-1)!.evaluate(() => [innerWidth, innerHeight])).toEqual([540, 720]);
+});
+
+test('viewport duplicate and removal preserve previews, and compare modes remain usable', async () => {
+  const originalIds = await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')));
+  const first = page.locator('[data-viewport-id]').first();
+  await first.locator('summary').click();
+  await first.getByRole('button', { name: '⧉ Duplicate', exact: true }).click();
+  await expect(page.locator('[data-viewport-id]')).toHaveCount(5);
+  const newId = (await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).find(id => !originalIds.includes(id));
+  expect(newId).toBeTruthy();
+  const added = page.locator(`[data-viewport-id="${newId}"]`);
+  await added.locator('summary').click();
+  await added.getByRole('button', { name: '✕ Remove', exact: true }).click();
+  await expect(page.locator('[data-viewport-id]')).toHaveCount(4);
+  expect(await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).toEqual(originalIds);
+  await page.getByRole('button', { name: /⚖.*Compare/ }).click();
+  await expect(page.getByText('Visual Comparison / Diff', { exact: true })).toBeVisible();
+  await expect.poll(() => frames().length).toBe(6);
+  for (const mode of ['Overlay Curtain', 'Side by Side', 'Dual Split']) {
+    await page.getByRole('button', { name: mode, exact: false }).click();
+    await expect.poll(() => frames().filter(f => f.url().startsWith(base)).length).toBe(6);
+  }
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('Visual Comparison / Diff', { exact: true })).toHaveCount(0);
+  await expect.poll(() => frames().length).toBe(4);
+});
+
+test('device picker resets brand, preserves default desktop orientation and favorite after reload', async () => {
+  await page.getByRole('button', { name: '+ Add Device', exact: true }).click();
+  const picker = page.getByRole('dialog', { name: 'Add Devices' });
+  await picker.getByRole('button', { name: 'Apple', exact: true }).click();
+  await picker.getByRole('button', { name: 'Desktops', exact: true }).click();
+  await picker.getByRole('checkbox', { name: 'Select Desktop 1080p', exact: true }).check();
+  await picker.getByRole('button', { name: 'Toggle favorite for Desktop 1080p', exact: true }).click();
+  await picker.getByRole('button', { name: 'Add 1 Selected Device', exact: true }).click();
+  await expect(page.locator('iframe[name^="viewgrid:"]')).toHaveCount(5);
+  await expect.poll(() => frames().at(-1)!.evaluate(() => [innerWidth, innerHeight])).toEqual([1920, 1080]);
+  await page.waitForTimeout(800);
+  await page.reload();
+  await page.getByRole('button', { name: '+ Add Device', exact: true }).click();
+  await picker.getByRole('button', { name: '★ Favorites', exact: true }).click();
+  await expect(picker.getByRole('checkbox', { name: 'Select Desktop 1080p', exact: true })).toBeVisible();
+});
+
+test('design overlay image opacity blend and removal do not modify preview content', async () => {
+  await page.getByRole('button', { name: /⚖.*Compare/ }).click();
+  await page.getByRole('button', { name: '🎨 Design Overlay', exact: true }).click();
+  await page.locator('input[type="file"]').first().setInputFiles({ name: 'controlled-overlay.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=', 'base64') });
+  const overlay = page.getByAltText('Figma Spec Overlay', { exact: true });
+  await expect(overlay).toBeVisible();
+  const range = page.locator('input[type="range"]').last();
+  await range.fill('35');
+  await expect(overlay).toHaveCSS('opacity', '0.35');
+  await page.locator('select').filter({ has: page.locator('option[value="difference"]') }).selectOption('difference');
+  await expect(overlay).toHaveCSS('mix-blend-mode', 'difference');
+  for (const frame of frames().filter(frame => frame.url().startsWith(base))) await expect(frame.locator('h1')).toHaveText('ViewGrid fixture');
+  await page.getByRole('button', { name: "Mockup'ı Kaldır", exact: true }).click();
+  await expect(overlay).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByText('Visual Comparison / Diff', { exact: true })).toHaveCount(0);
+});
+
+test('sidebar reorder hide restore and named workspace survive reload', async () => {
+  const sidebar = page.getByRole('complementary', { name: 'Workspace tools and devices' });
+  const ids = await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')));
+  await sidebar.getByRole('button', { name: 'Move Down iPhone 15 Pro', exact: true }).click();
+  await expect.poll(() => page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).toEqual([ids[1], ids[0], ids[2], ids[3]]);
+  await sidebar.getByRole('button', { name: 'Hide', exact: true }).first().click();
+  await expect(page.locator('[data-viewport-id]')).toHaveCount(3);
+  await sidebar.getByRole('button', { name: 'Show', exact: true }).click();
+  await expect(page.locator('[data-viewport-id]')).toHaveCount(4);
+  await sidebar.getByRole('button', { name: 'Workspace', exact: true }).click();
+  await sidebar.getByPlaceholder('Workspace name').fill('QA preserved workspace');
+  await sidebar.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(sidebar.getByText('QA preserved workspace', { exact: true })).toBeVisible();
+  await page.waitForTimeout(800);
+  await page.reload();
+  await sidebar.getByRole('button', { name: 'Workspace', exact: true }).click();
+  await expect(sidebar.getByText('QA preserved workspace', { exact: true })).toBeVisible();
+  await sidebar.getByRole('button', { name: 'Load', exact: true }).click();
+  await expect.poll(() => page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).toEqual([ids[1], ids[0], ids[2], ids[3]]);
+});
+
+test('multi-selection group and recent devices persist without deduplicating independent viewports', async () => {
+  await page.getByRole('button', { name: '+ Add Device', exact: true }).click();
+  const picker = page.getByRole('dialog', { name: 'Add Devices' });
+  await picker.getByRole('checkbox', { name: 'Select iPhone SE', exact: true }).check();
+  await picker.getByRole('checkbox', { name: 'Select iPhone 15 Pro', exact: true }).check();
+  await picker.getByRole('textbox', { name: 'Group name (e.g. Mobile + Tablet)', exact: true }).fill('QA phone group');
+  await picker.getByRole('button', { name: 'Save Selected as Group', exact: true }).click();
+  await picker.getByRole('button', { name: 'Add 2 Selected Devices', exact: true }).click();
+  await expect(page.locator('[data-viewport-id]')).toHaveCount(6);
+  await page.waitForTimeout(800);
+  await page.reload();
+  await page.getByRole('button', { name: '+ Add Device', exact: true }).click();
+  await expect(picker.getByText('QA phone group', { exact: true })).toBeVisible();
+  await picker.getByRole('button', { name: 'Select Group', exact: true }).click();
+  await expect(picker.getByRole('checkbox', { name: 'Select iPhone SE', exact: true })).toBeChecked();
+  await expect(picker.getByRole('checkbox', { name: 'Select iPhone 15 Pro', exact: true })).toBeChecked();
+  await picker.getByRole('button', { name: 'Recent', exact: false }).click();
+  await expect(picker.getByRole('checkbox', { name: 'Select iPhone SE', exact: true })).toBeVisible();
+  await picker.getByRole('button', { name: 'Add 2 Selected Devices', exact: true }).click();
+  await expect(page.locator('[data-viewport-id]')).toHaveCount(8);
+  expect(new Set(await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).size).toBe(8);
+});
+
+test('controlled analysis requires consent, keeps lab and field separate and handles quota without a fake score', async () => {
+  const mocked = JSON.parse(readFileSync('tests/fixtures/psi-response.json', 'utf8'));
+  let requests = 0;
+  await context.route('https://pagespeedonline.googleapis.com/**', async route => {
+    requests++;
+    expect(new URL(route.request().url()).searchParams.has('key')).toBe(false);
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mocked) });
+  });
+  try {
+    await page.getByRole('button', { name: 'Performance & CrUX', exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox', { name: 'Target URL' }).fill('https://example.com/');
+    await expect(dialog.getByRole('button', { name: 'Run Analysis', exact: true })).toBeDisabled();
+    expect(requests).toBe(0);
+    await dialog.getByRole('checkbox').check();
+    await dialog.getByRole('button', { name: 'Run Analysis', exact: true }).click();
+    await expect(dialog.getByText('82', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('Total Blocking Time (TBT)', { exact: true })).toBeVisible();
+    await expect(dialog.getByText('p75 INP: 180 ms', { exact: true })).toBeVisible();
+    expect(requests).toBe(1);
+    await page.screenshot({ path: 'test-results/development/analysis-controlled-chromium.png' });
+    await dialog.getByRole('textbox', { name: 'Target URL' }).fill('https://example.org/');
+    await expect(dialog.getByText('82', { exact: true })).toHaveCount(0);
+    await context.unroute('https://pagespeedonline.googleapis.com/**');
+    await context.route('https://pagespeedonline.googleapis.com/**', route => route.fulfill({ status: 429, contentType: 'application/json', body: '{}' }));
+    await dialog.getByRole('button', { name: 'Run Analysis', exact: true }).click();
+    await expect(dialog.getByText(/quota|rate limit/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(dialog.getByText('82', { exact: true })).toHaveCount(0);
+  } finally {
+    await context.unroute('https://pagespeedonline.googleapis.com/**');
+  }
+});
+
 test('loads four actual frames, applies device dimensions and rotates', async () => {
   const first = page.locator('[data-viewport-id]').first();
   const frame = frames()[0]!;
@@ -83,8 +240,60 @@ test('loads four actual frames, applies device dimensions and rotates', async ()
   await first.locator('button[title*="Rotate"],button[title*="orientation" i]').first().click();
   await expect.poll(() => frame.evaluate(() => innerWidth)).toBe(before.height);
 });
+test('workspace shell preserves logical viewports, collapse state and card actions', async () => {
+  const sidebar = page.getByRole('complementary', { name: 'Workspace tools and devices' });
+  const original = await frames()[0]!.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+  for (const size of [{ width: 1280, height: 800 }, { width: 1920, height: 1080 }]) {
+    await page.setViewportSize(size);
+    await page.getByRole('button', { name: /Fit to Screen/i }).click();
+    expect(await frames()[0]!.evaluate(() => ({ width: innerWidth, height: innerHeight }))).toEqual(original);
+    expect(await page.locator('main').evaluate(el => el.clientWidth)).toBeGreaterThan(500);
+    await page.screenshot({ path: `test-results/development/workspace-${size.width}.png` });
+  }
+  await sidebar.getByRole('button', { name: 'Collapse sidebar' }).click();
+  await expect(sidebar.getByRole('button', { name: 'Expand sidebar' })).toBeVisible();
+  await expect.poll(() => page.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('viewgrid.sidebar.collapsed'))['viewgrid.sidebar.collapsed'])).toBe(true);
+  await page.reload();
+  await expect(sidebar.getByRole('button', { name: 'Expand sidebar' })).toBeVisible();
+  await sidebar.getByRole('button', { name: 'Devices', exact: true }).click();
+  await expect(sidebar.getByRole('button', { name: 'Collapse sidebar' })).toBeVisible();
+  await expect.poll(() => page.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('viewgrid.sidebar.collapsed'))['viewgrid.sidebar.collapsed'])).toBe(false);
+  const first = page.locator('[data-viewport-id]').first();
+  await first.locator('summary').click();
+  await first.getByRole('button', { name: /Minimize/i }).click();
+  await expect(first.locator('iframe')).toHaveCount(0);
+  await first.getByRole('button', { name: /Restore/i }).click();
+  await expect(first.locator('iframe')).toHaveCount(1);
+  await page.setViewportSize({ width: 320, height: 800 });
+  expect(await page.locator('footer').evaluate(element => element.getBoundingClientRect().height)).toBeLessThanOrEqual(72);
+  await page.screenshot({ path: 'test-results/development/workspace-narrow.png' });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 800 });
+});
 test('scroll mirrors promptly even when the target site requests smooth scrolling', async () => {
   await measureScrollSync('local fixture with CSS smooth scrolling');
+});
+
+test('layout, fit and alignment preserve the real CSS viewport and persist', async () => {
+  const before = await Promise.all(frames().map(frame => frame.evaluate(() => [innerWidth, innerHeight])));
+  for (const title of ['Row', 'Column', 'Freeform', 'Grid']) {
+    await page.getByRole('button', { name: title, exact: false }).filter({ hasText: title }).first().click();
+    await page.getByRole('button', { name: /Fit to Screen/i }).click();
+    expect(await Promise.all(frames().map(frame => frame.evaluate(() => [innerWidth, innerHeight])))).toEqual(before);
+  }
+  await page.locator('select[title="Vertical alignment"]').selectOption('center');
+  await page.locator('select[title="Horizontal alignment"]').selectOption('space-between');
+  // Settings are intentionally persisted with an 800 ms debounce. Assert the
+  // actual storage write before reload rather than racing the scheduled save.
+  await expect.poll(() => page.evaluate(async () => {
+    const saved = (await (globalThis as any).chrome.storage.local.get('viewgrid.store.v1'))['viewgrid.store.v1'];
+    return [saved?.model?.alignItems, saved?.model?.justifyContent];
+  })).toEqual(['center', 'space-between']);
+  await page.reload();
+  await expect(page.locator('select[title="Vertical alignment"]')).toHaveValue('center');
+  await expect(page.locator('select[title="Horizontal alignment"]')).toHaveValue('space-between');
+  await expect.poll(() => frames().filter(frame => frame.url().startsWith(base)).length).toBe(4);
+  expect(await Promise.all(frames().map(frame => frame.evaluate(() => [innerWidth, innerHeight])))).toEqual(before);
 });
 
 test('normal tabs retain framing protections while a direct workspace preview loads', async () => {
@@ -127,7 +336,7 @@ test('navigation works with click sync disabled; SPA navigation follows', async 
 });
 test('scan groups repeated findings, shows evidence and exports a structured report', async () => {
   await page.locator('button').filter({ hasText: '🔍' }).click();
-  const drawer = page.getByRole('complementary');
+  const drawer = page.getByRole('complementary', { name: 'Responsive issues' });
   await expect(drawer).toBeVisible();
   await expect(drawer.getByText('element/viewport observations', { exact: false })).toBeVisible();
   await expect(drawer.locator('article')).not.toHaveCount(0);

@@ -17,7 +17,18 @@ Her teslim değişen dosyaları, gerekçeyi, çalıştırılan kontrolleri/kanı
 | ANALYSIS-UI / 1.3.0 | Antigravity: analysis UI/CSS/i18n | Performance alanı, dış servise gönderim açıklaması, engine/conditions/diagnostics | ANALYSIS-CORE, UI | Mobil/masaüstü/ikisi; error/abort/stale akışları; API mock ve gerçek sonuç ayrımı |
 | FIELD-SEO-A11Y / 1.4.0 | Codex high: analysis normalizasyonu; Antigravity: kategori/önem filtre UI | CrUX URL/origin/dönem, LCP/INP/CLS; Lighthouse SEO/a11y; manuel garanti yok | ANALYSIS | TBT ≠ INP, eksik veri puan değildir; fixture/unit/E2E |
 | REPORTS / 1.5.0 | Codex high: report schema/history/comparison; Antigravity: report UI/templates | HTML/JSON/print PDF, koşullar/geçmiş/silme/limit/median/screenshots | ANALYSIS + FIELD | Örnek gerçek dosyalar açılıp render incelenir; farklı koşullar uyarısı ve başarısız kontroller kayıtlı |
+| REPEAT-CORE / 1.5.0 | Codex Measurement high: yeni lib/api/repeated-analysis.ts, core/analysis/repetition.ts ve unit testleri | İsteğe bağlı 1/3 sıralı ölçüm, yalnız başarılı/karşılaştırılabilir lab sonuçlarında ortanca; saha verisini ortalamaz, 429 sonrası yeni tur göndermez | ANALYSIS-CORE | İptal/kısmi hata/kota/koşul farkı mock testleri; UI, mevcut history şeması ve canlı Google doğrulaması bu paketin dışında |
 | GEO / 1.6.0 BETA | Codex Architect high: versioned criteria; Antigravity: UI/doküman | Yerel deneysel crawl/semantic/source/date/schema erişim sinyalleri ve manuel öneriler; AI servis/sıralama garantisi yok | REPORTS | Kanıtlı durumlar, sürümlü checklist; unit/E2E ve açıklama |
 | RELEASE-GATES / her aşama | Bağımsız Codex Reviewer high + lider | İnceleme ve özellik matrisi, yayın yapılmaz | İlgili işler | lint/typecheck/unit/build/web-ext/Chromium+Firefox; kritik açık hata veya zorunlu çalıştırılmamış kontrol varsa aşama bitmez |
 
 Ölçüm anahtarı/kota erişimi gerçek engelse yerel normalizasyon, mock hata senaryoları, UI ve rapor işleri devam eder; gerçek servis testi engelli kaydedilir. Local/private hedefler dış API'ye gönderilmez. Çok sayfalı tarama, hesap/bulut, gerçek cihaz/Safari, AI fix ve yerel Lighthouse çalıştırıcı kapsam dışı.
+
+### Rapor tamamlama alt paketleri
+
+| Kimlik | Sorumlu ve dosya sahipliği | Bağımlılık | Kabul ve doğrulama |
+| --- | --- | --- | --- |
+| REPEAT-REPORT | Codex Measurement high: yeni core/reports/repeated.ts ve unit testi | REPEAT-CORE | Ortanca/sample count, ham turlar, koşul ve durma nedeni; query/içerik redaksiyonu, HTML kaçış/CSP, TR/EN/NO; mock unit/typecheck/lint. Sunucu/anahtar/canlı servis kapsam dışı. |
+| REPEAT-UI | Antigravity: AnalysisPanel.tsx/css, analysis-i18n.ts | REPEAT-CORE + REPEAT-REPORT | İsteğe bağlı 1/3 tur, kota talep sayısı açık, sıralı çalışma/iptal/429 durma; medyan ve saha ayrımı, ham tur geçmişi, HTML/JSON/PDF; gerçek eklentide kontrollü E2E. |
+| UI-CONTRAST | Lider: global.css, ortak Button ve picker/panel CSS, theme-contrast unit | UI-SHELL | Açık/koyu normal metin ve primary/hover ≥4.5:1; unit ve güncel build ekran doğrulaması. Tam erişilebilirlik garantisi değildir. |
+| UI-NARROW-FOOTER | Antigravity: yalnız styles.module.css; lider extension.spec.ts | UI-SHELL |320×800 durum çubuğu en fazla72px, sürüm/durum metinleri korunur, kontroller erişilebilir;1280/1920 regresyon E2E ve screenshot görsel inceleme. Yeni ürün özelliği veya bilgi silme kapsam dışı. |
+| REPORT-SCREENSHOT | Lider: App.tsx, yeni core/reports/screenshots.ts + unit; REPEAT-UI sonrası Antigravity panel | REPORTS | Kullanıcı seçerse yalnız yerel odaklı viewport PNG,6MiB/32MP sınırı, URL query redaksiyonu; görüntü içerik/PII uyarısı, silme, kalıcı history/ağ aktarımı yok; HTML/JSON/PDF gerçek capture E2E. Analiz motoru sonucu veya gerçek cihaz testi değildir. |

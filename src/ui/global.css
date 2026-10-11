@@ -14,7 +14,9 @@
   --text-dim: #94a3b8;
   --accent: #38bdf8;
   --accent-2: #0ea5e9;
-  --crit: #f43f5e;
+  --accent-text: #04121f;
+  --beta: #a5b4fc;
+  --crit: #fb7185;
   --major: #fb923c;
   --minor: #fbbf24;
   --ok: #34d399;
@@ -34,9 +36,15 @@
   --chip-border: rgba(0, 0, 0, 0.15);
   --border: #cbd5e1;
   --text: #0f172a;
-  --text-dim: #64748b;
-  --accent: #0284c7;
+  --text-dim: #526277;
+  --accent: #0369a1;
   --accent-2: #0369a1;
+  --accent-text: #ffffff;
+  --beta: #4338ca;
+  --crit: #b91c1c;
+  --major: #9a3412;
+  --minor: #854d0e;
+  --ok: #166534;
 }
 html, body, #root {
   height: 100%;
@@ -73,7 +81,7 @@ select option {
 }
 button { cursor: pointer; }
 button:hover { border-color: var(--accent); }
-button.primary { background: var(--accent-2); border-color: var(--accent-2); color: #04121f; font-weight: 600; }
+button.primary { background: var(--accent-2); border-color: var(--accent-2); color: var(--accent-text); font-weight: 600; }
 button.ghost { background: transparent; }
 input { min-width: 0; }
 ::placeholder { color: var(--text-dim); }

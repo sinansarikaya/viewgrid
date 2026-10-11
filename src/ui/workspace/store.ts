@@ -30,10 +30,17 @@ import { defaultWorkspace, parseWorkspace } from '../../core/workspace/serialize
 import { uid } from '../../core/util/id';
 import { b } from '../../platform/browser';
 import { hasHostAccess } from './bridge';
+import { fitWorkspaceZoom } from '../../core/workspace/fit';
 
 export interface StoreState {
   model: WorkspaceModel;
   customDevices: DeviceProfile[];
+    favoriteDeviceIds: string[];
+    recentDeviceIds: string[];
+    deviceGroups: Record<string, string[]>;
+    toggleDeviceFavorite(id: string): void;
+    saveDeviceGroup(name: string, ids: string[]): void;
+    deleteDeviceGroup(name: string): void;
   savedWorkspaces: Record<string, WorkspaceModel>;
   focusedId: string | null;
   focusMode: boolean;
@@ -168,6 +175,9 @@ function persistPayload(s: StoreState) {
   return {
     model: s.model,
     customDevices: s.customDevices,
+      favoriteDeviceIds: s.favoriteDeviceIds,
+      recentDeviceIds: s.recentDeviceIds,
+      deviceGroups: s.deviceGroups,
     savedWorkspaces: s.savedWorkspaces,
     language: s.language,
     languageExplicitlySet: s.languageExplicitlySet,
@@ -186,6 +196,9 @@ function schedulePersist(get: () => StoreState) {
 export const useStore = create<StoreState>((set, get) => ({
   model: defaultWorkspace(),
   customDevices: [],
+    favoriteDeviceIds: [],
+    recentDeviceIds: [],
+    deviceGroups: {},
   savedWorkspaces: {},
   focusedId: null,
   focusMode: false,
@@ -237,6 +250,9 @@ export const useStore = create<StoreState>((set, get) => ({
   async hydrate() {
     let model = defaultWorkspace();
     let customDevices: DeviceProfile[] = [];
+      let favoriteDeviceIds: string[] = [];
+      let recentDeviceIds: string[] = [];
+      let deviceGroups: Record<string, string[]> = {};
     let savedWorkspaces: Record<string, WorkspaceModel> = {};
     let language: 'tr' | 'en' | 'no' = defaultLanguage();
     let languageExplicitlySet = false;
@@ -249,6 +265,12 @@ export const useStore = create<StoreState>((set, get) => ({
         const parsed = parseWorkspace(data.model);
         if (parsed.ok && parsed.model) model = parsed.model;
         if (Array.isArray(data.customDevices)) customDevices = data.customDevices;
+          const ids = (value: unknown): string[] => Array.isArray(value) ? [...new Set(value.filter((id): id is string => typeof id === 'string' && id.length < 120))].slice(0, 200) : [];
+          favoriteDeviceIds = ids(data.favoriteDeviceIds);
+          recentDeviceIds = ids(data.recentDeviceIds).slice(0, 12);
+          if (data.deviceGroups && typeof data.deviceGroups === 'object') {
+            deviceGroups = Object.fromEntries(Object.entries(data.deviceGroups).filter(([name]) => name.trim().length > 0 && name.length <= 60).slice(0, 20).map(([name, value]) => [name, ids(value).slice(0, 16)]));
+          }
         if (data.savedWorkspaces && typeof data.savedWorkspaces === 'object') savedWorkspaces = data.savedWorkspaces;
         if (data.languageExplicitlySet && data.language && ['tr', 'en', 'no'].includes(data.language)) {
           language = data.language;
@@ -294,6 +316,9 @@ export const useStore = create<StoreState>((set, get) => ({
     set({
       model,
       customDevices,
+        favoriteDeviceIds,
+        recentDeviceIds,
+        deviceGroups,
       savedWorkspaces,
       granted,
       urlDraft: model.url,
@@ -335,23 +360,10 @@ export const useStore = create<StoreState>((set, get) => ({
     const { visibleViewports, profileOf } = get();
     const visible = visibleViewports();
     if (visible.length === 0) return;
-    const availW = Math.max(320, window.innerWidth - 64);
-    const availH = Math.max(300, window.innerHeight - 130);
-    const cols = Math.max(1, Math.min(visible.length, Math.ceil(Math.sqrt(visible.length))));
-    const rows = Math.ceil(visible.length / cols);
-    let maxCardW = 0;
-    let maxCardH = 0;
-    for (const v of visible) {
-      const p = profileOf(v);
-      const size = effectiveSize(p, v.orientation);
-      maxCardW = Math.max(maxCardW, size.width);
-      maxCardH = Math.max(maxCardH, size.height);
-    }
-    const scaleW = availW / (cols * (maxCardW + 40));
-    const scaleH = availH / (rows * (maxCardH + 80));
-    let bestZoom = Math.min(scaleW, scaleH);
-    bestZoom = Math.max(0.2, Math.min(1.2, Math.round(bestZoom * 20) / 20));
-    get().setAllZoom(bestZoom);
+    const canvas = document.querySelector('main');
+    if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) return;
+    const sizes = visible.map((v) => effectiveSize(profileOf(v), v.orientation));
+    get().setAllZoom(fitWorkspaceZoom(sizes, { width: canvas.clientWidth, height: canvas.clientHeight }, get().model.layout));
   },
   setUrlDraft(u) {
     set({ urlDraft: u });
@@ -392,10 +404,28 @@ export const useStore = create<StoreState>((set, get) => ({
       hidden: false,
       url: model.url,
     };
-    set((s) => ({ model: { ...s.model, viewports: [...s.model.viewports, vp] }, focusedId: vp.id }));
+      set((s) => ({ model: { ...s.model, viewports: [...s.model.viewports, vp] }, focusedId: vp.id, recentDeviceIds: [profile.id, ...s.recentDeviceIds.filter(id => id !== profile.id)].slice(0, 12) }));
     if (check.warn) get().showToast(`More than 8 viewports — performance may drop`);
     schedulePersist(get);
   },
+
+    toggleDeviceFavorite(id) {
+      set(s => ({ favoriteDeviceIds: s.favoriteDeviceIds.includes(id) ? s.favoriteDeviceIds.filter(value => value !== id) : [...s.favoriteDeviceIds, id].slice(-200) }));
+      schedulePersist(get);
+    },
+    saveDeviceGroup(name, ids) {
+      const safeName = name.trim().slice(0, 60);
+      if (!safeName) return;
+      const known = new Set([...BUILTIN_DEVICES, ...get().customDevices].map(device => device.id));
+      const selected = [...new Set(ids)].filter(id => known.has(id)).slice(0, 16);
+      if (!selected.length) return;
+      set(s => ({ deviceGroups: Object.fromEntries([...Object.entries(s.deviceGroups).filter(([key]) => key !== safeName), [safeName, selected]].slice(-20)) }));
+      schedulePersist(get);
+    },
+    deleteDeviceGroup(name) {
+      set(s => ({ deviceGroups: Object.fromEntries(Object.entries(s.deviceGroups).filter(([key]) => key !== name)) }));
+      schedulePersist(get);
+    },
 
   addPreset(name) {
     const preset = BUILTIN_PRESETS.find((p) => p.name === name);

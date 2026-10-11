@@ -9,6 +9,9 @@ import { getTranslation } from './i18n';
 
 import { getDeviceCategoryIcon } from './utils';
 import { preparePreview, sendAgentCmd } from './bridge';
+import { Button } from '../common/Button';
+import { useGeometryClass } from '../common/useGeometryClass';
+import cardStyles from './ViewportCard.module.css';
 
 interface Props {
   vp: ViewportState;
@@ -43,6 +46,11 @@ export function ViewportCard({
 }: Props) {
   const st = useStore();
   const t = getTranslation(st.language);
+  const cardText = {
+    tr: { reorder: 'Sürükleyip sıralayın', settings: 'Cihaz ayarları' },
+    en: { reorder: 'Drag to reorder', settings: 'Device settings' },
+    no: { reorder: 'Dra for å endre rekkefølge', settings: 'Enhetsinnstillinger' },
+  }[st.language];
   const profile = st.profileOf(vp);
   const logical = effectiveSize(profile, vp.orientation);
   const display = displayedSize(logical, vp.zoom);
@@ -128,11 +136,16 @@ export function ViewportCard({
       }));
     }
   };
+  const geometryClass = useGeometryClass({
+    '--vg-display-width': display.width, '--vg-display-height': display.height,
+    '--vg-logical-width': logical.width, '--vg-logical-height': logical.height,
+    '--vg-scale': clampZoom(vp.zoom), '--vg-touch-x': touchPos.x, '--vg-touch-y': touchPos.y,
+  });
 
   return (
     <div
       data-viewport-id={vp.id}
-      className={`${s.card} ${st.focusedId === vp.id ? s.cardFocused : ''} ${isDragging ? s.cardDragging : ''} ${isDropTarget ? s.cardDropTarget : ''}`}
+      className={`${s.card} ${geometryClass} ${st.focusedId === vp.id ? s.cardFocused : ''} ${isDragging ? s.cardDragging : ''} ${isDropTarget ? s.cardDropTarget : ''}`}
       onDragOver={(e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -155,7 +168,7 @@ export function ViewportCard({
         </div>
       )}
       <div
-        className={s.cardHeader}
+        className={`${s.cardHeader} ${cardStyles.header}`}
         draggable={!isFreeLayout}
         onMouseDown={(e) => {
           if (isFreeLayout && onFreeDrag) {
@@ -176,7 +189,7 @@ export function ViewportCard({
           onDragEndCard?.();
         }}
       >
-        <span className={s.deviceIcon} style={{ cursor: 'grab' }} title="Sürükleyip sıralayın">⠿ {getDeviceCategoryIcon(profile.category)}</span>
+        <span className={`${s.deviceIcon} ${cardStyles.drag}`} title={cardText.reorder}>⠿ {getDeviceCategoryIcon(profile.category)}</span>
         <strong>{profile.name}</strong>
         <span className={s.dim}>
           {logical.width}×{logical.height}
@@ -198,8 +211,12 @@ export function ViewportCard({
             ))}
           </select>
 
-          {/* Color Scheme Override (Auto / Dark / Light) */}
-          <button
+          <Button className={s.iconBtn} title={t.orientation} aria-label={t.orientation} onClick={() => st.toggleOrientation(vp.id)}>⟳</Button>
+          <Button className={s.iconBtn} title={t.shotOne} aria-label={t.shotOne} onClick={onShot}>📷</Button>
+          <details className={cardStyles.menu}>
+            <summary aria-label={profile.name + ' ' + cardText.settings} title={cardText.settings}>•••</summary>
+            <div className={cardStyles.menuBody}>
+          <Button
             className={s.iconBtn}
             title={
               vp.colorScheme === 'dark'
@@ -216,19 +233,17 @@ export function ViewportCard({
               } catch {}
               sendAgentCmd([vp.id], 'setColorScheme', undefined, { scheme: next });
             }}
-            style={{ cursor: 'pointer' }}
           >
             {vp.colorScheme === 'dark' ? '🌙' : vp.colorScheme === 'light' ? '☀️' : '🌗'}
-          </button>
+          </Button>
 
           {/* Hardware Finish Selector for iPhone 15 & MacBook */}
           {(profile.id.includes('iphone-15') || profile.category === 'laptop') && (
             <select
-              className={s.iconBtn}
+              className={`${s.iconBtn} ${cardStyles.finish}`}
               value={vp.frameFinish || 'default'}
               onChange={(e) => st.setFrameFinish(vp.id, e.target.value)}
               title={t.finish}
-              style={{ fontSize: 10, padding: '2px 4px' }}
             >
               {profile.id.includes('iphone-15') ? (
                 <>
@@ -246,14 +261,14 @@ export function ViewportCard({
             </select>
           )}
 
-          <button className={s.iconBtn} title={t.orientation} onClick={() => st.toggleOrientation(vp.id)}>⟳</button>
-          <button className={s.iconBtn} title={t.shotOne} onClick={onShot}>📷</button>
-          <button className={s.iconBtn} title={t.duplicate} onClick={() => st.duplicate(vp.id)}>⧉</button>
-          <button className={s.iconBtn} title={vp.minimized ? t.restore : t.minimize} onClick={() => st.toggleMinimized(vp.id)}>
-            {vp.minimized ? '▢' : '—'}
-          </button>
-          <button className={s.iconBtn} title={t.hide} onClick={() => st.toggleHidden(vp.id)}>👁</button>
-          <button className={s.iconBtn} title={t.remove} onClick={() => st.removeViewport(vp.id)}>✕</button>
+          <Button className={s.iconBtn} title={t.duplicate} onClick={() => st.duplicate(vp.id)}>⧉ {t.duplicate}</Button>
+          <Button className={s.iconBtn} title={vp.minimized ? t.restore : t.minimize} onClick={() => st.toggleMinimized(vp.id)}>
+            {vp.minimized ? '▢ ' + t.restore : '— ' + t.minimize}
+          </Button>
+          <Button className={s.iconBtn} title={t.hide} onClick={() => st.toggleHidden(vp.id)}>👁 {t.hide}</Button>
+          <Button className={s.iconBtn} title={t.remove} onClick={() => st.removeViewport(vp.id)}>✕ {t.remove}</Button>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -270,8 +285,7 @@ export function ViewportCard({
           >
             <div
               ref={contentRef}
-              className={`${s.content} ${st.model.touchCursor && profile.touchSupport ? s.touchCursorArea : ''}`}
-              style={{ width: display.width, height: display.height, position: 'relative' }}
+              className={`${s.content} ${cardStyles.content} ${st.model.touchCursor && profile.touchSupport ? s.touchCursorArea : ''}`}
               onPointerMove={handlePointerMove}
               onPointerDown={() => setTouchPos((p) => ({ ...p, active: true }))}
               onPointerUp={() => setTouchPos((p) => ({ ...p, active: false }))}
@@ -280,22 +294,20 @@ export function ViewportCard({
               <iframe
                 ref={iframeRef}
                 key={`${vp.id}:${vp.url}:${st.previewGeneration}:${attempt}:${previewReady}`}
-                className={s.iframe}
+                className={`${s.iframe} ${cardStyles.preview}`}
                 tabIndex={-1}
                 name={`viewgrid:${vp.id}`}
                 src={previewReady ? vp.url || 'about:blank' : 'about:blank'}
-                style={{ width: logical.width, height: logical.height, transform: `scale(${clampZoom(vp.zoom)})` }}
                 title={`${profile.name} viewport`}
                 onLoad={onInjected}
               />
-              {!previewReady && <div role={preview.error ? 'alert' : 'status'} style={{ position: 'absolute', inset: 0, padding: 16, background: 'var(--panel)', color: 'var(--text)', overflow: 'auto' }}>
+              {!previewReady && <div role={preview.error ? 'alert' : 'status'} className={cardStyles.loading}>
                 <p>{preview.error || (st.language === 'tr' ? 'Önizleme hazırlanıyor…' : 'Preparing preview…')}</p>
-                {preview.error && <button onClick={() => setAttempt(value => value + 1)}>{st.language === 'tr' ? 'Tekrar dene' : 'Retry'}</button>}
+                {preview.error && <Button onClick={() => setAttempt(value => value + 1)}>{st.language === 'tr' ? 'Tekrar dene' : 'Retry'}</Button>}
               </div>}
               {st.model.touchCursor && profile.touchSupport && touchPos.visible && (
                 <div
-                  className={`${s.touchDot} ${touchPos.active ? s.touchDotActive : ''}`}
-                  style={{ left: touchPos.x, top: touchPos.y }}
+                  className={`${s.touchDot} ${cardStyles.touch} ${touchPos.active ? s.touchDotActive : ''}`}
                 />
               )}
             </div>

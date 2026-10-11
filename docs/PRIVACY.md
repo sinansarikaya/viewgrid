@@ -12,6 +12,8 @@ Analiz geçmişi cihazdaki extension storage içinde en fazla20 kayıt ve256KiB 
 
 Gerçek Google ölçümü bu ortamda kota/anahtar engellidir. Kontrollü test örnekleri mock olarak etiketlidir. Kurulum/servis seçenekleri ve maliyet sınırları: [Analiz kurulumu](ANALYSIS_SETUP.md).
 
+Rapor için isteğe bağlı viewport görüntüsü kullanıcı tarafından ayrıca seçilir. Görüntü yalnız mevcut çalışma alanında bellekte tutulur; Google'a veya ViewGrid sunucusuna gönderilmez, analiz geçmişine otomatik yazılmaz. Kaldırma/kapatma ile bellekten bırakılır; dışa aktarılan HTML/JSON/PDF içine kullanıcının seçimiyle gömülür. En fazla6MiB/32 megapiksel tek PNG kabul edilir. URL query/fragment metadata'dan çıkarılır; görüntünün pikselleri site içeriği veya kişisel veri içerebilir ve otomatik sansürlenmez. Paylaşmadan görseli inceleyin. Yapılandırılmış preview URL'si analiz hedefinden veya yönlendirme sonrası sayfadan farklı olabilir; bu görüntü laboratuvar ölçümü değildir.
+
 ## Data on your device
 
 - `storage.local`: workspace URLs, saved workspaces, custom devices, language, theme and shortcut preferences.

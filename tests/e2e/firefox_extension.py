@@ -44,13 +44,16 @@ base = f'http://127.0.0.1:{server.server_port}'
 uuid = '11111111-1111-4111-8111-111111111111'
 os.environ['MOZ_REMOTE_ALLOW_SYSTEM_ACCESS'] = '1'
 options = webdriver.FirefoxOptions()
+if os.environ.get('VIEWGRID_FIREFOX_BINARY'):
+    options.binary_location = os.environ['VIEWGRID_FIREFOX_BINARY']
 options.add_argument('-headless')
 options.set_preference('extensions.webextensions.uuids', json.dumps({'viewgrid@viewgrid.dev': uuid}))
 driver = webdriver.Firefox(options=options)
 driver.set_window_size(1280, 900)
 wait = WebDriverWait(driver, 25, ignored_exceptions=(StaleElementReferenceException, NoSuchFrameException))
-out = Path('test-results/firefox')
+out = Path(os.environ.get('VIEWGRID_FIREFOX_TEST_OUT', 'test-results/firefox'))
 out.mkdir(parents=True, exist_ok=True)
+package_dir = tempfile.TemporaryDirectory()
 
 
 def workspace(url):
@@ -79,14 +82,16 @@ def frame_script(script, index=0, *args):
 
 
 try:
-    with tempfile.TemporaryDirectory() as tmp:
-        package = Path(tmp) / 'viewgrid-firefox.zip'
-        with zipfile.ZipFile(package, 'w') as z:
-            for p in Path('dist/firefox').rglob('*'):
-                if p.is_file():
-                    z.write(p, p.relative_to('dist/firefox'))
-        addon = driver.install_addon(str(package), temporary=True)
-        assert addon == 'viewgrid@viewgrid.dev'
+    # Use GeckoDriver's local path installation. Its base64 archive transfer can
+    # fail to load content-script files in the cached Firefox test environment.
+    # The local package must remain available until the browser closes.
+    package = Path(package_dir.name) / 'viewgrid-firefox.zip'
+    with zipfile.ZipFile(package, 'w') as z:
+        for p in Path('dist/firefox').rglob('*'):
+            if p.is_file():
+                z.write(p, p.relative_to('dist/firefox'))
+    addon = driver.execute('INSTALL_ADDON', {'path': str(package), 'temporary': True})['value']
+    assert addon == 'viewgrid@viewgrid.dev'
     workspace(base + '/site')
     wait.until(lambda _: all('ViewGrid Firefox fixture' in frame_text(i) for i in range(4)))
     print('PASS Firefox: actual extension loads all four previews', flush=True)
@@ -108,6 +113,7 @@ try:
     wait.until(lambda _: frame_script('return performance.timeOrigin') != before)
     wait.until(lambda _: 'ViewGrid Firefox fixture' in frame_text())
     print('PASS Firefox: protected navigation and reload', flush=True)
+    driver.execute_script("window.__vgSyncEvents=[]; browser.runtime.onMessage.addListener(m=>{if(m.type==='vg/agent-event')window.__vgSyncEvents.push(m.env);});")
     frame_script("document.querySelector('#action').click()")
     wait.until(lambda _: all(frame_script("return document.querySelector('#count').textContent", i) == '1' for i in range(4)))
     print('PASS Firefox: actual content agents synchronize clicks', flush=True)
@@ -127,7 +133,30 @@ try:
     driver.switch_to.default_content()
     assert result == 'SecurityError', result
     print('PASS Firefox: preview worker registration is blocked', flush=True)
-    wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '[data-testid="extension-version"]').text == 'v1.0.3')
+    expected_version = json.loads(Path('package.json').read_text())['version']
+    wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '[data-testid="extension-version"]').text == f'v{expected_version}')
+    driver.save_screenshot(str(out / 'success.png'))
+    print(f'PASS Firefox: extension version v{expected_version}', flush=True)
+    # Network-free consent check. Controlled transport/results are verified
+    # separately by firefox_analysis_bidi.py, not by this baseline runner.
+    print('INFO Firefox: controlled PSI 200/429 has a separate BiDi runner', flush=True)
+    driver.find_element(By.XPATH, "//button[contains(., 'Performance & CrUX')]").click()
+    dialog = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '[role="dialog"]'))
+    target = dialog.find_element(By.CSS_SELECTOR, 'input[aria-label="Target URL"]')
+    target.clear()
+    target.send_keys('https://example.com/')
+    run_button = dialog.find_element(By.XPATH, ".//button[contains(., 'Run Analysis')]")
+    assert not run_button.is_enabled()
+    dialog.find_element(By.CSS_SELECTOR, 'input[type="checkbox"]').click()
+    wait.until(lambda _: run_button.is_enabled())
+    target.clear()
+    target.send_keys('http://127.0.0.1/')
+    wait.until(lambda _: not run_button.is_enabled())
+    assert not dialog.find_elements(By.CSS_SELECTOR, '[class*="scoreBadge"]')
+    driver.save_screenshot(str(out / 'analysis-consent-validation.png'))
+    print('PASS Firefox: analysis consent/public URL validation UI; no analysis request sent', flush=True)
+    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+    wait.until(lambda d: not d.find_elements(By.CSS_SELECTOR, '[role="dialog"]'))
     if os.environ.get('VIEWGRID_LIVE_TEST_URL'):
         url = os.environ['VIEWGRID_LIVE_TEST_URL']
         main = driver.current_window_handle
@@ -182,9 +211,14 @@ except Exception:
     (out / 'page.html').write_text(driver.page_source)
     try:
         print('FIREFOX DIAGNOSTICS', driver.execute_script('return window.__vgHeaders || []'), flush=True)
+        print('FIREFOX SYNC EVENTS', driver.execute_script('return window.__vgSyncEvents || []'), flush=True)
+        print('FIREFOX FRAME STATE', [frame_script("return {url:location.href,name:window.name,count:document.querySelector('#count')?.textContent,timeOrigin:performance.timeOrigin}", i) for i in range(4)], flush=True)
     except Exception:
         pass
     raise
 finally:
-    driver.quit()
-    server.shutdown()
+    try:
+        driver.quit()
+    finally:
+        package_dir.cleanup()
+        server.shutdown()

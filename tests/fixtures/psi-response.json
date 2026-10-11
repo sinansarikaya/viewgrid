@@ -1,0 +1,40 @@
+{
+  "id": "https://example.com/",
+  "analysisUTCTimestamp": "2026-10-11T10:00:00.000Z",
+  "loadingExperience": {
+    "id": "https://example.com/",
+    "metrics": {
+      "LARGEST_CONTENTFUL_PAINT_MS": { "percentile": 2100 },
+      "INTERACTION_TO_NEXT_PAINT": { "percentile": 180 },
+      "CUMULATIVE_LAYOUT_SHIFT_SCORE": { "percentile": 12 }
+    }
+  },
+  "originLoadingExperience": { "id": "https://example.com", "metrics": {} },
+  "lighthouseResult": {
+    "lighthouseVersion": "12.8.2-fixture",
+    "requestedUrl": "https://example.com/",
+    "finalUrl": "https://example.com/",
+    "fetchTime": "2026-10-11T10:00:00.000Z",
+    "userAgent": "ViewGrid controlled fixture - not a real service measurement",
+    "configSettings": { "formFactor": "mobile", "locale": "en-US", "throttlingMethod": "simulate", "throttling": { "rttMs": 150, "cpuSlowdownMultiplier": 4 }, "screenEmulation": { "mobile": true, "width": 412, "height": 823, "deviceScaleFactor": 1.75 } },
+    "runWarnings": ["Controlled mock response; this is not a live PageSpeed measurement."],
+    "categories": {
+      "performance": { "score": 0.82, "auditRefs": [{ "id": "largest-contentful-paint", "weight": 25 }, { "id": "render-blocking-resources", "weight": 0 }] },
+      "seo": { "score": 0.9, "auditRefs": [{ "id": "document-title", "weight": 1 }, { "id": "meta-description", "weight": 1 }, { "id": "is-crawlable", "weight": 1 }] },
+      "accessibility": { "score": 0.85, "auditRefs": [{ "id": "color-contrast", "weight": 7 }, { "id": "heading-order", "weight": 3 }] }
+    },
+    "audits": {
+      "largest-contentful-paint": { "id": "largest-contentful-paint", "title": "Largest Contentful Paint", "score": 0.8, "scoreDisplayMode": "numeric", "numericValue": 2450, "displayValue": "2.5 s" },
+      "cumulative-layout-shift": { "id": "cumulative-layout-shift", "title": "Cumulative Layout Shift", "score": 1, "scoreDisplayMode": "numeric", "numericValue": 0.08 },
+      "first-contentful-paint": { "id": "first-contentful-paint", "title": "First Contentful Paint", "score": 0.8, "scoreDisplayMode": "numeric", "numericValue": 1400 },
+      "speed-index": { "id": "speed-index", "title": "Speed Index", "score": 0.8, "scoreDisplayMode": "numeric", "numericValue": 2300 },
+      "total-blocking-time": { "id": "total-blocking-time", "title": "Total Blocking Time", "score": 0.8, "scoreDisplayMode": "numeric", "numericValue": 210 },
+      "render-blocking-resources": { "id": "render-blocking-resources", "title": "Eliminate render-blocking resources", "description": "Defer non-critical styles and scripts.", "score": 0, "scoreDisplayMode": "numeric", "displayValue": "Potential savings 450 ms", "details": { "items": [{ "url": "https://example.com/app.css", "wastedMs": 450 }] } },
+      "document-title": { "id": "document-title", "title": "Document has a title", "score": 1, "scoreDisplayMode": "binary" },
+      "meta-description": { "id": "meta-description", "title": "Document lacks a meta description", "description": "Add a useful summary for search users.", "score": 0, "scoreDisplayMode": "binary" },
+      "is-crawlable": { "id": "is-crawlable", "title": "Page is not blocked from indexing", "score": 1, "scoreDisplayMode": "binary" },
+      "color-contrast": { "id": "color-contrast", "title": "Background and foreground colors lack contrast", "description": "Increase text contrast; manual review is still required.", "score": 0, "scoreDisplayMode": "binary", "details": { "items": [{ "node": { "selector": ".muted", "snippet": "<p class=\"muted\">Sample</p>", "nodeLabel": "Sample" } }] } },
+      "heading-order": { "id": "heading-order", "title": "Heading levels are ordered", "score": null, "scoreDisplayMode": "manual" }
+    }
+  }
+}

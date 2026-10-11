@@ -1,0 +1,6 @@
+.actions { display: grid; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
+.actions > button { justify-content: flex-start; }
+.actions summary { cursor: pointer; padding: 8px; }
+.actions summary:focus-visible { outline: 2px solid var(--accent); }
+.channels { display: grid; gap: 8px; padding: 8px; }
+.channels label { display: flex; justify-content: space-between; gap: 8px; }

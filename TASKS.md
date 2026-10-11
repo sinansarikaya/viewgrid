@@ -1,6 +1,6 @@
 # TASKS — ViewGrid Product Promotion & Distribution Plan
 
-_Son güncelleme: 2026-09-26 | Antigravity_
+_Son güncelleme: 2026-10-11 | Codex_
 
 > Bu dosya projenin ana master görev ve uygulama takip listesidir.
 > Eski `TASK.md` ve `TASKS.md` birleştirilerek bu dosyada toplanmıştır.
@@ -26,7 +26,25 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 
 ## In Progress
 
+- [~] [AUTO] ViewGrid 1.0.4–1.6.0 BETA geliştirme: yeni shell/cihaz/analiz/rapor/GEO ve kontrollü testler entegre; koruma matrisi ve katalog kaynak kapıları açık. Paket1.0.3, mağaza doğrulanmadı; plan/kanıt/devir `docs/IMPLEMENTATION_PLAN.md`, `docs/FEATURE_TEST_MATRIX.md`, `docs/TEAM_HANDOFF.md`.
+
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
+
+## Done
+
+- [x] [AUTO] Ücretsiz/açık kaynak mimari kararı karar/plan/gizlilik/kurulum ve MIT bağımlılık bildirimine işlendi (`7086eee`). Zorunlu ücretli servis/hesap yok; temel eklenti sunucusuz. PSI canlı başarı HTTP429 nedeniyle, ayrı CrUX anahtar yokluğu nedeniyle engelli; Lighthouse yalnız araştırılmış alternatif, otomatik runner değildir. Ürün sürüm kabulü bu belge işinin tamamlanmasından ayrıdır. _(2026-10-11, Codex)_
+
+- [x] [AUTO] Model tercihleri ve görev bazlı düşünme seviyesi devir notlarına kaydedildi; kurulu Codex model metadatasında low/medium/high desteği doğrulandı. _(2026-10-11, Codex)_
+
+- [x] [AUTO] Araç hazırlığı tamamlandı: ayrı Playwright erişimleri ve Chromium smoke geçti; Firefox temel yükleme geçti, click-sync regresyonu açık. Kanıtlar: `test-results/tool-readiness/READINESS.md`. _(2026-10-11, Codex)_
+
+- [x] [AUTO] Firefox click-sync zaman aşımı ortam/test kurulumuna ayrıştırıldı: aynı ZIP GeckoDriver yerel path ile geçti, Selenium base64 aktarımı yeniden başarısız oldu; ürün sync kodu değiştirilmedi. `test-results/firefox-v104/DIAGNOSIS.md`. _(2026-10-11, Codex)_
+
+- [x] [AUTO] Firefox gerçek eklentide kontrollü PSI200/429 native BiDi ile geçti; dış Google trafiğine kapalı bağımsız test. `test-results/development/firefox-bidi-latest.log`. _(2026-10-11, Codex)_
+
+## Todo
+
+- [ ] [AUTO] Kalan koruma senaryoları ve model bazlı katalog kaynak doğrulaması; canlı PSI429/CrUXanahtar eksikliği engelleri ayrı kalır.
 
 ---
 
@@ -101,6 +119,7 @@ Turn ViewGrid into a polished, high-trust developer tool across:
   - X / Twitter announcement thread
 
 ### Out of Scope / Future Roadmap Items
+> Aşağıdaki uygulama değişikliği sınırı yalnız tarihsel tanıtım girişimine aittir; 2026-10-11 onaylı ürün geliştirme kapsamını kısıtlamaz. Eski 1.0.1 mağaza beyanları tarihsel kayıttır; güncel mağaza sürümü doğrulanmadı.
 - [ ] Extension functional/application code modifications (Preserve 1.0.1 stability)
 - [ ] Adding new browser extension features or modifying manifest permissions
 - [ ] Paid advertising campaigns or commercial endorsements
@@ -222,6 +241,10 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 ---
 
 ## 📝 Historical Notes & Decisions (Preserved from TASKS.md)
+
+- **2026-10-11 ekip/model tercihi:** Codex `gpt-6.1-sol`, Antigravity seçimi `Gemini 3.8 Flash (Medium)` korunur. Antigravity'nin gerçek backend model kimliği doğrulanamadı; seçili etiket kullanım kanıtı değildir ve geliştirmeyi engellemez. Codex görev seviyeleri: rutin koordinasyon low/medium, normal geliştirme medium, mimari ve karmaşık hata teşhisi high. Kurulu CLI `-c model_reasoning_effort=...` override mekanizmasını, yerel model metadatası low/medium/high değerlerini destekliyor. Mevcut lider oturumunun seviyesini buradan değiştiren araç yok; varsayılan low korunuyor. Yeni uzman alt ajanlarda desteklenen reasoning_effort seçimi görev başında uygulanır; değiştirme veya gerçek kullanım doğrulanamazsa açıkça raporlanır. Lider + çalışan Codex alt ajanları + çalışan Antigravity yürütücüleri (varsa onun alt ajanları da) toplam en fazla 3; tamamlanan/kapanan oturumlar sayılmaz. Tam geliştirme görevi, sürüm planı ve referans görseli bekleniyor.
+
+- **2026-10-11 araç hazırlığı:** Antigravity Playwright `--isolated` kullanır; Codex kendi MCP oturumunu, E2E ayrı geçici profili yönetir. Aynı tarayıcıyı iki yürütücü yönetmez. Graph binary `/usr/bin/codebase-memory-mcp`; Codex canlı oturumunda araçlar yeniden yüklenene kadar yerel graph CLI kullanılabilir. Tam rapor `test-results/tool-readiness/READINESS.md`. Ürün kapsamı/sürüm/tasarım bekleniyor; kod veya lockfile değiştirilmedi.
 
 - **Service Worker & PWA Framing Fix:** CastPost ve PWA sitelerinde daha önce tarayıcıda ziyaret edilen sitenin Service Worker'ı (`sw.js`) kayıtlı kaldığı için, ViewGrid içindeki iframe istekleri ağ yerine Service Worker'ın `fetch` / `event.respondWith` mekanizmasına takılıyordu. Firefox'ta SW hata veriyor (`sw.js:78`), Chrome'da ise `declarativeNetRequest` Service Worker yanıtlarına müdahale edemediği için önbellekteki `X-Frame-Options: DENY` başlığı silinemiyordu. Hedef URL açılırken ve URL değişiminde background aracılığıyla ilgili origin/hostname'e ait Service Worker ve cacheStorage verileri temizlendi; `world-inject.js` ile ViewGrid iframe'leri içinde Service Worker kaydı izole edilerek devre dışı bırakıldı; Chromium için DNR oturum kurallarına ek olarak 9999 öncelikli kalıcı dinamik kurallar devreye alındı.
 - **HTTP 307 Redirect & Host Permission Banner:** CastPost ve korumalı sitelerdeki HTTP 307 redirect durumunda sub_frame origin değişiminden kaynaklı X-Frame-Options soyulmama sorunu çözüldü. Firefox MV3'te kullanıcı henüz host permission vermediyse canvasın üzerinde otomatik beliren tek tıkla izin isteme barı (HostPermissionBanner) eklendi; izin sonrasında tüm iframeler otomatik yeniden yükleniyor. v1.0.1 release paketleri release/ dizinine derlendi.
