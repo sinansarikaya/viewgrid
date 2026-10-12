@@ -325,10 +325,13 @@
   }
 
   // src/core/security/preview.ts
-  function workerRemovalOptions(url, firefox) {
+  function isFirefoxWorkspace(workspaceUrl2) {
+    return new URL(workspaceUrl2).protocol === "moz-extension:";
+  }
+  function workerRemovalOptions(url, firefox2) {
     if (!safeHttpUrl(url)) throw new Error("Preview URL must use HTTP or HTTPS");
     const parsed = new URL(url);
-    return firefox ? { hostnames: [parsed.hostname] } : { origins: [parsed.origin] };
+    return firefox2 ? { hostnames: [parsed.hostname] } : { origins: [parsed.origin] };
   }
   function uncachedHeaders(headers, response = false) {
     return [
@@ -340,13 +343,13 @@
 
   // src/background/index.ts
   var workspaceUrl = b.runtime.getURL("workspace.html");
+  var firefox = isFirefoxWorkspace(workspaceUrl);
   var workspaceTabs = /* @__PURE__ */ new Set();
   var agents = /* @__PURE__ */ new Map();
   var hydrated;
   var ruleQueue = Promise.resolve();
   var preparing = /* @__PURE__ */ new Map();
   async function preparePreview(tabId, url) {
-    const firefox = !!b.webRequest?.onHeadersReceived;
     const options = workerRemovalOptions(url, firefox);
     const key = `${tabId}:${new URL(url).origin}`;
     let task = preparing.get(key);
@@ -369,7 +372,7 @@
       await b.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [1001] });
       await b.declarativeNetRequest.updateSessionRules({
         removeRuleIds: [1001],
-        addRules: b.webRequest?.onHeadersReceived ? [] : workspaceRule([...workspaceTabs])
+        addRules: firefox ? [] : workspaceRule([...workspaceTabs])
       });
     });
     return ruleQueue;
@@ -407,7 +410,7 @@
     void syncRules();
     void persist();
   });
-  if (b.webRequest?.onHeadersReceived) {
+  if (firefox && b.webRequest?.onHeadersReceived) {
     b.webRequest.onHeadersReceived.addListener((details) => {
       if (details.type !== "sub_frame" || details.parentFrameId !== 0 || !workspaceTabs.has(details.tabId)) return {};
       return { responseHeaders: uncachedHeaders(relaxFirefoxHeaders(details.responseHeaders ?? []), true) };

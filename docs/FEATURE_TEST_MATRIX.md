@@ -6,6 +6,8 @@ Bu matris, kod tabanındaki mevcut özellikler ve testler (`tests/unit/*`, `test
 
 ## 2026-10-11 yeniden test kayıtları
 
+2026-10-12 görünür yeniden test: Chromium headed, sandbox açık, doğru dist/chromium ve ayrı profil ile canlı CastPost dört iframe içeriği/h1, Row/Grid/Fit, toolbar/canvas32px kontrolleri geçti. Kanıt `visible-live-verified.log`, `visible-workspace-qa.png`; ilgili framing/normal-tab/shell3E2E ve preview6unit geçti. Bu Brave'e Firefox paketi yükleme senaryosunun desteklendiği veya Brave/Firefox headed test edildiği anlamına gelmez. Kullanıcı yanlış paket yüklediğini doğruladı; ilk hata screenshot'u doğru paket regresyonu olarak sayılmaz.
+
 En güncel ek kayıtlar (alttaki tarihsel “henüz” ifadelerinin ilgili alt senaryosunu günceller; kapsamın tamamına başarı atamaz):
 
 | Özellik / ortam ve adımlar | Beklenen | Gerçekleşen / durum | Kanıt / yeniden test |

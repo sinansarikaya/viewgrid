@@ -1,8 +1,11 @@
 import { b } from '../platform/browser';
 import { isWorkspaceUrl, relaxFirefoxHeaders, safeHttpUrl, workspaceRule } from '../core/security/framing';
-import { uncachedHeaders, workerRemovalOptions } from '../core/security/preview';
+import { isFirefoxWorkspace, uncachedHeaders, workerRemovalOptions } from '../core/security/preview';
 
 const workspaceUrl = b.runtime.getURL('workspace.html');
+// webRequest exists in Chromium too; only Gecko uses blocking listeners and
+// hostname-scoped browsingData options.
+const firefox = isFirefoxWorkspace(workspaceUrl);
 const workspaceTabs = new Set<number>();
 const agents = new Map<number, Map<string, number>>();
 let hydrated: Promise<void> | undefined;
@@ -10,7 +13,6 @@ let ruleQueue = Promise.resolve();
 const preparing = new Map<string, Promise<void>>();
 
 async function preparePreview(tabId: number, url: string) {
-  const firefox = !!b.webRequest?.onHeadersReceived;
   const options = workerRemovalOptions(url, firefox);
   const key = `${tabId}:${new URL(url).origin}`;
   let task = preparing.get(key);
@@ -34,7 +36,7 @@ function syncRules() {
     // Remove the globally-scoped rule left behind by 1.0.1, even on upgrade.
     await b.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [1001] });
     await b.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: [1001], addRules: b.webRequest?.onHeadersReceived ? [] : workspaceRule([...workspaceTabs]),
+      removeRuleIds: [1001], addRules: firefox ? [] : workspaceRule([...workspaceTabs]),
     });
   });
   return ruleQueue;
@@ -69,7 +71,7 @@ b.tabs.onRemoved?.addListener(id => {
   void syncRules(); void persist();
 });
 
-if (b.webRequest?.onHeadersReceived) {
+if (firefox && b.webRequest?.onHeadersReceived) {
   b.webRequest.onHeadersReceived.addListener((details: any) => {
     if (details.type !== 'sub_frame' || details.parentFrameId !== 0 || !workspaceTabs.has(details.tabId)) return {};
     return { responseHeaders: uncachedHeaders(relaxFirefoxHeaders(details.responseHeaders ?? []), true) };

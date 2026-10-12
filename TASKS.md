@@ -1,6 +1,6 @@
 # TASKS — ViewGrid Product Promotion & Distribution Plan
 
-_Son güncelleme: 2026-10-11 | Codex_
+_Son güncelleme: 2026-10-12 | Codex_
 
 > Bu dosya projenin ana master görev ve uygulama takip listesidir.
 > Eski `TASK.md` ve `TASKS.md` birleştirilerek bu dosyada toplanmıştır.
@@ -26,11 +26,14 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 
 ## In Progress
 
+
 - [~] [AUTO] ViewGrid 1.0.4–1.6.0 BETA geliştirme: yeni shell/cihaz/analiz/rapor/GEO ve kontrollü testler entegre; koruma matrisi ve katalog kaynak kapıları açık. Paket1.0.3, mağaza doğrulanmadı; plan/kanıt/devir `docs/IMPLEMENTATION_PLAN.md`, `docs/FEATURE_TEST_MATRIX.md`, `docs/TEAM_HANDOFF.md`.
 
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+
+- [x] [AUTO] Görünür Chromium/gerçek eklenti QA: CastPost dörtiframe yükleme, Row/Grid/Fit ve üst32px kontrolleri geçti;6unit/3E2E/buildboth/typecheck/lint. Kullanıcı Brave'e Firefox paketi kurduğunu açıkladı; doğru paket ayrımı ve tarayıcı tespiti güçlendirildi. `visible-live-verified.log`, `visible-workspace-qa.png`; headedtest `node scripts/visible-workspace-qa.mjs`, normalprofil kullanılmaz. _(2026-10-12, Codex)_
 
 - [x] [AUTO] Ücretsiz/açık kaynak mimari kararı karar/plan/gizlilik/kurulum ve MIT bağımlılık bildirimine işlendi (`7086eee`). Zorunlu ücretli servis/hesap yok; temel eklenti sunucusuz. PSI canlı başarı HTTP429 nedeniyle, ayrı CrUX anahtar yokluğu nedeniyle engelli; Lighthouse yalnız araştırılmış alternatif, otomatik runner değildir. Ürün sürüm kabulü bu belge işinin tamamlanmasından ayrıdır. _(2026-10-11, Codex)_
 
