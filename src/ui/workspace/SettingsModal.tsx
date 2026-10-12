@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { Icon } from '../common/Icon';
+import { Button } from '../common/Button';
 import s from './SettingsModal.module.css';
 import { useStore, DEFAULT_SHORTCUTS } from './store';
 import { b } from '../../platform/browser';
@@ -80,23 +82,23 @@ export function SettingsModal() {
       <div className={s.modal} onClick={(e) => e.stopPropagation()}>
         <div className={s.header}>
           <div className={s.headerTitle}>
-            <span>⚙️</span>
+            <Icon name="settings" />
             <span>ViewGrid Ayarları</span>
           </div>
-          <button
+          <Button
             className={s.closeBtn}
             onClick={() => st.setSettingsOpen(false)}
             title="Kapat (Esc)"
           >
-            ✕
-          </button>
+            <Icon name="close" />
+          </Button>
         </div>
 
         <div className={s.body}>
           {/* Section 1: Keyboard Shortcuts */}
           <div className={s.section}>
             <div className={s.sectionTitle}>
-              <span>⌨️</span>
+              <Icon name="keyboard" />
               <span>Kısayol Tuşları</span>
             </div>
             <div className={s.sectionDesc}>
@@ -111,21 +113,21 @@ export function SettingsModal() {
                 return (
                   <React.Fragment key={key}>
                     <span className={s.shortcutLabel}>{label}</span>
-                    <button
+                    <Button
                       className={`${s.shortcutKeyBtn} ${isRecording ? s.recording : ''}`}
                       onClick={() => setRecordingAction(isRecording ? null : key)}
                       onKeyDown={(e) => isRecording && handleRecordKey(e, key)}
                       title={isRecording ? 'Yeni tuşa basın (Vazgeçmek için Esc)' : 'Değiştirmek için tıkla'}
                     >
                       {isRecording ? 'Tuşa basın...' : combo}
-                    </button>
+                    </Button>
                   </React.Fragment>
                 );
               })}
             </div>
 
             <div className={s.btnRowRight}>
-              <button
+              <Button
                 className={s.actionBtn}
                 onClick={() => {
                   st.resetShortcuts();
@@ -133,14 +135,14 @@ export function SettingsModal() {
                 }}
               >
                 Kısayolları Varsayılana Sıfırla
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Section 2: Cache & Network Behavior */}
           <div className={s.section}>
             <div className={s.sectionTitle}>
-              <span>⚡</span>
+              <Icon name="zap" />
               <span>Önbellek & Ağ Davranışı</span>
             </div>
 
@@ -151,13 +153,13 @@ export function SettingsModal() {
                   Etkinleştirildiğinde görünümler her zaman önbelleksiz (en taze sunucu haliyle) yüklenir.
                 </div>
               </div>
-              <button
+              <Button
                 className={`${s.toggle} ${st.bypassCacheOnLoad ? s.toggleActive : ''}`}
                 onClick={() => st.setBypassCacheOnLoad(!st.bypassCacheOnLoad)}
                 aria-label="Bypass Cache on Load"
               >
                 <div className={s.toggleThumb} />
-              </button>
+              </Button>
             </div>
 
             <div className={s.settingRow}>
@@ -167,16 +169,16 @@ export function SettingsModal() {
                   ViewGrid içindeki tüm test sayfalarının depolanan oturum ve önbellek verilerini sıfırlar.
                 </div>
               </div>
-              <button className={`${s.actionBtn} ${s.dangerBtn}`} onClick={handleClearAllData}>
-                🧹 Verileri Temizle
-              </button>
+              <Button className={`${s.actionBtn} ${s.dangerBtn}`} onClick={handleClearAllData}>
+                <Icon name="trash" /> Verileri Temizle
+              </Button>
             </div>
           </div>
 
           {/* Section 3: Appearance & Defaults */}
           <div className={s.section}>
             <div className={s.sectionTitle}>
-              <span>🎨</span>
+              <Icon name="palette" />
               <span>Görünüm & Cihaz Tercihleri</span>
             </div>
 
@@ -187,13 +189,13 @@ export function SettingsModal() {
                   iPhone, iPad ve MacBook modelleri için titanyum/alüminyum donanım çerçeveleri gösterilsin.
                 </div>
               </div>
-              <button
+              <Button
                 className={`${s.toggle} ${st.model.frames ? s.toggleActive : ''}`}
                 onClick={() => st.toggleFrames()}
                 aria-label="Toggle device frames"
               >
                 <div className={s.toggleThumb} />
-              </button>
+              </Button>
             </div>
 
             <div className={s.settingRow}>
@@ -203,21 +205,21 @@ export function SettingsModal() {
                   Mobil cihaz ekranlarında dokunmatik parmak noktasını görselleştirir.
                 </div>
               </div>
-              <button
+              <Button
                 className={`${s.toggle} ${st.model.touchCursor ? s.toggleActive : ''}`}
                 onClick={() => st.toggleTouchCursor()}
                 aria-label="Toggle touch cursor"
               >
                 <div className={s.toggleThumb} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         <div className={s.footer}>
-          <button className={s.actionBtn} onClick={() => st.setSettingsOpen(false)}>
+          <Button className={s.actionBtn} onClick={() => st.setSettingsOpen(false)}>
             Tamam
-          </button>
+          </Button>
         </div>
       </div>
     </div>

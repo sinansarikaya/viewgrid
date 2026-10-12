@@ -12,8 +12,8 @@ describe('workspace display fit', () => {
     expect(JSON.stringify(devices)).toBe(original);
     expect(fitGridZooms([], {width:100,height:100})).toEqual([]);
     const boundarySizes = Array.from({ length: 4 }, () => ({ width: 400, height: 400 }));
-    expect(fitGridZooms(boundarySizes, {width:724,height:1000})).toEqual([0.35,0.35,0.35,0.35]);
-    expect(fitGridZooms(boundarySizes, {width:725,height:1000})).toEqual([0.7,0.7,0.7,0.7]);
+    expect(fitGridZooms(boundarySizes, {width:724,height:1000})).toEqual([0.38,0.38,0.38,0.38]);
+    expect(fitGridZooms(boundarySizes, {width:725,height:1000})).toEqual([0.77,0.77,0.77,0.77]);
   });
   const sizes = Array.from({ length: 4 }, () => ({ width: 400, height: 800 }));
   it('uses actual canvas dimensions and does not mutate CSS sizes', () => {
@@ -22,11 +22,19 @@ describe('workspace display fit', () => {
     expect(JSON.stringify(sizes)).toBe(before);
   });
   it('fits row and column geometry independently', () => {
-    expect(fitWorkspaceZoom(sizes, { width: 2000, height: 1000 }, 'row')).toBe(1.05);
-    expect(fitWorkspaceZoom(sizes, { width: 2000, height: 1000 }, 'col')).toBe(0.2);
+    expect(fitWorkspaceZoom(sizes, { width: 2000, height: 1000 }, 'row')).toBe(1.09);
+    expect(fitWorkspaceZoom(sizes, { width: 2000, height: 1000 }, 'col')).toBe(0.18);
   });
   it('honours supported display scale limits', () => {
-    expect(fitWorkspaceZoom([{ width: 100, height: 100 }], { width: 9000, height: 9000 }, 'grid')).toBe(1.2);
-    expect(fitWorkspaceZoom(sizes, { width: 100, height: 100 }, 'grid')).toBe(0.2);
+    expect(fitWorkspaceZoom([{ width: 100, height: 100 }], { width: 9000, height: 9000 }, 'grid')).toBe(3);
+    expect(fitWorkspaceZoom(sizes, { width: 100, height: 100 }, 'grid')).toBe(0.01);
+  });
+  it('accounts for measured card chrome instead of letting it consume preview space', () => {
+    const size = [{ width:400,height:800 }];
+    const chrome = [{fixedWidth:20,fixedHeight:50,scaledWidth:10,scaledHeight:20}];
+    const zoom = fitGridZooms(size,{width:800,height:600},chrome)[0]!;
+    expect(zoom).toBe(0.64);
+    expect(zoom*820+50+24).toBeLessThanOrEqual(600);
+    expect((zoom+0.01)*820+50+24).toBeGreaterThan(600);
   });
 });

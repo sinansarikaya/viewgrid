@@ -1,5 +1,20 @@
 # Uygulama planı — 2026-10-11
 
+## ICON-GRID-POLISH — 2026-10-12
+
+- ICON-P1: Flash Gemini3.8FlashMedium, `.ai-team` yerel sözleşmesi `ui-icons-polish`; ortak Icon/Button/Tooltip ve mevcut UI ikonları, davranış/API/test dosyaları kapsam dışı. Flash ilk denemede600s timeout, ikinci dar migration görevinde headless RunCommand izin reddi yaşadı; iki başarısızlıktan sonra lider devraldı. Yetki bypass/model değişimi yapılmadı. Ek ikon bağımlılığı yok: yerel Feather MIT/Lucide ISC uyarlamaları, varsayılan16px/24viewBox, erişilebilir isim/hover-focus tooltip. Envanter docs/UI_ICON_INVENTORY.md ve dağıtım lisansları güncellendi; lider bundle boyutunu ölçtü.
+- GRID-P2: lider fit/layout/store/styles/useFitTracking ve testler; ölçülen başlık/çerçeve ile daha ince ölçek, Fit geçici override ve manualzoom ayrı. Grid kartı canvas içinde, büyük manualpreview için iç scroll; Row/Column/Freeform korunur. Kullanıcıya Fit sonucu bildirilir. Savedmodel/migration/API değişmez.
+- QA-P3: lider headed gerçek tarayıcı, normal kullanıcı profili kullanılmaz. Chromium `tabs.setZoom/getZoom`, Firefox eşdeğeriyle80/100/125 gerçek browserzoom; fiziksel çalışma alanı1280×800/1920×1080 ve actualCSSinner/dpr/appzoommetadata ayrı. CSS resize veya DPI emülasyonu browserzoom başarısı diye sunulmaz. Grid/header/narrow screenshot, konsol/ağ/trace; unit/lint/type/build/bothE2E. Codex yeni independentreview high salt okunur. Aynı browser tek sahibi, toplam en fazla3 yürütücü.
+- Analiz mevcut işlevleri korunur; Google429/CrUXanahtar engeli başka kapsamdır. Yeni servis/telemetri/secret/dependency/sürüm/push/yayın yok. Yeni iki referans eki görünmediği için bu çift üzerinde kesin önce/sonra iddiası yapılmaz; önceki ekler ve üretilen ölçüm kanıtları kullanılır.
+
+| Paket | Dosya sahibi / alan | Bağımlılık | Kabul ölçütü / doğrulama | Teslim |
+| --- | --- | --- | --- | --- |
+| ICON-P1 | Lider:common/Icon,Button,Tooltip;workspace ikon tüketicileri/i18n ve popup metni | Flash teslim incelemesi | Tek SVG stil, anlamlı ikonlar, erişilebilir ad, hover/focus/Escape ve hoverable tooltip; lisans ve bundle ölçümü | Kaynak,UI_ICON_INVENTORY,3tooltipunit,toolbar screenshot |
+| GRID-P2 | Lider:core/workspace/fit,layout;store/styles/useFitTracking/ViewportCard | Mevcut CSS viewport ve kayıt sözleşmesi | Uniform display scale, grid kart/preview bounds ve iç scrollbar yok; Fit override kalıcı modele yazılmaz; manual/loadSaved reset |5fit +3fitstateunit,kalıcı manualzoom E2E,iki tarayıcı6zoomsenaryosu |
+| QA-P3 | Lider:tests/docs/dist; bağımsız reviewer salt okunur | P1/P2 build | Lint/type/unit/iki build/web-ext, ilgili korumaE2E; ChromiumPlaywright veFirefoxGeckoDriver ayrı kanıt; gerçek masaüstü/izoleprofil | Matris,devir,loglar,screenshotlar; store/push/yayın yok |
+
+QA yöntemi: Hyprland tiled/maximized pencere CDP normal-bounds talebini uygulamadı. Kullanıcı oturumuna dokunmadan yalnız test PID'si doğrulandı ve kendi pencere floating yapıldı; Chromium belgelenmiş X11 backend ve native resize settle ile matrisi geçti. Gerçek `tabs.setZoom/getZoom` kullanıldı. Chromium Playwright CSS clipping gerçek zoomda native pikseli kesebildiği için CDP native-surface screenshot boyutu ayrıca assert edilir. Firefox screenshot CSS normalize görüntüdür; imagePixels ve viewport kaydedilir. Firefox80% frame innerHeight852→853 yuvarlaması ölçüldü; iframe CSS boyutu kesin assert kalır, yalnız motorun inner ölçüsünde1px yuvarlama ayrı belgelenir.
+
 ## UI-REFINE — 2026-10-12 güncel ekran referansı
 
 Bu paket yalnız arayüz iyileştirmesidir; analiz servisi/anahtar/telemetri ve sürüm yükseltme kapsam dışıdır. Mevcut analiz panelleri kodda çalışır; canlı Google kota engeli farklıdır, özellikler gizlenmez. Firefox click-sync kurulum sorunu çözüldü, teşhis tekrarlanmaz.

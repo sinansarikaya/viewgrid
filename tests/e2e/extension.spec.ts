@@ -100,16 +100,16 @@ test('viewport duplicate and removal preserve previews, and compare modes remain
   const originalIds = await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')));
   const first = page.locator('[data-viewport-id]').first();
   await first.locator('summary').click();
-  await first.getByRole('button', { name: '⧉ Duplicate', exact: true }).click();
+  await first.getByRole('button', { name: 'Duplicate', exact: true }).click();
   await expect(page.locator('[data-viewport-id]')).toHaveCount(5);
   const newId = (await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).find(id => !originalIds.includes(id));
   expect(newId).toBeTruthy();
   const added = page.locator(`[data-viewport-id="${newId}"]`);
   await added.locator('summary').click();
-  await added.getByRole('button', { name: '✕ Remove', exact: true }).click();
+  await added.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(page.locator('[data-viewport-id]')).toHaveCount(4);
   expect(await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).toEqual(originalIds);
-  await page.getByRole('button', { name: /⚖.*Compare/ }).click();
+  await page.getByRole('button', { name: 'Compare', exact: true }).click();
   await expect(page.getByText('Visual Comparison / Diff', { exact: true })).toBeVisible();
   await expect.poll(() => frames().length).toBe(6);
   for (const mode of ['Overlay Curtain', 'Side by Side', 'Dual Split']) {
@@ -134,13 +134,13 @@ test('device picker resets brand, preserves default desktop orientation and favo
   await page.waitForTimeout(800);
   await page.reload();
   await page.getByRole('button', { name: '+ Add Device', exact: true }).click();
-  await picker.getByRole('button', { name: '★ Favorites', exact: true }).click();
+  await picker.getByRole('button', { name: 'Favorites', exact: true }).click();
   await expect(picker.getByRole('checkbox', { name: 'Select Desktop 1080p', exact: true })).toBeVisible();
 });
 
 test('design overlay image opacity blend and removal do not modify preview content', async () => {
-  await page.getByRole('button', { name: /⚖.*Compare/ }).click();
-  await page.getByRole('button', { name: '🎨 Design Overlay', exact: true }).click();
+  await page.getByRole('button', { name: 'Compare', exact: true }).click();
+  await page.getByRole('button', { name: 'Design Overlay', exact: true }).click();
   await page.locator('input[type="file"]').first().setInputFiles({ name: 'controlled-overlay.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=', 'base64') });
   const overlay = page.getByAltText('Figma Spec Overlay', { exact: true });
   await expect(overlay).toBeVisible();
@@ -161,9 +161,9 @@ test('sidebar reorder hide restore and named workspace survive reload', async ()
   const ids = await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')));
   await sidebar.getByRole('button', { name: 'Move Down iPhone 15 Pro', exact: true }).click();
   await expect.poll(() => page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).toEqual([ids[1], ids[0], ids[2], ids[3]]);
-  await sidebar.getByRole('button', { name: 'Hide', exact: true }).first().click();
+  await sidebar.getByRole('button', { name: /^Hide / }).first().click();
   await expect(page.locator('[data-viewport-id]')).toHaveCount(3);
-  await sidebar.getByRole('button', { name: 'Show', exact: true }).click();
+  await sidebar.getByRole('button', { name: /^Show / }).click();
   await expect(page.locator('[data-viewport-id]')).toHaveCount(4);
   await sidebar.getByRole('button', { name: 'Workspace', exact: true }).click();
   await sidebar.getByPlaceholder('Workspace name').fill('QA preserved workspace');
@@ -237,6 +237,7 @@ test('loads four actual frames, applies device dimensions and rotates', async ()
   const first = page.locator('[data-viewport-id]').first();
   const frame = frames()[0]!;
   const before = await frame.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+  await first.locator('summary').click();
   await first.locator('button[title*="Rotate"],button[title*="orientation" i]').first().click();
   await expect.poll(() => frame.evaluate(() => innerWidth)).toBe(before.height);
 });
@@ -286,10 +287,12 @@ test('balanced grid uses independent display scales and preserves saved manual z
   expect(Math.max(...scales.map(scale => scale.height)) / Math.min(...scales.map(scale => scale.height))).toBeLessThan(1.4);
   for (const scale of scales) expect(Math.abs(scale.x - scale.y)).toBeLessThan(0.001);
   expect(await Promise.all(frames().map(frame => frame.evaluate(() => [innerWidth, innerHeight])))).toEqual(cssSizes);
+  await page.locator('[data-viewport-id]').first().locator('summary').click();
   const zoom = page.locator('[data-viewport-id]').first().getByRole('combobox', { name: 'Display zoom (CSS size unchanged)' });
   await zoom.selectOption('0.5');
   await expect.poll(() => page.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('viewgrid.store.v1'))['viewgrid.store.v1']?.model?.viewports?.[0]?.zoom)).toBe(0.5);
   await page.reload();
+  await page.locator('[data-viewport-id]').first().locator('summary').click();
   await expect(zoom).toHaveValue('0.5');
   await page.setViewportSize({ width: 1280, height: 800 });
 });
@@ -377,7 +380,7 @@ test('navigation works with click sync disabled; SPA navigation follows', async 
   await expect.poll(() => frames().every(f=>f.url()===base+'/spa')).toBe(true);
 });
 test('scan groups repeated findings, shows evidence and exports a structured report', async () => {
-  await page.locator('button').filter({ hasText: '🔍' }).click();
+  await page.getByRole('button', { name: 'Issues', exact: true }).click();
   const drawer = page.getByRole('complementary', { name: 'Responsive issues' });
   await expect(drawer).toBeVisible();
   await expect(drawer.getByText('element/viewport observations', { exact: false })).toBeVisible();
@@ -417,7 +420,7 @@ test('scan groups repeated findings, shows evidence and exports a structured rep
 });
 test('hard reload preserves application storage and URL', async () => {
   await frames()[0]!.evaluate(() => { localStorage.setItem('draft','keep-me'); sessionStorage.setItem('session-draft','keep-me'); });
-  await page.locator('button').filter({ hasText:'🧹' }).click();
+  await page.getByRole('button', { name: /Hard reload/i }).click();
   await expect(page.locator('iframe[name^="viewgrid:"]')).toHaveCount(4);
   await expect.poll(()=>frames().filter(f=>f.url()===base+'/site').length).toBe(4);
   expect(await frames()[0]!.evaluate(()=>localStorage.getItem('draft'))).toBe('keep-me');
@@ -428,7 +431,7 @@ test('captures the full logical device viewport and restores the workspace', asy
   const frame = frames()[0]!;
   const size = await frame.evaluate(()=>({width:innerWidth,height:innerHeight}));
   const download = page.waitForEvent('download');
-  await card.locator('button').filter({hasText:'📷'}).click();
+  await card.getByRole('button', { name: 'Screenshot (C)', exact: true }).click();
   const file = await download; const stream = await file.createReadStream();
   const chunks: Buffer[]=[]; for await(const chunk of stream!) chunks.push(chunk);
   const png = Buffer.concat(chunks);
@@ -513,7 +516,7 @@ test('CastPost loads from a worker-warmed profile, reopens and survives a browse
       await page.screenshot({ path: `test-results/castpost-chromium-${phase.replace(/ /g, '-')}.png` });
       if (phase === 'first warm open') await measureScrollSync('castpost.app warm profile');
       if (phase === 'first warm open') {
-        await page.locator('button').filter({ hasText: '🔍' }).click();
+        await page.getByRole('button', { name: 'Issues', exact: true }).click();
         const drawer = page.getByRole('complementary');
         await expect(drawer.getByText('Last scan', { exact: false })).toBeVisible();
         await expect(drawer.getByText('Inspected DOM elements', { exact: false })).toBeVisible();

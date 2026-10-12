@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import { Icon } from '../common/Icon';
+import { Button } from '../common/Button';
 import { useStore } from './store';
 import s from './BenchmarkModal.module.css';
 export function BenchmarkModal() {
@@ -6,7 +8,7 @@ export function BenchmarkModal() {
   useEffect(() => { const close = (e: KeyboardEvent) => { if (e.key === 'Escape') st.setBenchmarkOpen(false); }; window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close); }, [st]);
   if (!st.benchmarkOpen) return null;
   return <div className={s.overlay} onClick={() => st.setBenchmarkOpen(false)}><div className={s.modal} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
-    <div className={s.header}><strong>{tr ? 'Çalışma biçimi ve sınırlar' : 'Runtime and limitations'}</strong><button onClick={() => st.setBenchmarkOpen(false)}>✕</button></div>
+    <div className={s.header}><strong>{tr ? 'Çalışma biçimi ve sınırlar' : 'Runtime and limitations'}</strong><Button iconOnly aria-label={tr ? 'Kapat' : st.language === 'no' ? 'Lukk' : 'Close'} onClick={() => st.setBenchmarkOpen(false)}><Icon name="close" /></Button></div>
     <div className={s.body}>
       <p>{tr ? 'Önizlemeler yerel tarayıcıda çalışır. Bellek ve hız, sayfanın içeriğine ve açık ekran sayısına bağlıdır. Bu panel canlı performans ölçümü yapmaz.' : 'Previews run in your local browser. Memory and speed depend on page content and the number of viewports. This panel does not measure live performance.'}</p>
       <p>{tr ? 'Normal sekmeler ve iç içe üçüncü taraf iframe’ler başlık istisnalarının dışında kalır. Chromium, yalnızca doğrudan ViewGrid önizlemelerinde XFO ve CSP başlıklarını kaldırır. Firefox diğer CSP yönergelerini koruyarak yalnızca frame-ancestors kısıtlamasını kaldırır.' : 'Normal tabs and nested third-party frames are outside the framing exceptions. Chromium removes XFO and CSP headers only for direct ViewGrid previews. Firefox preserves other CSP directives while removing frame-ancestors.'}</p>

@@ -28,11 +28,14 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 
 
 
+
 - [~] [AUTO] ViewGrid 1.0.4–1.6.0 BETA geliştirme: yeni shell/cihaz/analiz/rapor/GEO ve kontrollü testler entegre; koruma matrisi ve katalog kaynak kapıları açık. Paket1.0.3, mağaza doğrulanmadı; plan/kanıt/devir `docs/IMPLEMENTATION_PLAN.md`, `docs/FEATURE_TEST_MATRIX.md`, `docs/TEAM_HANDOFF.md`.
 
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+
+- [x] [AUTO] ICON-GRID-POLISH: ortak yerel SVG ikon/hover-focus-Escape tooltip, kompakt kart başlığı, ölçülmüş gridFit ve geçici ölçek/manualzoom ayrımı uygulandı.269unit,lint/typecheck,iki build/web-ext0error;Chromium32pass1isteğe bağlıskip ve headed6zoom;Firefoxheadedbaseline/click/6zoom/4layout geçti. Kanıt: docs/FEATURE_TEST_MATRIX.md ICON-GRID. Flash600s timeout + headless izin reddinden sonra lider devraldı, bypass yok. İki yeni referans eki görünmedi, önceki ekler ve yeni ölçümler kullanıldı; canlıGoogle/gerçekcihaz/Safari ve tüm serbestkonumFit kombinasyonları doğrulanmış sayılmaz. Sürüm1.0.3, push/yayın yok.
 
 - [x] [AUTO] UI-REFINE arayüz paketi: toolbar erişilebilirlik/spacing, okunaklı ve kaydırılabilirsidebar, dengeli grid/displayzoom; kayıtlı ayarlar ve gerçekCSSölçüleri korunur.262unit/Chromium32E2E/Firefox9baseline+UI veBiDi200/429/lint/types/buildboth geçti, web-ext3bilinenuyarı. Bağımsızreview tamam; kanıt `docs/FEATURE_TEST_MATRIX.md` UI-REFINE, `test-results/development/ui-refine-*`. Sürüm1.0.3; analizservisi ve yayın kapsam dışı. _(2026-10-12, Codex)_
 
@@ -261,3 +264,7 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - **Önbellek Temizleme:** Kullanıcıların eski önbellek görmesini engellemek için toolbara "Önbelleği Temizle & Zorla Yenile (Bypass Cache)" butonu (🧹) eklendi; iframe'lere timestamp buster eklendi ve content agent'lara storage/cookie temizleme komutu tanımlandı.
 - **Tanıtım Sitesi Scroll & Drag:** Tanıtım sitesindeki SYNCHRONIZED SCROLL ENGINE bölümündeki Phone/Tablet/Desktop kartlarına canlı sürükle-bırak (drag-and-drop) ve kesik çizgili iskelet önizlemesi entegre edildi.
 - **Canonical & Erişilebilirlik:** Self-referencing canonical metadata, Lighthouse footer kontrast güncellemesi (`#a0a0a0`), mobil lazy-loading ve COOP güvenlik başlığı uygulandı.
+
+<!-- AI-TEAM-TASKS-START -->
+## AI Team Tasks
+<!-- AI-TEAM-TASKS-END -->

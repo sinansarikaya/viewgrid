@@ -624,7 +624,7 @@ test.describe.serial('QA-ANALYSIS Controlled E2E Suite', () => {
     await langSelect.selectOption('tr');
 
     // Toggle theme to Light
-    const themeBtn = page.locator('header button').filter({ hasText: /☀|◐/ });
+    const themeBtn = page.locator('header button[title="Tema"]');
     await themeBtn.click();
     await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe('light');
 

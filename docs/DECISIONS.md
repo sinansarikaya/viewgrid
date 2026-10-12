@@ -1,5 +1,13 @@
 # Kararlar
 
+## ICON-GRID arayüz polish — 2026-10-12
+
+- Tek yerel stroke SVG sistemi; harici ikon paketi/font/CDN yok. Feather MIT/Lucide ISC bildirimleri dağıtımlarda tutulur. Çalışma zamanı ağ/secret/telemetri eklenmez.
+- Grid per-device uniform gösterim ölçeği kullanır; CSS cihaz ölçüsü değişmez. `fitZooms` geçici store alanıdır, persist payload'a girmez; manual zoom seçimi ve saved workspace yükleme Fit'i sıfırlar. Resize/orientation/visibility değişiminde sessiz refit, capture sırasında refit yok.
+- Kartta cihaz adı/CSS ölçüsü ve capture görünür; DPR, orientation ve display zoom erişilebilir taşma menüsündedir. Fit seçili ölçek ayrıca etiketlenir; kayıtlı kullanıcı zoom'u farklıdır.
+- Performance/SEO/Reports mevcut çalışan panelleri korunur, GEO deneysel Beta kalır. Bu polish paketinde servis geliştirme veya canlı ölçüm başarısı iddiası yok.
+- Kullanıcı masaüstünde izole profil/PID sahipliği doğrulanır; normal tarayıcı penceresi kapatılmaz. Chromium native screenshot ve Firefox CSS normalize screenshot metadata ayrı tutulur. Firefox80% iç ölçüsündeki1px yuvarlama CSS boyut değişikliği diye yorumlanmaz; kesin iframe CSS boyutu ayrıca assert edilir.
+
 ## Öncelikli ürün ve barındırma kararı — 2026-10-11
 
 - ViewGrid ücretsiz/açık kaynak (mevcut MIT) kalır. Zorunlu kullanıcı başı lisans, ücretli API/SaaS/barındırma yok. Temel responsive test, sync, capture, compare sunucusuz çalışır; analiz isteğe bağlıdır.

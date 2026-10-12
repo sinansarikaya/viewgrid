@@ -10,6 +10,7 @@ from threading import Thread
 import tempfile
 import time
 import zipfile
+import subprocess
 
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException, NoSuchFrameException
@@ -46,9 +47,21 @@ os.environ['MOZ_REMOTE_ALLOW_SYSTEM_ACCESS'] = '1'
 options = webdriver.FirefoxOptions()
 if os.environ.get('VIEWGRID_FIREFOX_BINARY'):
     options.binary_location = os.environ['VIEWGRID_FIREFOX_BINARY']
-options.add_argument('-headless')
+headed = os.environ.get('VIEWGRID_FIREFOX_HEADED') == '1'
+if headed:
+    assert os.environ.get('DISPLAY'), 'Headed Firefox requires the real desktop DISPLAY'
+    os.environ['MOZ_ENABLE_WAYLAND'] = '0'
+else:
+    options.add_argument('-headless')
 options.set_preference('extensions.webextensions.uuids', json.dumps({'viewgrid@viewgrid.dev': uuid}))
 driver = webdriver.Firefox(options=options)
+if headed and os.environ.get('HYPRLAND_INSTANCE_SIGNATURE'):
+    pid = driver.capabilities['moz:processID']
+    clients = json.loads(subprocess.check_output(['hyprctl', '-j', 'clients'], text=True))
+    owned = [client for client in clients if client['pid'] == pid]
+    assert len(owned) == 1, 'Cannot verify ownership of Firefox test window'
+    subprocess.check_output(['hyprctl', 'eval', f'local w=hl.get_window("pid:{pid}"); assert(w); hl.dispatch(hl.dsp.window.fullscreen_state({{internal=0,client=0,action="set",layout_aware=false,window=w}})); hl.dispatch(hl.dsp.window.float({{action="set",window=w}}))'], text=True)
+    print('OWNED HEADED FIREFOX', {'pid': pid, 'address': owned[0]['address']}, flush=True)
 driver.set_window_size(1280, 900)
 wait = WebDriverWait(driver, 25, ignored_exceptions=(StaleElementReferenceException, NoSuchFrameException))
 out = Path(os.environ.get('VIEWGRID_FIREFOX_TEST_OUT', 'test-results/firefox'))
@@ -151,6 +164,52 @@ try:
         assert driver.execute_script('return document.documentElement.scrollWidth <= innerWidth')
         driver.save_screenshot(str(out / f'workspace-{width}.png'))
     print('PASS Firefox: UI 1280/1920, Row/Grid/Fit preserve CSS dimensions and document reflow', flush=True)
+    if headed:
+        evidence = []
+        for width, height in [(1280, 800), (1920, 1080)]:
+            driver.execute_async_script('const done=arguments[arguments.length-1]; browser.tabs.getCurrent().then(t=>browser.tabs.setZoom(t.id,1)).then(()=>done(true));')
+            driver.set_window_size(width, height)
+            time.sleep(1)
+            actual = driver.execute_script('return [innerWidth, innerHeight]')
+            driver.set_window_size(width + width - actual[0], height + height - actual[1])
+            wait.until(lambda d: d.execute_script('return [innerWidth,innerHeight]') == [width,height])
+            time.sleep(.5)
+            for factor in [.8, 1, 1.25]:
+                actual_zoom = driver.execute_async_script('const factor=arguments[0], done=arguments[arguments.length-1]; browser.tabs.getCurrent().then(async t=>{await browser.tabs.setZoom(t.id,factor); done(await browser.tabs.getZoom(t.id));});', factor)
+                assert actual_zoom == factor
+                time.sleep(.5)
+                measured = driver.execute_script('return {width:innerWidth,height:innerHeight,dpr:devicePixelRatio}')
+                assert abs(measured['width']*factor-width) <= 1
+                assert abs(measured['height']*factor-height) <= 1
+                driver.find_element(By.XPATH, "//button[@title='Fit to screen']").click()
+                print('FIREFOX BROWSER ZOOM GEOMETRY', {'factor':factor,'measured':measured,'frameInner': [frame_script('return [innerWidth,innerHeight]', i) for i in range(4)], 'iframeCSS':driver.execute_script("return [...document.querySelectorAll('iframe[name^=\"viewgrid:\"]')].map(f=>[f.clientWidth,f.clientHeight])")}, flush=True)
+                # Firefox rounds frame inner dimensions through fractional physical
+                # pixels at browser zoom (e.g. 852 CSS px becomes 853 at 80%).
+                # The actual iframe CSS contract remains exact, not relaxed.
+                assert driver.execute_script("return [...document.querySelectorAll('iframe[name^=\"viewgrid:\"]')].map(f=>[f.clientWidth,f.clientHeight])") == logical
+                observed = [frame_script('return [innerWidth,innerHeight]', i) for i in range(4)]
+                assert all(abs(actual-wanted) <= 1 for pair, expected in zip(observed, logical) for actual, wanted in zip(pair, expected)), observed
+                assert driver.execute_script('return document.documentElement.scrollWidth<=innerWidth')
+                assert len(driver.find_elements(By.CSS_SELECTOR, 'header svg')) > 0
+                wait.until(lambda d: d.execute_script("return [...document.querySelectorAll('[data-viewport-id]')].every(card=>{const b=card.getBoundingClientRect(),m=card.closest('main').getBoundingClientRect();return b.left>=m.left-1&&b.right<=m.right+1&&b.top>=m.top-1&&b.bottom<=m.bottom+1;})"))
+                png = driver.get_screenshot_as_png()
+                (out / f'grid-{width}x{height}-browser-{round(factor*100)}.png').write_bytes(png)
+                evidence.append({'workspaceAt100': [width,height], 'browserZoom':actual_zoom, 'viewport':measured, 'imagePixels':[int.from_bytes(png[16:20],'big'),int.from_bytes(png[20:24],'big')], 'logical':logical, 'frameInner':observed})
+        (out / 'headed-zoom-evidence.json').write_text(json.dumps(evidence, indent=2))
+        driver.execute_async_script('const done=arguments[arguments.length-1]; browser.tabs.getCurrent().then(t=>browser.tabs.setZoom(t.id,1)).then(()=>done(true));')
+        from selenium.webdriver import ActionChains
+        fit = driver.find_element(By.XPATH, "//button[@title='Fit to screen']")
+        ActionChains(driver).move_to_element(fit).perform()
+        wait.until(lambda d: d.find_element(By.CSS_SELECTOR,'[role="tooltip"]').is_displayed())
+        ActionChains(driver).move_by_offset(-100,0).perform()
+        driver.execute_script('arguments[0].focus()', fit)
+        wait.until(lambda d: d.find_element(By.CSS_SELECTOR,'[role="tooltip"]').is_displayed())
+        driver.save_screenshot(str(out / 'toolbar-tooltip.png'))
+        for label in ['Row', 'Column', 'Freeform', 'Grid']:
+            driver.find_element(By.XPATH, f"//button[@title='{label}']").click()
+            expected = {'Row':'row','Column':'col','Freeform':'free','Grid':'grid'}[label]
+            wait.until(lambda d: d.find_element(By.CSS_SELECTOR,'main [data-layout]').get_attribute('data-layout') == expected)
+        print('PASS Firefox: headed SVG/tooltip, four layouts and six actual browser zoom cases', flush=True)
     # Network-free consent check. Controlled transport/results are verified
     # separately by firefox_analysis_bidi.py, not by this baseline runner.
     print('INFO Firefox: controlled PSI 200/429 has a separate BiDi runner', flush=True)

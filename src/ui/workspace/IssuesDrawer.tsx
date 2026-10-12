@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import { Icon } from '../common/Icon';
+import { Button } from '../common/Button';
 import s from './IssuesDrawer.module.css';
 import { useStore } from './store';
 import { groupIssues, issueReport, reportDocument } from '../../core/issues/report';
@@ -31,18 +33,18 @@ export function IssuesDrawer() {
     catch { st.showToast(t.copyFailed); }
   };
   return <aside className={s.drawer} aria-label={t.title}>
-    <header className={s.header}><strong>{t.title}</strong><button aria-label="Close issues" onClick={() => st.setDrawerOpen(false)}>✕</button></header>
+    <header className={s.header}><strong>{t.title}</strong><Button aria-label="Close issues" onClick={() => st.setDrawerOpen(false)}><Icon name="close" /></Button></header>
     <div className={s.summary}><b>{filtered.length}</b> {t.unique} <span>· {filtered.reduce((n, g) => n + g.occurrences.length, 0)} {t.occurrences}</span></div>
     <p className={s.note}>{t.note}</p>
     <label className={s.note}><input type="checkbox" checked={includeOptional} onChange={event => setIncludeOptional(event.target.checked)} /> {t.optionalToggle} ({optionalCount})</label>
     {st.scannedAt && <p className={s.note}>{t.scanned}: <time dateTime={new Date(st.scannedAt).toISOString()}>{new Date(st.scannedAt).toLocaleString(st.language === 'no' ? 'nb-NO' : st.language)}</time></p>}
     {st.scannedAt && <p className={s.note}>{t.coverage}: {Object.entries(st.scanCoverage).map(([id, count]) => `${name(id)}: ${count}`).join(" · ")}</p>}
     <div className={s.actions}>
-      <button onClick={() => void startScan()} disabled={st.scanning}>{t.rescan}</button>
-      <button disabled={!st.scannedAt || st.scanning} onClick={() => void copy(issueReport(filtered, name, context))}>{t.copy}</button>
-      <button disabled={!st.scannedAt || st.scanning} onClick={() => downloadBlob(new Blob([JSON.stringify({ schemaVersion: 3, extensionVersion: context.version, ...context, coverage: st.scanCoverage, heuristic: true, failedViewports: context.failed, truncatedViewports: context.truncated, findings: filtered }, null, 2)], { type: 'application/json' }), 'viewgrid-issues.json')}>{t.json}</button>
+      <Button onClick={() => void startScan()} disabled={st.scanning}>{t.rescan}</Button>
+      <Button disabled={!st.scannedAt || st.scanning} onClick={() => void copy(issueReport(filtered, name, context))}>{t.copy}</Button>
+      <Button disabled={!st.scannedAt || st.scanning} onClick={() => downloadBlob(new Blob([JSON.stringify({ schemaVersion: 3, extensionVersion: context.version, ...context, coverage: st.scanCoverage, heuristic: true, failedViewports: context.failed, truncatedViewports: context.truncated, findings: filtered }, null, 2)], { type: 'application/json' }), 'viewgrid-issues.json')}>{t.json}</Button>
     </div>
-    <div className={s.actions}><button disabled={!st.scannedAt || st.scanning} onClick={() => downloadBlob(new Blob([reportDocument(filtered, name, context)], { type: 'text/html;charset=utf-8' }), 'viewgrid-scan-report.html')}>{t.html}</button></div>
+    <div className={s.actions}><Button disabled={!st.scannedAt || st.scanning} onClick={() => downloadBlob(new Blob([reportDocument(filtered, name, context)], { type: 'text/html;charset=utf-8' }), 'viewgrid-scan-report.html')}>{t.html}</Button></div>
     <div className={s.filters}>
       <input aria-label={t.search} placeholder={t.search} value={query} onChange={e => setQuery(e.target.value)} />
       <select aria-label={t.allDevices} value={device} onChange={e => setDevice(e.target.value)}><option value="all">{t.allDevices}</option>{st.model.viewports.map(v => <option key={v.id} value={v.id}>{name(v.id)}</option>)}</select>
@@ -61,14 +63,14 @@ export function IssuesDrawer() {
         <p>{g.issue.message}</p>
         {g.occurrences.length > g.viewportIds.length && <p>{new Set(g.occurrences.map(i => i.selector)).size} {t.componentElements}</p>}
         <code className={s.selector}>{g.issue.selector || 'document'}</code>
-        <div className={s.devices}>{t.devices}: {g.viewportIds.map(id => <button key={id} title={t.show} disabled={!g.occurrences.find(i => i.viewportId === id)?.selector} onClick={() => {
+        <div className={s.devices}>{t.devices}: {g.viewportIds.map(id => <Button key={id} title={t.show} disabled={!g.occurrences.find(i => i.viewportId === id)?.selector} onClick={() => {
           st.focus(id); st.setDrawerOpen(true);
           document.querySelector(`[data-viewport-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'center', inline: 'center' });
           void sendAgentCmd([id], 'highlight', undefined, { selector: g.occurrences.find(i => i.viewportId === id)?.selector });
-        }}>{name(id)}</button>)}</div>
+        }}>{name(id)}</Button>)}</div>
         <p className={s.advice}><b>{t.suggestion}:</b> {t.advice[g.issue.rule]}</p>
-        <details><summary>{t.evidence}</summary>{g.occurrences.map(i => <div key={`${i.viewportId}:${i.selector}`}><b>{name(i.viewportId)} · {String(i.data?.label || i.selector || "document")}</b><button disabled={!i.selector} onClick={() => void sendAgentCmd([i.viewportId], "highlight", undefined, { selector: i.selector })}>{t.show}</button><button disabled={!i.selector} onClick={() => void copy(i.selector || "document")}>{t.selector}</button><code className={s.selector}>{i.selector}</code><pre>{JSON.stringify(i.data, null, 2)}</pre></div>)}</details>
-        <div className={s.actions}><button onClick={() => void copy(issueReport([g], name))}>{t.item}</button>{g.issue.selector && <button onClick={() => void copy(g.issue.selector!)}>{t.selector}</button>}</div>
+        <details><summary>{t.evidence}</summary>{g.occurrences.map(i => <div key={`${i.viewportId}:${i.selector}`}><b>{name(i.viewportId)} · {String(i.data?.label || i.selector || "document")}</b><Button disabled={!i.selector} onClick={() => void sendAgentCmd([i.viewportId], "highlight", undefined, { selector: i.selector })}>{t.show}</Button><Button disabled={!i.selector} onClick={() => void copy(i.selector || "document")}>{t.selector}</Button><code className={s.selector}>{i.selector}</code><pre>{JSON.stringify(i.data, null, 2)}</pre></div>)}</details>
+        <div className={s.actions}><Button onClick={() => void copy(issueReport([g], name))}>{t.item}</Button>{g.issue.selector && <Button onClick={() => void copy(g.issue.selector!)}>{t.selector}</Button>}</div>
       </article>)}
     </div>
   </aside>;

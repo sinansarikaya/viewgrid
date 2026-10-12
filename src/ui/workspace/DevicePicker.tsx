@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Icon } from '../common/Icon';
 import { useStore } from './store';
 import { MAX_VIEWPORTS, type DeviceCategory, type Orientation } from '../../core/types';
 import { Modal } from '../common/Modal';
@@ -218,6 +219,7 @@ export function DevicePicker() {
               onClick={() => { setActiveCategory(cat.id); setActiveBrand('all'); }}
             >
               {cat.label}
+              {cat.id === 'favorite' && <Icon name="star" />}
             </Button>
           ))}
         </div>
@@ -304,7 +306,7 @@ export function DevicePicker() {
                       aria-label={t.ariaToggleFavorite(device.name)}
                       aria-pressed={isFav}
                     >
-                      {isFav ? '★' : '☆'}
+                      <Icon name={isFav ? "starFilled" : "star"} />
                     </Button>
 
                     <Button
@@ -391,7 +393,7 @@ export function DevicePicker() {
                       onClick={() => st.deleteDeviceGroup(name)}
                       aria-label={t.ariaDeleteGroup(name)}
                     >
-                      ✕
+                      <Icon name="close" />
                     </Button>
                   </div>
                 </div>

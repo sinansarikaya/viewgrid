@@ -1,4 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Icon } from '../common/Icon';
+import { Tooltip } from '../common/Tooltip';
+import { useFitTracking } from './useFitTracking';
 import s from './styles.module.css';
 import { useStore } from './store';
 import { ViewportCard } from './ViewportCard';
@@ -54,6 +57,7 @@ function matchesShortcut(e: KeyboardEvent, comboStr?: string): boolean {
 export function App({ hub: _hub }: { hub: LoopGuard }) {
   const st = useStore();
   const t = getTranslation(st.language);
+  useFitTracking();
   React.useLayoutEffect(() => {
     if (!st.starterFitPending) return;
     st.fitToScreen();
@@ -441,10 +445,10 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         <span className={s.brand}>
           ViewGrid <small data-testid="extension-version" className={s.versionTag}>v{version}</small>
         </span>
-        <Button variant="default" className={s.iconBtn} title={t.back} aria-label={t.back} onClick={() => sendAgentCmd('all', 'back')}>←</Button>
-        <Button variant="default" className={s.iconBtn} title={t.forward} aria-label={t.forward} onClick={() => sendAgentCmd('all', 'forward')}>→</Button>
-        <Button variant="default" className={s.iconBtn} title={t.reloadAll} aria-label={t.reloadAll} onClick={() => sendAgentCmd('all', 'reload')}>⟳</Button>
-        <Button variant="default" className={s.iconBtn} title={t.hardReloadAll} aria-label={t.hardReloadAll} onClick={() => void handleHardReload()}>🧹</Button>
+        <Button variant="default" className={s.iconBtn} title={t.back} aria-label={t.back} onClick={() => sendAgentCmd('all', 'back')}><Icon name="arrowLeft" /></Button>
+        <Button variant="default" className={s.iconBtn} title={t.forward} aria-label={t.forward} onClick={() => sendAgentCmd('all', 'forward')}><Icon name="arrowRight" /></Button>
+        <Button variant="default" className={s.iconBtn} title={t.reloadAll} aria-label={t.reloadAll} onClick={() => sendAgentCmd('all', 'reload')}><Icon name="refresh" /></Button>
+        <Button variant="default" className={s.iconBtn} title={t.hardReloadAll} aria-label={t.hardReloadAll} onClick={() => void handleHardReload()}><Icon name="trash" /></Button>
 
         {/* URL Bar — Keep as the very first input on the page for E2E selector compliance */}
         <div className={s.url}>
@@ -472,10 +476,10 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
           onClick={() => st.setBenchmarkOpen(true)}
           title={st.language === 'tr' ? 'Çalışma biçimi ve sınırlar' : 'Runtime and limitations'}
         >
-          ⚡ Local
+          <Icon name="deviceDesktop" /> Local
         </Button>
         <details className={s.captureMenu}>
-          <summary>{st.language === 'tr' ? 'Yakalama' : st.language === 'no' ? 'Skjermbilde' : 'Capture'}</summary>
+          <Tooltip content={st.language === 'tr' ? 'Yakalama seçenekleri' : st.language === 'no' ? 'Skjermbildevalg' : 'Capture options'} placement="bottom"><summary><Icon name="camera" />{st.language === 'tr' ? 'Yakalama' : st.language === 'no' ? 'Skjermbilde' : 'Capture'}</summary></Tooltip>
           <div className={s.menu}>
             <Button onClick={() => { if (st.focusedId) void shotOne(st.focusedId); else st.showToast(t.compareSelectHint); }}>{t.shotOne}</Button>
             <Button onClick={() => void shotAll()}>{t.shotAll}</Button>
@@ -486,10 +490,11 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         <div className={s.secondaryControls}>
         {/* Theme Toggle */}
         <Button variant="default" onClick={st.toggleTheme} title={t.theme} aria-label={t.theme}>
-          {st.model.theme === 'dark' ? '☀' : '◐'}
+          <Icon name={st.model.theme === "dark" ? "sun" : "moon"} />
         </Button>
 
         {/* Language selector */}
+        <Icon name="globe" />
         <select
           value={st.language}
           onChange={(e) => st.setLanguage(e.target.value as Language)}
@@ -497,14 +502,14 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
           aria-label={t.language}
           className={s.langSelect}
         >
-          <option value="tr">🇹🇷 TR</option>
-          <option value="en">🇬🇧 EN</option>
-          <option value="no">🇳🇴 NO</option>
+          <option value="tr">TR</option>
+          <option value="en">EN</option>
+          <option value="no">NO</option>
         </select>
 
         {/* Settings & Workspace Menu */}
-        <Button variant="default" onClick={() => st.setSettingsOpen(true)} title="Ayarlar (Settings)" aria-label={st.language === 'tr' ? 'Ayarlar' : st.language === 'no' ? 'Innstillinger' : 'Settings'}>⚙️</Button>
-        <Button variant="default" onClick={() => setMenuOpen(!menuOpen)} title={t.menu} aria-label={t.menu} aria-expanded={menuOpen}>☰</Button>
+        <Button variant="default" onClick={() => st.setSettingsOpen(true)} title="Ayarlar (Settings)" aria-label={st.language === 'tr' ? 'Ayarlar' : st.language === 'no' ? 'Innstillinger' : 'Settings'}><Icon name="settings" /></Button>
+        <Button variant="default" onClick={() => setMenuOpen(!menuOpen)} title={t.menu} aria-label={t.menu} aria-expanded={menuOpen}><Icon name="menu" /></Button>
         </div>
 
         {menuOpen && (
@@ -532,7 +537,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                 <span>{n}</span>
                 <span>
                   <Button variant="default" className={s.iconBtn} onClick={() => { st.loadSaved(n); setMenuOpen(false); }}>{t.load}</Button>
-                  <Button variant="danger" className={s.iconBtn} aria-label={`${st.language === 'tr' ? 'Çalışma alanını sil' : st.language === 'no' ? 'Slett arbeidsområde' : 'Delete workspace'}: ${n}`} onClick={() => st.deleteSaved(n)}>✕</Button>
+                  <Button variant="danger" className={s.iconBtn} aria-label={`${st.language === 'tr' ? 'Çalışma alanını sil' : st.language === 'no' ? 'Slett arbeidsområde' : 'Delete workspace'}: ${n}`} onClick={() => st.deleteSaved(n)}><Icon name="close" /></Button>
                 </span>
               </div>
             ))}
@@ -557,7 +562,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
       {!st.granted && (
         <div className={s.permissionBanner}>
           <div className={s.permissionBannerContent}>
-            <span className={s.permissionBannerIcon}>🛡️</span>
+            <span className={s.permissionBannerIcon}><Icon name="shield" /></span>
             <div>
               <div className={s.permissionBannerTitle}>{t.siteAccessRequiredTitle}</div>
               <div className={s.permissionBannerDesc}>{t.siteAccessRequiredDesc}</div>
@@ -601,7 +606,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                   onClick={() => st.setLayout('grid')}
                   title={t.layoutGrid}
                 >
-                  ⊞ {t.layoutGrid}
+                  <Icon name="layoutGrid" /> {t.layoutGrid}
                 </Button>
                 <Button
                   variant="default"
@@ -609,7 +614,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                   onClick={() => st.setLayout('row')}
                   title={t.layoutRow}
                 >
-                  ⊟ {t.layoutRow}
+                  <Icon name="layoutRow" /> {t.layoutRow}
                 </Button>
                 <Button
                   variant="default"
@@ -617,7 +622,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                   onClick={() => st.setLayout('col')}
                   title={t.layoutCol}
                 >
-                  ⫿ {t.layoutCol}
+                  <Icon name="layoutCol" /> {t.layoutCol}
                 </Button>
                 <Button
                   variant="default"
@@ -629,7 +634,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                   }}
                   title={t.layoutFree}
                 >
-                  ✥ {t.layoutFree}
+                  <Icon name="layoutFree" /> {t.layoutFree}
                 </Button>
               </div>
 
@@ -638,7 +643,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                 onClick={() => st.autoAlignAll()}
                 title={t.autoAlignGrid}
               >
-                ⚡ {t.autoAlignGrid}
+                <Icon name="gridAlign" /> {t.autoAlignGrid}
               </Button>
 
               <Button
@@ -646,7 +651,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                 onClick={() => st.fitToScreen()}
                 title={t.fitToScreen}
               >
-                ⤢ {t.fitToScreen}
+                <Icon name="cornerExpand" /> {t.fitToScreen}
               </Button>
             </div>
 
@@ -749,7 +754,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                           }}
                         >
                           <div className={s.skeletonInner}>
-                            <span className={s.skeletonIcon}>📥</span>
+                            <span className={s.skeletonIcon}><Icon name="inbox" /></span>
                             <span>{t.dropHere}</span>
                           </div>
                         </div>
@@ -781,7 +786,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                           }}
                         >
                           <div className={s.skeletonInner}>
-                            <span className={s.skeletonIcon}>📥</span>
+                            <span className={s.skeletonIcon}><Icon name="inbox" /></span>
                             <span>{t.dropHere}</span>
                           </div>
                         </div>
@@ -805,7 +810,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                       }}
                     >
                       <div className={s.skeletonInner}>
-                        <span className={s.skeletonIcon}>📥</span>
+                        <span className={s.skeletonIcon}><Icon name="inbox" /></span>
                         <span>{t.dropHere}</span>
                       </div>
                     </div>

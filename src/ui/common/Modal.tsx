@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from './Button';
+import { Icon } from './Icon';
 import s from './Modal.module.css';
 
 export interface ModalProps {
@@ -121,7 +122,7 @@ export const Modal: React.FC<ModalProps> = ({
               onClick={() => onCloseRef.current()}
               aria-label="Close dialog"
             >
-              ✕
+              <Icon name="close" />
             </Button>
           </div>
         )}

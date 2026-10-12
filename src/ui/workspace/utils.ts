@@ -1,17 +1,19 @@
+import type { IconName } from '../common/Icon';
+
 /**
  * UI helper utilities for ViewGrid workspace
  */
-export function getDeviceCategoryIcon(cat?: string): string {
+export function getDeviceCategoryIconName(cat?: string): IconName {
   switch (cat) {
     case 'phone':
-      return '📱';
+      return 'deviceMobile';
     case 'tablet':
-      return '📟';
+      return 'deviceTablet';
     case 'laptop':
-      return '💻';
+      return 'deviceLaptop';
     case 'desktop':
-      return '🖥️';
+      return 'deviceDesktop';
     default:
-      return '📐';
+      return 'gridAlign';
   }
 }

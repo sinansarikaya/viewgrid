@@ -21,8 +21,9 @@ export function clampZoom(z: number): number {
 export function displayedSize(
   logical: { width: number; height: number },
   zoom: number,
+  fitted = false,
 ): { width: number; height: number } {
-  const z = clampZoom(zoom);
+  const z = fitted && Number.isFinite(zoom) ? Math.max(0.01, Math.min(3, zoom)) : clampZoom(zoom);
   return { width: Math.round(logical.width * z), height: Math.round(logical.height * z) };
 }
 

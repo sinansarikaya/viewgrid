@@ -45,6 +45,7 @@ export interface StoreState {
   focusedId: string | null;
   focusMode: boolean;
   starterFitPending: boolean;
+  fitZooms: Record<string, number>;
   issues: Issue[];
   scanning: boolean;
   scanId: string | null;
@@ -68,7 +69,7 @@ export interface StoreState {
 
   // actions
   setLanguage(lang: 'tr' | 'en' | 'no'): void;
-  fitToScreen(): void;
+  fitToScreen(announce?: boolean): void;
   setAllZoom(zoom: number): void;
   hydrate(): Promise<void>;
   persist(): Promise<void>;
@@ -204,6 +205,7 @@ export const useStore = create<StoreState>((set, get) => ({
   focusedId: null,
   focusMode: false,
   starterFitPending: false,
+  fitZooms: {},
   issues: [],
   scanning: false,
   scanCoverage: {}, scanId: null, scanPending: [], scanFailed: [], scanTruncated: [], scannedAt: null,
@@ -244,9 +246,9 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   visibleViewports() {
-    const { model, focusMode, focusedId } = get();
-    if (focusMode && focusedId) return model.viewports.filter((v) => v.id === focusedId && !v.hidden);
-    return model.viewports.filter((v) => !v.hidden);
+    const { model, focusMode, focusedId, fitZooms } = get();
+    const visible = model.viewports.filter(viewport => !viewport.hidden && (!focusMode || !focusedId || viewport.id === focusedId));
+    return visible.map(viewport => fitZooms[viewport.id] === undefined ? viewport : { ...viewport, zoom: fitZooms[viewport.id]! });
   },
 
   async hydrate() {
@@ -320,6 +322,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set({
       model,
       starterFitPending: seeded,
+      fitZooms: {},
       customDevices,
         favoriteDeviceIds,
         recentDeviceIds,
@@ -355,6 +358,7 @@ export const useStore = create<StoreState>((set, get) => ({
   setAllZoom(zoom) {
     const z = clampZoom(zoom);
     set((s) => ({
+      fitZooms: {},
       model: {
         ...s.model,
         viewports: s.model.viewports.map((v) => ({ ...v, zoom: z })),
@@ -362,7 +366,7 @@ export const useStore = create<StoreState>((set, get) => ({
     }));
     schedulePersist(get);
   },
-  fitToScreen() {
+  fitToScreen(announce = true) {
     const { visibleViewports, profileOf } = get();
     const visible = visibleViewports();
     if (visible.length === 0) return;
@@ -370,13 +374,21 @@ export const useStore = create<StoreState>((set, get) => ({
     if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) return;
     const sizes = visible.map((v) => effectiveSize(profileOf(v), v.orientation));
     if (get().model.layout === 'grid') {
-      const zooms = fitGridZooms(sizes, { width: canvas.clientWidth, height: canvas.clientHeight });
+      const chrome = visible.map(viewport => {
+        const card = document.querySelector(`[data-viewport-id="${CSS.escape(viewport.id)}"]`);
+        const header = card?.querySelector('[draggable]')?.getBoundingClientRect();
+        const content = card?.querySelector('iframe')?.parentElement?.getBoundingClientRect();
+        const frame = card?.querySelector('iframe')?.parentElement?.parentElement?.closest('[class*="frameContainer"]')?.getBoundingClientRect();
+        return { fixedWidth: 20, fixedHeight: (header?.height ?? 40) + 26, scaledWidth: content && frame ? Math.max(0, frame.width - content.width) / viewport.zoom : 12, scaledHeight: content && frame ? Math.max(0, frame.height - content.height) / viewport.zoom : 24 };
+      });
+      const zooms = fitGridZooms(sizes, { width: canvas.clientWidth, height: canvas.clientHeight }, chrome);
       const byId = new Map(visible.map((viewport, index) => [viewport.id, zooms[index]!]));
-      set(state => ({ model: { ...state.model, viewports: state.model.viewports.map(viewport => ({ ...viewport, zoom: byId.get(viewport.id) ?? viewport.zoom })) } }));
-      schedulePersist(get);
+      set({ fitZooms: Object.fromEntries(byId) });
+      if (announce) get().showToast(get().language === 'tr' ? 'Görünümler sığdırıldı; kayıtlı zoom değişmedi.' : get().language === 'no' ? 'Visningene er tilpasset; lagret zoom er uendret.' : 'Viewports fitted; saved zoom is unchanged.');
       return;
     }
-    get().setAllZoom(fitWorkspaceZoom(sizes, { width: canvas.clientWidth, height: canvas.clientHeight }, get().model.layout));
+    const zoom = fitWorkspaceZoom(sizes, { width: canvas.clientWidth, height: canvas.clientHeight }, get().model.layout);
+    set({ fitZooms: Object.fromEntries(visible.map(viewport => [viewport.id, zoom])) });
   },
   setUrlDraft(u) {
     set({ urlDraft: u });
@@ -512,6 +524,7 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   setZoom(id, zoom) {
+    set({ fitZooms: {} });
     const z = clampZoom(zoom);
     set((s) => ({
       model: { ...s.model, viewports: s.model.viewports.map((v) => (v.id === id ? { ...v, zoom: z } : v)) },
@@ -693,7 +706,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (!m) return;
     const parsed = parseWorkspace(structuredClone(m));
     if (parsed.ok && parsed.model) {
-      set({ model: { ...parsed.model, name }, urlDraft: parsed.model.url });
+      set({ model: { ...parsed.model, name }, urlDraft: parsed.model.url, fitZooms: {} });
       schedulePersist(get);
       get().showToast(`Loaded "${name}"`);
     }

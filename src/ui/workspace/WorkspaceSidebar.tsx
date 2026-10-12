@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Icon } from '../common/Icon';
 import { useStore } from './store';
 import { getTranslation } from './i18n';
 import { getShellTranslation } from './shell-i18n';
@@ -75,7 +76,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           title={collapsed ? stText.expandSidebar : stText.collapseSidebar}
           aria-label={collapsed ? stText.expandSidebar : stText.collapseSidebar}
         >
-          {collapsed ? '▶' : '◀'}
+          <Icon name={collapsed ? "chevronRight" : "chevronLeft"} />
         </Button>
       </div>
 
@@ -87,7 +88,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           title={stText.devices}
           aria-label={stText.devices}
         >
-          <span className={s.tabIcon}>📱</span>
+          <span className={s.tabIcon}><Icon name="deviceMobile" /></span>
           {!collapsed && <span>{stText.devices}</span>}
         </Button>
 
@@ -98,7 +99,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           title={stText.tools}
           aria-label={stText.tools}
         >
-          <span className={s.tabIcon}>🛠️</span>
+          <span className={s.tabIcon}><Icon name="tools" /></span>
           {!collapsed && <span>{stText.tools}</span>}
         </Button>
 
@@ -109,7 +110,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           title={stText.sync}
           aria-label={stText.sync}
         >
-          <span className={s.tabIcon}>🔄</span>
+          <span className={s.tabIcon}><Icon name="refresh" /></span>
           {!collapsed && <span>{stText.sync}</span>}
         </Button>
 
@@ -120,7 +121,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           title={stText.workspace}
           aria-label={stText.workspace}
         >
-          <span className={s.tabIcon}>📁</span>
+          <span className={s.tabIcon}><Icon name="folder" /></span>
           {!collapsed && <span>{stText.workspace}</span>}
         </Button>
       </nav>
@@ -179,7 +180,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                             title={stText.moveUp}
                             aria-label={`${stText.moveUp} ${profile.name}`}
                           >
-                            ↑
+                            <Icon name="arrowUp" />
                           </Button>
 
                           {/* Keyboard/Button Reorder: Move Down */}
@@ -192,7 +193,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                             title={stText.moveDown}
                             aria-label={`${stText.moveDown} ${profile.name}`}
                           >
-                            ↓
+                            <Icon name="arrowDown" />
                           </Button>
 
                           {/* Unhide / Hide toggle (enables opening hidden devices back) */}
@@ -202,9 +203,9 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                             className={s.actionBtn}
                             onClick={() => st.toggleHidden(v.id)}
                             title={v.hidden ? stText.unhide : stText.hide}
-                            aria-label={v.hidden ? stText.unhide : stText.hide}
+                            aria-label={`${v.hidden ? stText.unhide : stText.hide} ${profile.name}`}
                           >
-                            {v.hidden ? '👁️‍🗨️' : '👁️'}
+                            <Icon name={v.hidden ? "eyeOff" : "eye"} />
                           </Button>
                         </div>
                       </div>
@@ -236,7 +237,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                   onClick={st.toggleTouchCursor}
                   title={stText.touchCursor}
                 >
-                  <span className={s.toolIcon}>👆</span>
+                  <span className={s.toolIcon}><Icon name="touchCursor" /></span>
                   <span>{stText.touchCursor}</span>
                 </Button>
 
@@ -246,7 +247,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                   onClick={st.toggleFrames}
                   title={stText.deviceFrames}
                 >
-                  <span className={s.toolIcon}>{st.model.frames ? '▣' : '▢'}</span>
+                  <span className={s.toolIcon}><Icon name={st.model.frames ? 'frameChecked' : 'frame'} /></span>
                   <span>{stText.deviceFrames}</span>
                 </Button>
 
@@ -256,17 +257,17 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                   onClick={st.toggleFocusMode}
                   title={stText.focusMode}
                 >
-                  <span className={s.toolIcon}>⛶</span>
+                  <span className={s.toolIcon}><Icon name="focus" /></span>
                   <span>{stText.focusMode}</span>
                 </Button>
 
                 <Button
                   variant="default"
                   className={s.toolBtn}
-                  onClick={st.fitToScreen}
+                  onClick={() => st.fitToScreen()}
                   title={stText.fitToScreen}
                 >
-                  <span className={s.toolIcon}>⤢</span>
+                  <span className={s.toolIcon}><Icon name="cornerExpand" /></span>
                   <span>{stText.fitToScreen}</span>
                 </Button>
 
@@ -276,7 +277,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                   onClick={onScrollToTop}
                   title={stText.scrollToTop}
                 >
-                  <span className={s.toolIcon}>⤒</span>
+                  <span className={s.toolIcon}><Icon name="scrollToTop" /></span>
                   <span>{stText.scrollToTop}</span>
                 </Button>
 
@@ -286,7 +287,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                   onClick={onScan}
                   title={stText.scanIssues}
                 >
-                  <span className={s.toolIcon}>🔍</span>
+                  <span className={s.toolIcon}><Icon name="search" /></span>
                   <span>{stText.scanIssues}</span>
                 </Button>
               </div>
@@ -383,7 +384,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                           onClick={() => st.deleteSaved(name)}
                           aria-label={`${st.language === 'tr' ? 'Çalışma alanını sil' : st.language === 'no' ? 'Slett arbeidsområde' : 'Delete workspace'}: ${name}`}
                         >
-                          ✕
+                          <Icon name="close" />
                         </Button>
                       </div>
                     </div>

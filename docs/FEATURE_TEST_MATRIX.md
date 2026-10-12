@@ -1,5 +1,25 @@
 # ViewGrid Özellik Test Matrisi
 
+## ICON-GRID-POLISH kabul kayıtları — 2026-10-12
+
+Bu paket önceki1.0.4–1.6geniş kapsamın tamamlanması veya mağaza yayını değildir. Sürüm package1.0.3; mağaza sürümü doğrulanmadı. Kanıt kökü `test-results/development/`.
+
+| Senaryo / ortam, ön koşul ve adım | Beklenen | Gerçekleşen / durum | Kanıt / yeniden test |
+| --- | --- | --- | --- |
+| Chromium gerçek extension, izole headed X11,1280×800/1920×1080; tabsAPI80/100/125zoom + Fit | Tüm grid kartları ve iframe uniform ölçeği canvas içinde; CSS393×852/820×1180/1280×800/1920×1080 aynı; wrapper scrollbarsız | Geçti:6ölçüm; actualzoom/physicalworkspace/innerCSS/dpr/iframegeometry ayrı kayıt. Native screenshot boyutu assert | icon-final-spacing.log; icon-grid/chromium-evidence.json ve chromium-*.png |
+| Fit ikon/metin aralığı ve kontrol assetleri | İkon/metin üst üste gelmez; yerel SVG yüklenir, pageerror/extensionassetfail yok | Geçti:6zoomda en az6CSSpx ikon/metin aralığı; sıfır pageerror/assetfail | icon-final-spacing.log; icon-grid/toolbar-closeup.png |
+| Chromium dar gerçek pencere | Kontroller reflow, yerleşimler korunur; tooltip hover/focus | Geçti;640nativewindow/actualCSS boyutu kaydedildi,Grid/Row/Column/Freeform CSS boyutları aynı | icon-grid/narrow.png; chromium-evidence.json |
+| Chromium ilgili korumaE2E | CRUD/rotasyon/custom/fav/group/kalıcılık,sidebar,compare/Figma,issues,nav,scroll/click,screenshot ve kontrollü analiz korunur | Geçti:32test;1isteğe bağlı canlıworker-warmedCastPost çalıştırılmadı. İlk emoji seçici başarısızlıkları semantik rol/ad seçimine çevrildi; compare tooltip duplicate ve yeni menü erişimleri yeniden test edildi | icon-accepted-e2e.log; eski icon-regression.log/icon-final-current-e2e.log başarısız denemeleri korunur |
+| Firefox gerçek ZIP addon,headed izole X11,baseline ve aynı6browserzoom | Click-sync/protectednav/reload/normal-tab/SW/version/onay; SVG,tooltip,4layout ve CSS ölçüsü korunur | Geçti.80%Firefox innerHeight852→853 fiziksel yuvarlama gözlendi; iframeclientCSS852 kesin kaldı. Motor inner ölçüsü1px tolerans gerekçesi ve gerçek değer ayrıca kaydedildi | icon-firefox-final.log; icon-firefox-final/headed-zoom-evidence.json,grid-*.png,toolbar-tooltip.png |
+| Firefox kontrollü analiz ayrı legacyBiDi runner | PSI200lab/field ayrı,429tekistek/puanyok,dışistek0 | Geçti; canlıservis kanıtı değildir,headedzoom testinden ayrı headless transport regresyonudur | icon-firefox-bidi.log ve icon-firefox-bidi/evidence.json |
+| Fit state ve tooltip karma pointer/keyboard | Fit model/persist'i değiştirmez; manual/loadSaved clear;hoverable/focus/Escape/blur | Geçti:3fitstate,5fitgeometry,3tooltip regresyonu; yeni daha küçük Fit floor ayrı, manualfloor0.1 değişmedi | icon-final-unit.log; tests/unit/workspace-fit-state.test.ts,tooltip.test.ts,workspace-fit.test.ts |
+| Genel kalite kapısı | Lint,typecheck,unit,iki build,web-ext | Geçti:269unit/31dosya;lint/typecheck ve buildler geçti;web-ext0error/0notice/3bilinen uyarı | icon-final-lint.log,icon-final-typecheck.log,icon-final-unit.log,icon-final-build.log,icon-final-webext.log |
+| Bağımsız inceleme | Yeni kritik regresyon yok; tüm ikon migration eksikleri giderilir | Geçti kaynak incelemesi; reviewer tarayıcı testi çalıştırmadı. Tooltip/Benchmark/glyph bulguları düzeltildi ve kalıcı testle doğrulandı | /root/icon_grid_review; TEAM_HANDOFF |
+| Antigravity mevcut Flash | İzinli boundedtask ve bağımsız browserQA | Engelli:600s timeout ve headless RunCommand izin reddi; bu pakette yeni Antigravity browserQA yapılmadı. Lider alternatif gerçek browser testleri yukarıda | .ai-team/tasks/ui-icons-polish ve ui-icons-migrate yerel logları; icon-team-run.log,icon-migrate-run.log |
+| Yeni iki referans görsel, canlıGoogle, gerçekcihaz/Safari/AT tamdenetimi | Görülmeyen/testedilmeyen kanıt başarı sayılmaz | İki yeni ek erişilemedi, önceki ekler kullanıldı. CanlıGoogle önceki429/anahtar engeli; gerçekcihaz/Safari/AT tamdenetimi çalıştırılmadı. Serbestkonumdaki tüm olası FreeformFit kombinasyonları bu grid kapısında doğrulanmadı | Önceki hazırlık/devir; ANALYSIS_SETUP.md |
+
+Yeni ikonfontu/asset indirme yok, package/lockfile değişmedi. Lisans THIRD_PARTY_NOTICES.md ile iki dağıtıma kopyalandı. Güncel JS gzip farkı4285byte bütün polish paketidir, yalnız ikon boyutu iddiası değildir. Dar900altında sidebar'ın mevcut overlay davranışı korunur; ana canvas etkileşimi öncesi gerçek Collapse kontrolü ile drawer kapanır ve hitTarget doğrulanır. İlk dar testler açık drawer arkasını tıklamaya çalıştığı için başarısızdı; DOMRect/elementFromPoint/ancestor-scroll ve bağımsız review ile neden kanıtlandı, forceclick/işlev kapatma yapılmadı. modeGroup satır sarması dar rail kullanımını destekler.
+
 ## UI-REFINE kabul kayıtları — 2026-10-12
 
 Bu tablo yalnız güncel arayüz paketinin kapısıdır; önceki geniş1.0.4–1.6kapsamının tamamlandığı anlamına gelmez. Loglar `test-results/development/` altındadır.

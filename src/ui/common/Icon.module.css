@@ -1,0 +1,16 @@
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.langPicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

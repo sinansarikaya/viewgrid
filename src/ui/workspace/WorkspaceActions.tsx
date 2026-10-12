@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
 import { useStore } from './store';
 import { getTranslation } from './i18n';
@@ -51,7 +52,7 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
           }}
           title={t.compareTitle}
         >
-          ⚖ {t.compare}
+          <Icon name="scale" /> {t.compare}
         </Button>
         <Button
           variant="default"
@@ -64,7 +65,7 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
             st.setCompareOpen(true, 'figma');
           }}
         >
-          🎨 Figma overlay / diff
+          <Icon name="palette" /> Figma overlay / diff
         </Button>
         <Button
           variant="default"
@@ -72,14 +73,14 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
           onClick={onScan}
           title={t.issues}
         >
-          🔍 {t.issues}
+          <Icon name="search" /> {t.issues}
         </Button>
         <Button
           variant="default"
           className={styles.actionBtn}
           onClick={() => st.setDrawerOpen(!st.drawerOpen)}
         >
-          {t.panel}
+          <Icon name="columns" /> {t.panel}
         </Button>
       </div>
 

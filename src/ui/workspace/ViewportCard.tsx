@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { Icon } from '../common/Icon';
+import { Tooltip } from '../common/Tooltip';
 import s from './styles.module.css';
 import { useStore } from './store';
 import type { ViewportState } from '../../core/types';
@@ -7,7 +9,7 @@ import { clampZoom, displayedSize, effectiveSize } from '../../core/workspace/la
 import { DeviceFrame } from './DeviceFrame';
 import { getTranslation } from './i18n';
 
-import { getDeviceCategoryIcon } from './utils';
+import { getDeviceCategoryIconName } from './utils';
 import { preparePreview, sendAgentCmd } from './bridge';
 import { Button } from '../common/Button';
 import { useGeometryClass } from '../common/useGeometryClass';
@@ -53,7 +55,8 @@ export function ViewportCard({
   }[st.language];
   const profile = st.profileOf(vp);
   const logical = effectiveSize(profile, vp.orientation);
-  const display = displayedSize(logical, vp.zoom);
+  const fitted = st.fitZooms[vp.id] !== undefined;
+  const display = displayedSize(logical, vp.zoom, fitted);
   const contentRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [attempt, setAttempt] = React.useState(0);
@@ -139,7 +142,7 @@ export function ViewportCard({
   const geometryClass = useGeometryClass({
     '--vg-display-width': display.width, '--vg-display-height': display.height,
     '--vg-logical-width': logical.width, '--vg-logical-height': logical.height,
-    '--vg-scale': clampZoom(vp.zoom), '--vg-touch-x': touchPos.x, '--vg-touch-y': touchPos.y,
+    '--vg-scale': fitted ? vp.zoom : clampZoom(vp.zoom), '--vg-touch-x': touchPos.x, '--vg-touch-y': touchPos.y,
   });
 
   return (
@@ -189,17 +192,22 @@ export function ViewportCard({
           onDragEndCard?.();
         }}
       >
-        <span className={`${s.deviceIcon} ${cardStyles.drag}`} title={cardText.reorder}>⠿ {getDeviceCategoryIcon(profile.category)}</span>
+        <span className={`${s.deviceIcon} ${cardStyles.drag}`} title={cardText.reorder}><Icon name="grip" /> <Icon name={getDeviceCategoryIconName(profile.category)} /></span>
         <strong>{profile.name}</strong>
         <span className={s.dim}>
           {logical.width}×{logical.height}
         </span>
-        <span className={s.dprChip} title={st.language === 'tr' ? 'DPR: cihaz bilgisi, gerçek cihaz emülasyonu değildir' : st.language === 'no' ? 'DPR: enhetsmetadata, ikke ekte enhetsemulering' : 'DPR: device metadata, not real device emulation'}>{profile.devicePixelRatio}x</span>
         <div
           className={s.cardActions}
           onMouseDown={(e) => e.stopPropagation()}
           draggable={false}
         >
+          <Button className={s.iconBtn} title={t.shotOne} aria-label={t.shotOne} onClick={onShot}><Icon name="camera" /></Button>
+          <details className={cardStyles.menu}>
+            <Tooltip content={cardText.settings}><summary aria-label={profile.name + ' ' + cardText.settings} title={cardText.settings}><Icon name="moreHorizontal" /></summary></Tooltip>
+            <div className={cardStyles.menuBody}>
+          <span className={s.dprChip} title={st.language === 'tr' ? 'DPR: cihaz bilgisi, gerçek cihaz emülasyonu değildir' : st.language === 'no' ? 'DPR: enhetsmetadata, ikke ekte enhetsemulering' : 'DPR: device metadata, not real device emulation'}>DPR {profile.devicePixelRatio}x</span>
+          <label>{st.language === 'tr' ? 'Gösterim zoom’u' : st.language === 'no' ? 'Visningszoom' : 'Display zoom'}{fitted ? ' (Fit)' : ''}
           <select
             className={s.iconBtn}
             value={vp.zoom}
@@ -208,15 +216,12 @@ export function ViewportCard({
             aria-label={st.language === 'tr' ? 'Gösterim zoom’u (CSS ölçüsü değişmez)' : st.language === 'no' ? 'Visningszoom (CSS-størrelse uendret)' : 'Display zoom (CSS size unchanged)'}
           >
             {[...ZOOM_PRESETS, vp.zoom].filter((z, i, a) => a.indexOf(z) === i).sort((a, b) => a - b).map((z) => (
-              <option key={z} value={z}>{Math.round(z * 100)}%</option>
+              <option key={z} value={z} disabled={fitted && !ZOOM_PRESETS.includes(z)}>{fitted && !ZOOM_PRESETS.includes(z) ? 'Fit ' : ''}{Math.round(z * 100)}%</option>
             ))}
           </select>
+          </label>
 
-          <Button className={s.iconBtn} title={t.orientation} aria-label={t.orientation} onClick={() => st.toggleOrientation(vp.id)}>⟳</Button>
-          <Button className={s.iconBtn} title={t.shotOne} aria-label={t.shotOne} onClick={onShot}>📷</Button>
-          <details className={cardStyles.menu}>
-            <summary aria-label={profile.name + ' ' + cardText.settings} title={cardText.settings}>•••</summary>
-            <div className={cardStyles.menuBody}>
+          <Button title={t.orientation} aria-label={t.orientation} onClick={() => st.toggleOrientation(vp.id)}><Icon name="orientation" /> {t.orientation}</Button>
           <Button onClick={() => void sendAgentCmd([vp.id], 'reload')} title={st.language === 'tr' ? 'Bu görünümü yenile' : st.language === 'no' ? 'Last denne visningen på nytt' : 'Reload this viewport'}>{st.language === 'tr' ? 'Görünümü yenile' : st.language === 'no' ? 'Last visningen på nytt' : 'Reload viewport'}</Button>
           <Button
             className={s.iconBtn}
@@ -237,7 +242,7 @@ export function ViewportCard({
               sendAgentCmd([vp.id], 'setColorScheme', undefined, { scheme: next });
             }}
           >
-            {vp.colorScheme === 'dark' ? '🌙' : vp.colorScheme === 'light' ? '☀️' : '🌗'}
+            <Icon name={vp.colorScheme === "dark" ? "moon" : vp.colorScheme === "light" ? "sun" : "halfMoon"} />
           </Button>
 
           {/* Hardware Finish Selector for iPhone 15 & MacBook */}
@@ -264,12 +269,12 @@ export function ViewportCard({
             </select>
           )}
 
-          <Button className={s.iconBtn} title={t.duplicate} onClick={() => st.duplicate(vp.id)}>⧉ {t.duplicate}</Button>
+          <Button className={s.iconBtn} title={t.duplicate} onClick={() => st.duplicate(vp.id)}><Icon name="copy" /> {t.duplicate}</Button>
           <Button className={s.iconBtn} title={vp.minimized ? t.restore : t.minimize} onClick={() => st.toggleMinimized(vp.id)}>
-            {vp.minimized ? '▢ ' + t.restore : '— ' + t.minimize}
+            <Icon name={vp.minimized ? "square" : "minus"} /> {vp.minimized ? t.restore : t.minimize}
           </Button>
-          <Button className={s.iconBtn} title={t.hide} onClick={() => st.toggleHidden(vp.id)}>👁 {t.hide}</Button>
-          <Button className={s.iconBtn} title={t.remove} onClick={() => st.removeViewport(vp.id)}>✕ {t.remove}</Button>
+          <Button className={s.iconBtn} title={t.hide} onClick={() => st.toggleHidden(vp.id)}><Icon name="eye" /> {t.hide}</Button>
+          <Button className={s.iconBtn} title={t.remove} onClick={() => st.removeViewport(vp.id)}><Icon name="close" /> {t.remove}</Button>
             </div>
           </details>
         </div>

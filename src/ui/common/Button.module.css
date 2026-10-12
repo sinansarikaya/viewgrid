@@ -2,7 +2,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
+  line-height: 1.4;
+  min-width: 0;
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -15,6 +17,11 @@
   user-select: none;
   transition: all 0.15s ease;
   outline: none;
+}
+
+.button svg,
+.button :global(.icon) {
+  flex-shrink: 0;
 }
 
 .button:hover:not(:disabled) {
@@ -67,6 +74,8 @@
 .iconOnly {
   padding: 5px;
   border-radius: var(--radius, 6px);
+  min-width: 28px;
   width: 28px;
   height: 28px;
+  flex-shrink: 0;
 }
