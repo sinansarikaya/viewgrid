@@ -274,6 +274,48 @@ test('scroll mirrors promptly even when the target site requests smooth scrollin
   await measureScrollSync('local fixture with CSS smooth scrolling');
 });
 
+test('balanced grid uses independent display scales and preserves saved manual zoom', async () => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const cssSizes = await Promise.all(frames().map(frame => frame.evaluate(() => [innerWidth, innerHeight])));
+  await page.getByRole('button', { name: /Fit to Screen/i }).click();
+  const scales = await page.locator('[data-viewport-id] iframe').evaluateAll(nodes => nodes.map(node => {
+    const frame = node as HTMLIFrameElement;
+    const rect = frame.getBoundingClientRect();
+    return { height: rect.height, x: rect.width / frame.clientWidth, y: rect.height / frame.clientHeight };
+  }));
+  expect(Math.max(...scales.map(scale => scale.height)) / Math.min(...scales.map(scale => scale.height))).toBeLessThan(1.4);
+  for (const scale of scales) expect(Math.abs(scale.x - scale.y)).toBeLessThan(0.001);
+  expect(await Promise.all(frames().map(frame => frame.evaluate(() => [innerWidth, innerHeight])))).toEqual(cssSizes);
+  const zoom = page.locator('[data-viewport-id]').first().getByRole('combobox', { name: 'Display zoom (CSS size unchanged)' });
+  await zoom.selectOption('0.5');
+  await expect.poll(() => page.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('viewgrid.store.v1'))['viewgrid.store.v1']?.model?.viewports?.[0]?.zoom)).toBe(0.5);
+  await page.reload();
+  await expect(zoom).toHaveValue('0.5');
+  await page.setViewportSize({ width: 1280, height: 800 });
+});
+
+test('short windows retain sidebar analysis actions and keyboard collapse controls', async () => {
+  await page.setViewportSize({ width: 640, height: 480 });
+  const sidebar = page.getByRole('complementary', { name: 'Workspace tools and devices' });
+  const geo = sidebar.getByRole('button', { name: /GEO Signals/ });
+  await geo.scrollIntoViewIfNeeded();
+  await expect(geo).toBeVisible();
+  const buttonBounds = await geo.boundingBox();
+  const sidebarBounds = await sidebar.boundingBox();
+  expect(buttonBounds!.y + buttonBounds!.height).toBeLessThanOrEqual(sidebarBounds!.y + sidebarBounds!.height + 1);
+  await geo.click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  const collapse = sidebar.getByRole('button', { name: 'Collapse sidebar' });
+  await collapse.scrollIntoViewIfNeeded();
+  await collapse.focus();
+  await page.keyboard.press('Enter');
+  await expect(sidebar.getByRole('button', { name: 'Expand sidebar' })).toBeVisible();
+  await sidebar.getByRole('button', { name: 'Devices', exact: true }).click();
+  await expect(sidebar.getByRole('button', { name: 'Collapse sidebar' })).toBeVisible();
+  await page.setViewportSize({ width: 1280, height: 800 });
+});
+
 test('layout, fit and alignment preserve the real CSS viewport and persist', async () => {
   const before = await Promise.all(frames().map(frame => frame.evaluate(() => [innerWidth, innerHeight])));
   for (const title of ['Row', 'Column', 'Freeform', 'Grid']) {

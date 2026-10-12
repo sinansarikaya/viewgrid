@@ -1,5 +1,15 @@
 # Uygulama planı — 2026-10-11
 
+## UI-REFINE — 2026-10-12 güncel ekran referansı
+
+Bu paket yalnız arayüz iyileştirmesidir; analiz servisi/anahtar/telemetri ve sürüm yükseltme kapsam dışıdır. Mevcut analiz panelleri kodda çalışır; canlı Google kota engeli farklıdır, özellikler gizlenmez. Firefox click-sync kurulum sorunu çözüldü, teşhis tekrarlanmaz.
+
+| Paket / sahip | Dosya alanı | Bağımlılık | Kabul / doğrulama |
+| --- | --- | --- | --- |
+| UI-R1 lider | App/styles, ViewportCard, core/workspace/fit, store ve unit/E2E | Mevcut envanter/devir | Üst kontrol isim/spacing/reflow, grid eşit kart hücresi ve bağımsız uniform display zoom; kaydedilmiş ayarlar ve CSS boyut korunur;1280/1920/320 screenshot ve E2E |
+| UI-R2 Antigravity | WorkspaceSidebar.module.css, WorkspaceActions.tsx/css | Mevcut Sidebar/Analysis davranışı | Okunaklı2x2panel sekmeleri, collapsed rail, Tools/Sync/Analyze grupları; EN/TR/NO, tüm handlerlar korunur; lint/typecheck/source review |
+| UI-R3 lider + bağımsız reviewer | Test/docs; reviewer salt okunur | R1/R2 | Chromium gerçekextension+görünür canlısmoke, Firefox ayrıbaseline, mevcutunit/E2E/lint/typecheck/build/web-ext; diff incelemesi, kanıt ve commit. Normal profiller kullanılmaz. |
+
 Başlangıç paket sürümü 1.0.3. Mağaza sürümleri doğrulanmadı; yerel geliştirme sürümü yayınlanmış sayılmaz. Hedef sırası 1.0.4 → 1.1.0 → 1.2.0 → 1.3.0 → 1.4.0 → 1.5.0 → 1.6.0 BETA. Sürüm yalnız ilgili kabul kapıları geçtiğinde yükseltilir.
 
 Öncelikli güncelleme: ücretsiz/açık kaynak, zorunlu ücretli servis/hesap/barındırma yok; temel eklenti sunucusuz. ANALYSIS-CORE/UI, FIELD ve REPORTS kamu kotasına bağımlılığı açıkça gösterir; keyless429 ve ayrı CrUX anahtar eksikliği gerçek servis testlerinde engelli. Mock çıktılar gerçek ölçüm değildir. LOCAL-RESEARCH paketi liderde: `docs/ANALYSIS_SETUP.md`, gizlilik ve lisans bildirimleri; resmî PSI/CrUX şartları ve açık kaynak Lighthouse kurulum/platform/kaynak/bakım araştırması. Sunucu kurma/yayınlama veya istemciye anahtar ekleme kapsam dışı; gelecekte isteğe bağlı kullanıcı sunucusu güvenli profil olabilir.

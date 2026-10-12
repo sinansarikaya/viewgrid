@@ -27,11 +27,14 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 ## In Progress
 
 
+
 - [~] [AUTO] ViewGrid 1.0.4–1.6.0 BETA geliştirme: yeni shell/cihaz/analiz/rapor/GEO ve kontrollü testler entegre; koruma matrisi ve katalog kaynak kapıları açık. Paket1.0.3, mağaza doğrulanmadı; plan/kanıt/devir `docs/IMPLEMENTATION_PLAN.md`, `docs/FEATURE_TEST_MATRIX.md`, `docs/TEAM_HANDOFF.md`.
 
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+
+- [x] [AUTO] UI-REFINE arayüz paketi: toolbar erişilebilirlik/spacing, okunaklı ve kaydırılabilirsidebar, dengeli grid/displayzoom; kayıtlı ayarlar ve gerçekCSSölçüleri korunur.262unit/Chromium32E2E/Firefox9baseline+UI veBiDi200/429/lint/types/buildboth geçti, web-ext3bilinenuyarı. Bağımsızreview tamam; kanıt `docs/FEATURE_TEST_MATRIX.md` UI-REFINE, `test-results/development/ui-refine-*`. Sürüm1.0.3; analizservisi ve yayın kapsam dışı. _(2026-10-12, Codex)_
 
 - [x] [AUTO] Görünür Chromium/gerçek eklenti QA: CastPost dörtiframe yükleme, Row/Grid/Fit ve üst32px kontrolleri geçti;6unit/3E2E/buildboth/typecheck/lint. Kullanıcı Brave'e Firefox paketi kurduğunu açıkladı; doğru paket ayrımı ve tarayıcı tespiti güçlendirildi. `visible-live-verified.log`, `visible-workspace-qa.png`; headedtest `node scripts/visible-workspace-qa.mjs`, normalprofil kullanılmaz. _(2026-10-12, Codex)_
 

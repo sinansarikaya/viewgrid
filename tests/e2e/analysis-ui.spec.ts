@@ -632,6 +632,9 @@ test.describe.serial('QA-ANALYSIS Controlled E2E Suite', () => {
     await page.getByRole('button', { name: 'Performans & CrUX', exact: true }).click();
     const lightDialog = page.getByRole('dialog').first();
     await expect(lightDialog).toBeVisible();
+    await lightDialog.evaluate(async element => {
+      await Promise.all(element.getAnimations({ subtree: true }).map(animation => animation.finished));
+    });
 
     // Take screenshot of AnalysisPanel in light theme
     await page.screenshot({ path: 'test-results/development/analysis-ui-light.png' });

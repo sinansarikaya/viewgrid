@@ -381,6 +381,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                           iconOnly
                           className={s.actionBtn}
                           onClick={() => st.deleteSaved(name)}
+                          aria-label={`${st.language === 'tr' ? 'Çalışma alanını sil' : st.language === 'no' ? 'Slett arbeidsområde' : 'Delete workspace'}: ${name}`}
                         >
                           ✕
                         </Button>

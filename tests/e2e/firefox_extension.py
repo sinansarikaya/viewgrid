@@ -137,6 +137,20 @@ try:
     wait.until(lambda d: d.find_element(By.CSS_SELECTOR, '[data-testid="extension-version"]').text == f'v{expected_version}')
     driver.save_screenshot(str(out / 'success.png'))
     print(f'PASS Firefox: extension version v{expected_version}', flush=True)
+    logical = [frame_script('return [innerWidth,innerHeight]', i) for i in range(4)]
+    for width, height in [(1280, 800), (1920, 1080)]:
+        driver.set_window_size(width, height)
+        actual = driver.execute_script('return [innerWidth, innerHeight]')
+        driver.set_window_size(width + width - actual[0], height + height - actual[1])
+        wait.until(lambda d: d.execute_script('return [innerWidth, innerHeight]') == [width, height])
+        driver.find_element(By.XPATH, "//button[@title='Row']").click()
+        driver.find_element(By.XPATH, "//button[@title='Grid']").click()
+        driver.find_element(By.XPATH, "//button[@title='Fit to screen']").click()
+        print('FIREFOX UI CSS GEOMETRY', {'expected': logical, 'observed': [frame_script('return [innerWidth,innerHeight]', i) for i in range(4)]}, flush=True)
+        wait.until(lambda _: [frame_script('return [innerWidth,innerHeight]', i) for i in range(4)] == logical)
+        assert driver.execute_script('return document.documentElement.scrollWidth <= innerWidth')
+        driver.save_screenshot(str(out / f'workspace-{width}.png'))
+    print('PASS Firefox: UI 1280/1920, Row/Grid/Fit preserve CSS dimensions and document reflow', flush=True)
     # Network-free consent check. Controlled transport/results are verified
     # separately by firefox_analysis_bidi.py, not by this baseline runner.
     print('INFO Firefox: controlled PSI 200/429 has a separate BiDi runner', flush=True)

@@ -1,5 +1,24 @@
 # ViewGrid Özellik Test Matrisi
 
+## UI-REFINE kabul kayıtları — 2026-10-12
+
+Bu tablo yalnız güncel arayüz paketinin kapısıdır; önceki geniş1.0.4–1.6kapsamının tamamlandığı anlamına gelmez. Loglar `test-results/development/` altındadır.
+
+| Senaryo / ortam ve adımlar | Beklenen | Gerçekleşen / durum | Kanıt |
+| --- | --- | --- | --- |
+| Chromium gerçek eklenti, tam mevcut E2E | CRUD/custom/group/recent/fav, compare/Figma/issues/capture/sync/nav, analizmock ve kalıcılık |32geçti;1isteğe bağlı canlıworker-warmedCastPost çalıştırılmadı | ui-refine-regression-complete.log |
+| Grid display / CSS / kayıt |1920fit, x/yuniformscale, manual50%storagewrite+reload | Dengeli yükseklik (<1.4oran), CSSölçüsü aynı, manualzoom korunur: Geçti | extension.spec.ts balancedgrid; workspace-fit4unit ve724/725boundary |
+| Kısa pencere panel/klavye |640×480GEOscrollIntoView+click+Escape; collapsefocus+Enter,Devicesexpand | Tüm eylemler kaydırmayla erişilebilir: Geçti | extension.spec.ts shortwindows; ui-refine-regression-complete.log |
+| Chromium1280/1920/320, lightTR | Fit/menü/minimize/restore/sidebarkalıcılığı/tema/dil | Geçti; screenshotlar görsel incelendi | ui-refine-evidence/chromium-1280.png, chromium-1920.png, chromium-320.png, light-tr-analysis.png |
+| Firefox gerçek geçici addon | YerelZIP;4frame/click/protectednav/reload/normal-tab/SW/version/onay | Geçti; click-sync eski kurulum sorunu tekrar teşhis edilmedi | ui-refine-firefox-retest.log |
+| Firefox UI gerçek CSS1280×800/1920×1080 | windowchrome offset düzeltilir;Row/Grid/Fit,logicaldimsassert,screenshot | Geçti; ilk anlık geometri assertion başarısızdı, aynı kesin ölçü için explicitsettlewait ile geçti; ürün beklentisi gevşetilmedi | ui-refine-firefox-complete.log (başarısız), ui-refine-firefox-retest.log; ui-refine-firefox-retest/workspace-1280.png ve workspace-1920.png |
+| Firefox kontrollü analiz | NativeBiDi200/429,denyproxy | Geçti; labTBT210/sahap75INP180 ayrı,429tekistek/puanyok; canlıGoogle değil | ui-refine-firefox-analysis.log |
+| Görünür Chromium canlıCastPost | Ayrıprofile,headlessfalse,sandboxaçık,4iframeh1,Row/Grid/Fit,32px ölçüm | Geçti; site içeriğine müdahale edilmedi | ui-refine-visible-complete.log; ui-refine-evidence/castpost-chromium.png |
+| Unit/lint/type/build/web-ext | Mevcut tümunit ve iki target |262unit/29dosya,lint/typecheck/buildgeçti;web-ext0error/0notice/3bilinenuyarı | ui-refine-unit-complete.log, ui-refine-lint-delivery.log, ui-refine-types-verified.log, ui-refine-build-verified.log, ui-refine-web-ext-complete.log |
+| Canlı PSI/CrUX ve gerçek cihaz | BuUIpaketinde servis geliştirme/test yok | Engelli: öncekiGoogle429/CrUXanahtar yok; gerçekcihaz/Safari/screenreader tamdenetim çalıştırılmadı | ANALYSIS_SETUP.md; önceki kanıtlar korunur |
+
+Bağımsız kaynak incelemesi `/root/independent_review`: container cascade/content-box ve pre-render starterfit düzeltildi; silme/schemeisimleri ve tek sidebar scroll doğrulandı, somut açık blocker yok. Reviewer tarayıcı çalıştırmadı; tarayıcı sonuçları liderin ayrı kanıtlarıdır.
+
 Bu matris, kod tabanındaki mevcut özellikler ve testler (`tests/unit/*`, `tests/e2e/*`) ile `test-results/tool-readiness/READINESS.md` hazırlık sonuçları temel alınarak hazırlanmıştır.
 
 > **Kural:** Unit, gerçek eklenti ve manuel sonuçlar ayrı değerlendirilir. Bir screenshot, capture özelliğinin test edildiği anlamına gelmez. Başlangıç lint/typecheck ve 107 unit geçti; eski yerel kanıtlar Playwright çıktı temizliğiyle kayboldu. Son yeniden koşu: `test-results/development/unit-current.log`, `current-typecheck.log`. Aşağıdaki uçtan uca senaryolar ayrıca doğrulanmadıkça çalıştırılmadı kalır. Tarihsel hazırlık satırları güncel retest kaydıyla birlikte okunur.

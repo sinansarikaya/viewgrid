@@ -194,7 +194,7 @@ export function ViewportCard({
         <span className={s.dim}>
           {logical.width}×{logical.height}
         </span>
-        <span className={s.dprChip}>{profile.devicePixelRatio}x</span>
+        <span className={s.dprChip} title={st.language === 'tr' ? 'DPR: cihaz bilgisi, gerçek cihaz emülasyonu değildir' : st.language === 'no' ? 'DPR: enhetsmetadata, ikke ekte enhetsemulering' : 'DPR: device metadata, not real device emulation'}>{profile.devicePixelRatio}x</span>
         <div
           className={s.cardActions}
           onMouseDown={(e) => e.stopPropagation()}
@@ -205,6 +205,7 @@ export function ViewportCard({
             value={vp.zoom}
             onChange={(e) => st.setZoom(vp.id, Number(e.target.value))}
             title={t.zoomPresets}
+            aria-label={st.language === 'tr' ? 'Gösterim zoom’u (CSS ölçüsü değişmez)' : st.language === 'no' ? 'Visningszoom (CSS-størrelse uendret)' : 'Display zoom (CSS size unchanged)'}
           >
             {[...ZOOM_PRESETS, vp.zoom].filter((z, i, a) => a.indexOf(z) === i).sort((a, b) => a - b).map((z) => (
               <option key={z} value={z}>{Math.round(z * 100)}%</option>
@@ -216,8 +217,10 @@ export function ViewportCard({
           <details className={cardStyles.menu}>
             <summary aria-label={profile.name + ' ' + cardText.settings} title={cardText.settings}>•••</summary>
             <div className={cardStyles.menuBody}>
+          <Button onClick={() => void sendAgentCmd([vp.id], 'reload')} title={st.language === 'tr' ? 'Bu görünümü yenile' : st.language === 'no' ? 'Last denne visningen på nytt' : 'Reload this viewport'}>{st.language === 'tr' ? 'Görünümü yenile' : st.language === 'no' ? 'Last visningen på nytt' : 'Reload viewport'}</Button>
           <Button
             className={s.iconBtn}
+            aria-label={vp.colorScheme === 'dark' ? t.colorSchemeDark : vp.colorScheme === 'light' ? t.colorSchemeLight : t.colorSchemeAuto}
             title={
               vp.colorScheme === 'dark'
                 ? t.colorSchemeDark

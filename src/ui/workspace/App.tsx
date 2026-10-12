@@ -54,6 +54,11 @@ function matchesShortcut(e: KeyboardEvent, comboStr?: string): boolean {
 export function App({ hub: _hub }: { hub: LoopGuard }) {
   const st = useStore();
   const t = getTranslation(st.language);
+  React.useLayoutEffect(() => {
+    if (!st.starterFitPending) return;
+    st.fitToScreen();
+    useStore.setState({ starterFitPending: false });
+  }, [st.starterFitPending, st.fitToScreen]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLElement>());
   const [menuOpen, setMenuOpen] = useState(false);
@@ -436,15 +441,16 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         <span className={s.brand}>
           ViewGrid <small data-testid="extension-version" className={s.versionTag}>v{version}</small>
         </span>
-        <Button variant="default" className={s.iconBtn} title={t.back} onClick={() => sendAgentCmd('all', 'back')}>←</Button>
-        <Button variant="default" className={s.iconBtn} title={t.forward} onClick={() => sendAgentCmd('all', 'forward')}>→</Button>
-        <Button variant="default" className={s.iconBtn} title={t.reloadAll} onClick={() => sendAgentCmd('all', 'reload')}>⟳</Button>
-        <Button variant="default" className={s.iconBtn} title={t.hardReloadAll} onClick={() => void handleHardReload()}>🧹</Button>
+        <Button variant="default" className={s.iconBtn} title={t.back} aria-label={t.back} onClick={() => sendAgentCmd('all', 'back')}>←</Button>
+        <Button variant="default" className={s.iconBtn} title={t.forward} aria-label={t.forward} onClick={() => sendAgentCmd('all', 'forward')}>→</Button>
+        <Button variant="default" className={s.iconBtn} title={t.reloadAll} aria-label={t.reloadAll} onClick={() => sendAgentCmd('all', 'reload')}>⟳</Button>
+        <Button variant="default" className={s.iconBtn} title={t.hardReloadAll} aria-label={t.hardReloadAll} onClick={() => void handleHardReload()}>🧹</Button>
 
         {/* URL Bar — Keep as the very first input on the page for E2E selector compliance */}
         <div className={s.url}>
           <input
             placeholder={t.urlPlaceholder}
+            aria-label={t.urlPlaceholder}
             value={st.urlDraft}
             onChange={(e) => st.setUrlDraft(e.target.value)}
             onKeyDown={(e) => {
@@ -477,8 +483,9 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
           </div>
         </details>
 
+        <div className={s.secondaryControls}>
         {/* Theme Toggle */}
-        <Button variant="default" onClick={st.toggleTheme} title={t.theme}>
+        <Button variant="default" onClick={st.toggleTheme} title={t.theme} aria-label={t.theme}>
           {st.model.theme === 'dark' ? '☀' : '◐'}
         </Button>
 
@@ -487,6 +494,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
           value={st.language}
           onChange={(e) => st.setLanguage(e.target.value as Language)}
           title={t.language}
+          aria-label={t.language}
           className={s.langSelect}
         >
           <option value="tr">🇹🇷 TR</option>
@@ -495,8 +503,9 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         </select>
 
         {/* Settings & Workspace Menu */}
-        <Button variant="default" onClick={() => st.setSettingsOpen(true)} title="Ayarlar (Settings)">⚙️</Button>
-        <Button variant="default" onClick={() => setMenuOpen(!menuOpen)} title={t.menu}>☰</Button>
+        <Button variant="default" onClick={() => st.setSettingsOpen(true)} title="Ayarlar (Settings)" aria-label={st.language === 'tr' ? 'Ayarlar' : st.language === 'no' ? 'Innstillinger' : 'Settings'}>⚙️</Button>
+        <Button variant="default" onClick={() => setMenuOpen(!menuOpen)} title={t.menu} aria-label={t.menu} aria-expanded={menuOpen}>☰</Button>
+        </div>
 
         {menuOpen && (
           <div className={s.menu}>
@@ -523,7 +532,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                 <span>{n}</span>
                 <span>
                   <Button variant="default" className={s.iconBtn} onClick={() => { st.loadSaved(n); setMenuOpen(false); }}>{t.load}</Button>
-                  <Button variant="danger" className={s.iconBtn} onClick={() => st.deleteSaved(n)}>✕</Button>
+                  <Button variant="danger" className={s.iconBtn} aria-label={`${st.language === 'tr' ? 'Çalışma alanını sil' : st.language === 'no' ? 'Slett arbeidsområde' : 'Delete workspace'}: ${n}`} onClick={() => st.deleteSaved(n)}>✕</Button>
                 </span>
               </div>
             ))}

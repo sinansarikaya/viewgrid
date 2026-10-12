@@ -138,12 +138,24 @@
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: 10px;
+  padding: 10px 14px;
   background: var(--bg-soft);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
+.secondaryControls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.canvasGrid > .card {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-soft);
+}
+.canvasGrid .cardHeader { align-self: stretch; flex-wrap: wrap; box-sizing: border-box; }
+.canvas { container-type: inline-size; }
 
 .toolbar :global(.button),
 .toolbar button,
@@ -298,16 +310,16 @@
 }
 .canvasGrid {
   display: grid;
-  grid-template-columns: repeat(2, max-content);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   align-items: flex-start;
   justify-content: flex-start;
 }
 
-.canvasGrid[data-cols="1"] { grid-template-columns: repeat(1, max-content); }
-.canvasGrid[data-cols="2"] { grid-template-columns: repeat(2, max-content); }
-.canvasGrid[data-cols="3"] { grid-template-columns: repeat(3, max-content); }
-.canvasGrid[data-cols="4"] { grid-template-columns: repeat(4, max-content); }
+.canvasGrid[data-cols="1"] { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.canvasGrid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.canvasGrid[data-cols="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.canvasGrid[data-cols="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .canvasGrid[data-cols="5"] { grid-template-columns: repeat(5, max-content); }
 .canvasGrid[data-cols="6"] { grid-template-columns: repeat(6, max-content); }
 .canvasGrid[data-cols="7"] { grid-template-columns: repeat(7, max-content); }
@@ -320,6 +332,10 @@
 .canvasGrid[data-cols="14"] { grid-template-columns: repeat(14, max-content); }
 .canvasGrid[data-cols="15"] { grid-template-columns: repeat(15, max-content); }
 .canvasGrid[data-cols="16"] { grid-template-columns: repeat(16, max-content); }
+
+@container (max-width: 700px) {
+  .canvasGrid[data-cols] { grid-template-columns: minmax(0, 1fr); }
+}
 
 .canvasGrid[data-align="flex-start"], .canvasRow[data-align="flex-start"], .canvasCol[data-align="flex-start"] { align-items: flex-start; }
 .canvasGrid[data-align="center"], .canvasRow[data-align="center"], .canvasCol[data-align="center"] { align-items: center; }
@@ -505,7 +521,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: rgba(28, 30, 36, 0.9);
+  background: var(--panel);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -518,7 +534,7 @@
   max-width: 100%;
 }
 .deviceIcon { font-size: 13px; line-height: 1; }
-.cardHeader strong { font-size: 12px; font-weight: 600; color: #fff; }
+.cardHeader strong { font-size: 13px; font-weight: 600; color: var(--text); }
 .dim { color: var(--text-dim); font-family: var(--mono); font-size: 11px; }
 .dprChip {
   font-size: 10px;

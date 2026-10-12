@@ -13,6 +13,7 @@
 
 .sidebarExpanded {
   width: 260px;
+  overflow-y: auto;
 }
 
 .sidebarCollapsed {
@@ -54,65 +55,79 @@
 }
 
 .navTabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 6px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-soft);
-  overflow-x: auto;
 }
 
 .sidebarCollapsed .navTabs {
+  display: flex;
   flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
   border-bottom: none;
 }
 
 .navTab {
-  flex: 1;
-  display: flex;
+  min-height: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
-  padding: 8px 4px;
-  font-size: 11px;
+  padding: 0 8px;
+  font-size: 12px;
   font-weight: 600;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  border-bottom: 2px solid transparent;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 6px);
   color: var(--text-dim);
   cursor: pointer;
   white-space: nowrap;
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  width: 100%;
 }
 
 .sidebarCollapsed .navTab {
-  border-bottom: none;
-  border-left: 2px solid transparent;
-  padding: 10px 0;
+  justify-content: center;
+  padding: 0;
+  min-height: 36px;
+  height: 36px;
+  width: 36px;
+  margin: 0 auto;
+  border-radius: var(--radius, 6px);
 }
 
 .navTab:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .navTabActive {
   color: var(--accent) !important;
-  border-bottom-color: var(--accent) !important;
-  background: rgba(56, 189, 248, 0.06) !important;
+  border-color: var(--accent) !important;
+  background: rgba(56, 189, 248, 0.12) !important;
 }
 
 .sidebarCollapsed .navTabActive {
-  border-left-color: var(--accent) !important;
+  border-color: var(--accent) !important;
+  background: rgba(56, 189, 248, 0.16) !important;
 }
 
 .tabIcon {
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  flex: 0 0 auto;
+  overflow: visible;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -159,11 +174,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 6px;
-  border-radius: var(--radius);
+  padding: 6px 8px;
+  border-radius: var(--radius, 6px);
   background: var(--panel-2);
   border: 1px solid var(--border);
   font-size: 12px;
+  min-height: 44px;
+  box-sizing: border-box;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -177,7 +194,7 @@
 }
 
 .deviceHidden {
-  opacity: 0.55;
+  opacity: 0.6;
   filter: grayscale(0.5);
 }
 
@@ -187,12 +204,13 @@
   align-items: flex-start !important;
   text-align: left !important;
   gap: 2px !important;
-  padding: 4px 6px !important;
+  padding: 2px 4px !important;
   background: transparent !important;
   border: none !important;
   flex: 1 !important;
   min-width: 0 !important;
   color: inherit !important;
+  cursor: pointer !important;
 }
 
 .deviceSelectBtn:hover {
@@ -200,32 +218,43 @@
 }
 
 .deviceName {
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
+  line-height: 1.3;
 }
 
 .deviceMeta {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-dim);
   font-family: var(--mono);
+  line-height: 1.2;
 }
 
 .deviceActions {
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-left: 4px;
+  gap: 3px;
+  margin-left: 6px;
   flex-shrink: 0;
 }
 
 .actionBtn {
-  padding: 2px 5px !important;
-  font-size: 11px !important;
+  padding: 0 4px !important;
+  min-width: 26px !important;
+  width: 26px !important;
+  min-height: 26px !important;
+  height: 26px !important;
+  font-size: 12px !important;
   line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
 }
 
 .syncList {

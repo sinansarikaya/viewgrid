@@ -30,7 +30,7 @@ import { defaultWorkspace, parseWorkspace } from '../../core/workspace/serialize
 import { uid } from '../../core/util/id';
 import { b } from '../../platform/browser';
 import { hasHostAccess } from './bridge';
-import { fitWorkspaceZoom } from '../../core/workspace/fit';
+import { fitGridZooms, fitWorkspaceZoom } from '../../core/workspace/fit';
 
 export interface StoreState {
   model: WorkspaceModel;
@@ -44,6 +44,7 @@ export interface StoreState {
   savedWorkspaces: Record<string, WorkspaceModel>;
   focusedId: string | null;
   focusMode: boolean;
+  starterFitPending: boolean;
   issues: Issue[];
   scanning: boolean;
   scanId: string | null;
@@ -202,6 +203,7 @@ export const useStore = create<StoreState>((set, get) => ({
   savedWorkspaces: {},
   focusedId: null,
   focusMode: false,
+  starterFitPending: false,
   issues: [],
   scanning: false,
   scanCoverage: {}, scanId: null, scanPending: [], scanFailed: [], scanTruncated: [], scannedAt: null,
@@ -248,6 +250,7 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   async hydrate() {
+    let seeded = false;
     let model = defaultWorkspace();
     let customDevices: DeviceProfile[] = [];
       let favoriteDeviceIds: string[] = [];
@@ -294,6 +297,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (urlParam) {
       model = { ...model, url: urlParam, viewports: model.viewports.map((v) => ({ ...v, url: urlParam })) };
       if (model.viewports.length === 0) {
+        seeded = true;
         // seed a sensible starter set on first launch with a URL
         model.viewports = ['iphone-15-pro', 'ipad-air', 'laptop-1280', 'desktop-1080p'].map((deviceId) => ({
           id: uid('vp'),
@@ -315,6 +319,7 @@ export const useStore = create<StoreState>((set, get) => ({
     }
     set({
       model,
+      starterFitPending: seeded,
       customDevices,
         favoriteDeviceIds,
         recentDeviceIds,
@@ -328,6 +333,7 @@ export const useStore = create<StoreState>((set, get) => ({
       bypassCacheOnLoad,
     });
     document.documentElement.dataset.theme = model.theme;
+    // Only the new starter workspace is fitted automatically. Saved zooms remain untouched.
   },
 
   async persist() {
@@ -363,6 +369,13 @@ export const useStore = create<StoreState>((set, get) => ({
     const canvas = document.querySelector('main');
     if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) return;
     const sizes = visible.map((v) => effectiveSize(profileOf(v), v.orientation));
+    if (get().model.layout === 'grid') {
+      const zooms = fitGridZooms(sizes, { width: canvas.clientWidth, height: canvas.clientHeight });
+      const byId = new Map(visible.map((viewport, index) => [viewport.id, zooms[index]!]));
+      set(state => ({ model: { ...state.model, viewports: state.model.viewports.map(viewport => ({ ...viewport, zoom: byId.get(viewport.id) ?? viewport.zoom })) } }));
+      schedulePersist(get);
+      return;
+    }
     get().setAllZoom(fitWorkspaceZoom(sizes, { width: canvas.clientWidth, height: canvas.clientHeight }, get().model.layout));
   },
   setUrlDraft(u) {
