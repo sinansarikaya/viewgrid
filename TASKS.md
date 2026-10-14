@@ -28,6 +28,8 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 
 
 
+
+
 - [~] [AUTO] INTERACTION-SCAN-FIX: altı güncel referans; tarama/PSI429/izin/state ayrımı, tooltip hit-area, gerçek checkbox tasarımı, kart reorder/drop/FLIP ve reduced motion. Başlangıç088c1df, output/ korunur; lider+uzman+Flash ortak en fazla3, test ve kaynak sahipliği ayrı.
 
 
@@ -38,6 +40,8 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+
+- [x] ANALYSIS-PRESENTATION: tek tarama kapsamı açık, bölüm özeti/renkli sekme ve menü durumları, ayrı MD indirme/kopyalama, modalda sonuç koruma/URL geçerliliği, merkez zoom ve dış tık/Escape ile kapanan üst katman menüsü hazır.351unit/lint/type/build; görünür Chromium/Firefox cache ve UI akışları, CastPost50+18 karşılaştırması geçti. Yayın yok,1.0.3 korundu. Kanıt `docs/REPORT_UX_VALIDATION.md`. _(2026-10-14, Codex)_
 
 - [x] REPORT-UX: 1.0.3 korundu; anlaşılır renkli/metinli rapor, Markdown indirme/kopyalama/rapor dili, iki varsayılan profil, güncel farklı kontrol rozetleri, geçerlilik kaydı ve kullanılabilir hizalama eklendi. 344 unit, lint/type/build; Chromium 25 test ve Firefox yerel akışı geçti. CastPost canlı50 kontrol+18 GEO sonucu ve ham zamanlama eşleşti, kaynak dosyaları salt okunur incelendi. Yayımlanmadı. Kanıt `docs/REPORT_UX_VALIDATION.md`. _(2026-10-14, Codex)_
 
@@ -259,6 +263,8 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 ---
 
 ## 📝 Historical Notes & Decisions (Preserved from TASKS.md)
+
+- Analiz UX: tek DOM taraması tüm bölümleri toplar; her sekme yalnız kendi kapsamını ve MD aktarımını sunar. Sonuçlar modal kapanışında çalışma alanı oturumunda korunur; sayfa/görünüm değişiminde eski olarak işaretlenir. Performans yeşili ölçüm mevcut demektir, kalite skoru değildir.
 
 - **2026-10-14 tamamlanma:** Yeni analiz arayüzünde Google/CrUX isteği, ek kurulum veya tekrar ölçüm onayı yoktur. Lighthouse/DAST/crawl bulunmaz; yerel gözlemler ve sınırlı kurallar açıkça etiketlenir. Eski iki uzak UI E2E paketi `tests/legacy/` içinde saklandı, eski PSI normalizasyon/rapor unit testleri aktiftir. `output/` ve önceki kirli kaynak değişiklikleri korundu.
 - **2026-10-14 ekip doğrulaması:** Gemini izin engeli ve işçi pnpm salt-okunur hatası eski görev kayıtlarında korunur; lider UI/entegrasyon ve gerçek kontrolleri tamamladı. Codex bağımsız incelemesindeki dört bulgu kapandı ve `local-review-closure` kabul edildi. Çalıştırıcıda yalnız kaynak dizini okuma ve sözleşmede açıkça izinli kural kanıtı kapsamı düzeltildi; sandbox/başka kaynak kanıtı sınırı korunur.
