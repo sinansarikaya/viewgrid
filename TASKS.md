@@ -44,6 +44,7 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+- [x] RELEASE-READINESS değerlendirmesi: Gemini paket/Codex güvenlik incelemesi ve lider runtime kontrolleri tamamlandı. Karar yayına hazır değil; SEC-01 hassas alan sync/SEC-02 frame bağlama kaynak eksikleri açık.358 unit,24 Chromium+canlı restart,Firefox,UI axe0 ihlal. Runner başarısız/onaylanmamış sonuçlar başarılı sayılmadı. Rapor `docs/RELEASE_READINESS_1.0.3.md`. _(2026-10-14, Codex)_
 - [x] ANALYSIS-HEIGHT-NO: Dört analiz sekmesinin yüksekliği sabitlendi; Norveççe geçmiş başlık/profil/saatleri düzeltildi. Canlı Norveççe kopyalama/indirme, 800/480 px gerçek pencere, CastPost 50 kural +18 GEO karşılaştırması ve358 unit test geçti. Kanıt: `docs/ANALYSIS_MODAL_REVIEW.md`. Sürüm1.0.3. _(2026-10-14, Codex)_
 
 - [x] REPORT-FEEDBACK: rapora özel yeşil/kısa/animasyonlu kopya ve indirme geri bildirimi, gecikmiş işlem koruması, ortak profil kartları, belirsiz sonuç filtresi, insan dilinde GEO ve gerçek geçen kontrol metni; toplamda türetilmiş aynı bulgu tekrar sayılmaz.358 unit, lint/type/build; Chromium25 + Firefox görünür akış ve CastPost50+18 karşılaştırması geçti.1.0.3 korundu, tam yayın onayı verilmedi. Kanıt `docs/ANALYSIS_MODAL_REVIEW.md`. _(2026-10-14, Codex)_
@@ -71,6 +72,7 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - [x] [AUTO] Firefox gerçek eklentide kontrollü PSI200/429 native BiDi ile geçti; dış Google trafiğine kapalı bağımsız test. `test-results/development/firefox-bidi-latest.log`. _(2026-10-11, Codex)_
 
 ## Todo
+- [ ] RELEASE-SECURITY: SEC-01 hassas alan/origin sync koruması ve SEC-02 doğrudan frame/document kaydı; SEC-04 worker mesajı yarışı için negatif güvenlik testleri. Kaynak bulguları henüz exploit testiyle yeniden üretilmedi.
 
 
 - [ ] [AUTO] Kalan koruma senaryoları ve model bazlı katalog kaynak doğrulaması; canlı PSI429/CrUXanahtar eksikliği engelleri ayrı kalır.
