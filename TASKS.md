@@ -20,11 +20,13 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - **Primary:** "Test every breakpoint at once."
 - **Supporting:** "View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction."
 - **Slogan:** "Stop resizing your browser."
-- **Yerel geliştirme paketi:** `v1.0.4` — mağaza sürümü bu oturumda doğrulanmadı.
+- **Yerel geliştirme paketi:** `v1.0.3` — mağaza sürümü bu oturumda doğrulanmadı.
 
 ---
 
 ## In Progress
+
+
 
 - [~] [AUTO] INTERACTION-SCAN-FIX: altı güncel referans; tarama/PSI429/izin/state ayrımı, tooltip hit-area, gerçek checkbox tasarımı, kart reorder/drop/FLIP ve reduced motion. Başlangıç088c1df, output/ korunur; lider+uzman+Flash ortak en fazla3, test ve kaynak sahipliği ayrı.
 
@@ -36,6 +38,8 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+
+- [x] REPORT-UX: 1.0.3 korundu; anlaşılır renkli/metinli rapor, Markdown indirme/kopyalama/rapor dili, iki varsayılan profil, güncel farklı kontrol rozetleri, geçerlilik kaydı ve kullanılabilir hizalama eklendi. 344 unit, lint/type/build; Chromium 25 test ve Firefox yerel akışı geçti. CastPost canlı50 kontrol+18 GEO sonucu ve ham zamanlama eşleşti, kaynak dosyaları salt okunur incelendi. Yayımlanmadı. Kanıt `docs/REPORT_UX_VALIDATION.md`. _(2026-10-14, Codex)_
 
 - [x] LOCAL-ANALYSIS: ViewGrid 1.0.4 yerel DOM/SEO/GEO + paketlenen axe ve gerçek yükleme gözlemleri, URL/profil/izin/iptal/sınırlar, eski geçmiş/rapor ayrımı ve yumuşak modal/menü/panel geçişleri tamamlandı. 332 unit, type/lint, iki build; Chromium 24 headed test ve Firefox yerel akışı geçti, bir isteğe bağlı canlı test atlandı. Dış analiz isteği yok; bağımsız inceleme bulguları kapandı. Firefox lint 0 hata/13 axe uyarısı; yerel ZIP hazır. Kanıt: `docs/LOCAL_ANALYSIS_VALIDATION.md`, `test-results/local-analysis/`. _(2026-10-14, Codex)_
 
