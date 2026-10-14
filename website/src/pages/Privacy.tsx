@@ -6,8 +6,9 @@ import { Footer } from '../components/Footer';
 export function Privacy() {
   return (
     <div className="site-root">
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <Header currentPath="/privacy/" />
-      <main className="legal-main">
+      <main id="main-content" tabIndex={-1} className="legal-main">
         <div className="container legal-container">
           <div className="legal-header">
             <span className="badge badge-emerald">100% LOCAL EXECUTION · ZERO TELEMETRY</span>
@@ -33,48 +34,7 @@ export function Privacy() {
                 ViewGrid requests only the browser extension permissions strictly required to perform responsive viewport testing. Each permission is audited and justified below:
               </p>
 
-              <div className="perm-table">
-                <div className="perm-row perm-head">
-                  <span>Permission</span>
-                  <span>Browser</span>
-                  <span>Exact Purpose in ViewGrid</span>
-                </div>
-                <div className="perm-row">
-                  <code>storage</code>
-                  <span>Chrome & Firefox</span>
-                  <span>Stores your custom viewport dimensions, user-created device profiles, and workspace settings locally on your machine via <code>chrome.storage.local</code> and <code>chrome.storage.session</code>. No data ever leaves your device.</span>
-                </div>
-                <div className="perm-row">
-                  <code>tabs</code>
-                  <span>Chrome & Firefox</span>
-                  <span>Used to create the ViewGrid workspace tab, detect when a workspace tab is closed to automatically clean up header rules, and navigate workspace frames.</span>
-                </div>
-                <div className="perm-row">
-                  <code>activeTab</code>
-                  <span>Chrome & Firefox</span>
-                  <span>Enables the "Open page in ViewGrid" context menu option and allows capturing screenshots of active viewports via <code>tabs.captureVisibleTab</code>.</span>
-                </div>
-                <div className="perm-row">
-                  <code>contextMenus / menus</code>
-                  <span>Chrome & Firefox</span>
-                  <span>Adds right-click options ("Open link in ViewGrid") to open any URL in a responsive workspace.</span>
-                </div>
-                <div className="perm-row">
-                  <code>declarativeNetRequestWithHostAccess</code>
-                  <span>Chromium</span>
-                  <span>Framing exceptions apply only within verified workspace tabs. Chromium removes XFO and CSP response headers for workspace subframes, including nested frames and page-initiated navigation/reload; Firefox handles direct previews and removes XFO and only the frame-ancestors directive. Normal browsing tabs retain their protections. Before loading a preview, ViewGrid waits for tab-scoped framing rules and removes service-worker registrations only for the selected site's origin (Chromium) or hostname (Firefox). This can also remove that site's worker registrations used by normal tabs; a normal visit can register them again. Cookies, localStorage, sessionStorage, IndexedDB and CacheStorage are not requested for removal, and no browser-wide cache cleanup is used. Preview agents prevent worker re-registration after workspace verification. Preview documents bypass stale HTTP cache headers.</span>
-                </div>
-                <div className="perm-row">
-                  <code>webRequest & webRequestBlocking</code>
-                  <span>Firefox</span>
-                  <span>The Firefox WebExtension equivalent for header relaxation, scoped strictly to workspace sub_frames.</span>
-                </div>
-                <div className="perm-row">
-                  <code>&lt;all_urls&gt;</code> (host_permissions)
-                  <span>Chrome & Firefox</span>
-                  <span>Required because ViewGrid is a development tool that allows developers to test arbitrary URLs (e.g. <code>http://localhost:3000</code>, internal staging servers, or any production site). Without this permission, the extension cannot inspect or strip framing restriction headers on the websites you choose to test.</span>
-                </div>
-              </div>
+              <div className="permissions-scroll" tabIndex={0} role="region" aria-label="Browser permission details"><table className="permissions-table"><caption>Browser permissions and their purpose</caption><thead><tr><th scope="col">Permission</th><th scope="col">Browser</th><th scope="col">Purpose</th></tr></thead><tbody><tr><th scope="row"><code>storage</code></th><td>Chrome & Firefox</td><td>Stores your custom viewport dimensions, user-created device profiles, and workspace settings locally on your machine via <code>chrome.storage.local</code> and <code>chrome.storage.session</code>. ViewGrid does not send these settings to an external service.</td></tr><tr><th scope="row"><code>tabs</code></th><td>Chrome & Firefox</td><td>Used to create the ViewGrid workspace tab, detect when a workspace tab is closed to automatically clean up header rules, and navigate workspace frames.</td></tr><tr><th scope="row"><code>activeTab</code></th><td>Chrome & Firefox</td><td>Enables the "Open page in ViewGrid" context menu option and allows capturing screenshots of active viewports via <code>tabs.captureVisibleTab</code>.</td></tr><tr><th scope="row"><code>contextMenus / menus</code></th><td>Chrome & Firefox</td><td>Adds right-click options ("Open link in ViewGrid") to open any URL in a responsive workspace.</td></tr><tr><th scope="row"><code>declarativeNetRequestWithHostAccess</code></th><td>Chromium</td><td>Framing exceptions apply only within verified workspace tabs. Chromium removes XFO and CSP response headers for workspace subframes, including nested frames and page-initiated navigation/reload; Firefox handles direct previews and removes XFO and only the frame-ancestors directive. Normal browsing tabs retain their protections. Before loading a preview, ViewGrid waits for tab-scoped framing rules and removes service-worker registrations only for the selected site's origin (Chromium) or hostname (Firefox). This can also remove that site's worker registrations used by normal tabs; a normal visit can register them again. Cookies, localStorage, sessionStorage, IndexedDB and CacheStorage are not requested for removal, and no browser-wide cache cleanup is used. Preview agents prevent worker re-registration after workspace verification. Preview documents bypass stale HTTP cache headers.</td></tr><tr><th scope="row"><code>webRequest & webRequestBlocking</code></th><td>Firefox</td><td>The Firefox WebExtension equivalent for header relaxation, scoped strictly to workspace sub_frames.</td></tr><tr><th scope="row"><code>&lt;all_urls&gt;</code> (host_permissions)</th><td>Chrome & Firefox</td><td>Required because ViewGrid is a development tool that allows developers to test arbitrary URLs (e.g. <code>http://localhost:3000</code>, internal staging servers, or any production site). Without this permission, the extension cannot inspect or strip framing restriction headers on the websites you choose to test.</td></tr></tbody></table></div>
             </section>
 
             <section className="legal-section">

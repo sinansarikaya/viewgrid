@@ -1,0 +1,21 @@
+# ViewGrid
+
+> Free, open-source responsive website testing extension for Chromium and Firefox. Maintained by Sinan Sarıkaya. Interface and reports support English, Turkish and Norwegian Bokmål.
+
+ViewGrid compares loaded previews at different CSS viewport sizes. It offers synchronized interactions, visual comparison, screenshots, local DOM-based SEO checks, selected axe accessibility checks and experimental GEO readiness signals. Analysis is packaged in the extension and requires no external analysis API. Previewed websites still make ordinary network requests.
+
+Local timings are observations, not Lighthouse scores or real-user Core Web Vitals. Device profiles do not emulate real mobile hardware. There is no whole-site crawl, DAST scan, compliance certification or guarantee of AI/search visibility. Human review is necessary.
+
+## Product and documentation
+- [English](https://viewgrid.sinansarikaya.dev/)
+- [Türkçe](https://viewgrid.sinansarikaya.dev/tr/)
+- [Norsk bokmål](https://viewgrid.sinansarikaya.dev/no/)
+- [Documentation](https://viewgrid.sinansarikaya.dev/docs/)
+- [Release history](https://viewgrid.sinansarikaya.dev/changelog/)
+- [Privacy and permission scope](https://viewgrid.sinansarikaya.dev/privacy/)
+- [Support](https://viewgrid.sinansarikaya.dev/support/)
+- [Source code](https://github.com/sinansarikaya/viewgrid)
+- [Release packages](https://github.com/sinansarikaya/viewgrid/releases)
+
+Contact: contact@sinansarikaya.dev
+Security reports: security@sinansarikaya.dev

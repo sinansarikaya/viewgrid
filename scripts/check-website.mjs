@@ -27,7 +27,7 @@ try {
   await page.goto(base);
   assert.equal(await page.locator('.site-version').innerText(), `v${version}`);
   for (const [language, expected] of [['tr', 'tr'], ['en', 'en'], ['no', 'en']]) {
-    await page.locator(`.lang-btn[data-lang="${language}"]`).click();
+    await Promise.all([page.waitForURL(url => url.pathname === (language === "en" ? "/" : `/${language}/`)), page.locator(`.lang-btn[data-lang="${language}"]`).click()]);
     assert.equal(await page.locator('#promo-source').getAttribute('src'), `/videos/viewgrid-promo-${expected}.mp4`);
     assert.equal(await page.locator('#promo-video').evaluate(video => video.paused), true);
     const response = await page.request.get(base + `/videos/viewgrid-promo-${expected}.mp4`);
@@ -37,7 +37,7 @@ try {
   for (const width of [1653, 1280, 1024, 768, 393, 320]) {
     await page.setViewportSize({ width, height: 900 });
     for (const language of ['en', 'tr', 'no']) {
-      await page.locator(`.lang-btn[data-lang="${language}"]`).click();
+      await Promise.all([page.waitForURL(url => url.pathname === (language === "en" ? "/" : `/${language}/`)), page.locator(`.lang-btn[data-lang="${language}"]`).click()]);
       const layout = await page.locator('.nav-inner').evaluate(header => {
         const boxes = ['.brand-link', '.nav-links', '.nav-controls'].map(selector => header.querySelector(selector).getBoundingClientRect());
         return { inside: boxes.every(box => box.left >= 0 && box.right <= innerWidth + 1), overlap: boxes.some((a, i) => boxes.slice(i + 1).some(b => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top)) };
@@ -54,7 +54,7 @@ try {
   await page.locator('h1').waitFor();
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   for (const [language, title] of [['tr', 'Her güncelleme. Her ayrıntı.'], ['en', 'Every update. Every detail.'], ['no', 'Hver oppdatering. Hver detalj.']]) {
-    await page.locator(`.lang-btn[data-lang="${language}"]`).click();
+    await Promise.all([page.waitForURL(url => url.pathname === `/changelog/${language === "en" ? "" : language + "/"}`), page.locator(`.lang-btn[data-lang="${language}"]`).click()]);
     assert.equal(await page.locator('h1').innerText(), title);
     assert.equal(await page.locator('html').getAttribute('lang'), language);
     await page.reload(); assert.equal(await page.locator('h1').innerText(), title);

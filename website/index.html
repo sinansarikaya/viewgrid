@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:;" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:;" />
   <title>ViewGrid — Test Every Breakpoint at Once | Multi-Viewport Responsive Workspace</title>
   <meta name="description" content="View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Free browser extension for Chrome & Firefox with Figma diffing and zero telemetry." />
   <link rel="canonical" href="https://viewgrid.sinansarikaya.dev/" />
@@ -51,9 +51,7 @@
   <link rel="apple-touch-icon" href="/icon128.png" />
 
   <!-- Typography: Fraunces (Variable Display Serif), Instrument Sans (Humanist Text Sans), JetBrains Mono (Numbers/Code) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..800,0..100,0..1;1,9..144,400..700,0..100,0..1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/fonts/fonts.css" />
 
   <style>
     /* -------------------------------------------------------------
@@ -185,7 +183,7 @@
     }
 
     /* Typography & Hierarchy */
-    h1, h2, h3, h4 {
+    h1, h2, h3, h3 {
       font-family: var(--font-display);
       color: var(--text);
       letter-spacing: -0.025em;
@@ -937,7 +935,7 @@
       color: var(--text);
       line-height: 1;
     }
-    .bench-card h4 {
+    .bench-card h3 {
       font-size: 1.2rem;
       margin: 0;
       color: var(--text);
@@ -1190,7 +1188,7 @@
     .hf-icon {
       font-size: 1.5rem;
     }
-    .handoff-feature-card h4 {
+    .handoff-feature-card h3 {
       font-size: 1.05rem;
       margin: 0;
       color: var(--text);
@@ -1346,7 +1344,7 @@
       padding: 12px;
       border-radius: 2px;
     }
-    .sim-hero-banner h5 {
+    .sim-hero-banner .preview-heading {
       font-size: 0.82rem;
       margin-bottom: 4px;
     }
@@ -1624,7 +1622,7 @@
       border-left: 3px solid var(--accent);
     }
 
-    .compare-side-card h4 {
+    .compare-side-card h3 {
       font-size: 1.15rem;
       margin-bottom: 10px;
     }
@@ -1960,7 +1958,7 @@
       border-left: 3px solid #C93B2B;
     }
     .diagram-row.passed {
-      border-left: 3px solid #2B8A3E;
+      border-left: 3px solid #17672a;
     }
 
     /* -------------------------------------------------------------
@@ -1992,7 +1990,7 @@
       box-shadow: 3px 3px 0 var(--border-dark);
     }
 
-    .usecase-card h4 {
+    .usecase-card h3 {
       font-size: 1.3rem;
       margin-bottom: 12px;
     }
@@ -2065,7 +2063,7 @@
       border-radius: 4px;
     }
 
-    .quiet-manual-box h5 {
+    .quiet-manual-box h3 {
       font-family: var(--font-mono);
       font-size: 0.85rem;
       text-transform: uppercase;
@@ -2249,6 +2247,7 @@
       .nav-links { grid-row:3; width:100%; }
     }
   </style>
+  <link rel="stylesheet" href="/accessibility.css" />
 </head>
 <body>
 
@@ -2287,12 +2286,12 @@
         </button>
 
         <div class="lang-switcher" role="group" aria-label="Language">
-          <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
-          <button type="button" class="lang-btn" data-lang="tr" onclick="setLang('tr')">TR</button>
-          <button type="button" class="lang-btn" data-lang="no" onclick="setLang('no')">NO</button>
+          <a class="lang-btn" data-lang="en" href="/" hreflang="en" lang="en">English</a>
+          <a class="lang-btn" data-lang="tr" href="/tr/" hreflang="tr" lang="tr">Türkçe</a>
+          <a class="lang-btn" data-lang="no" href="/no/" hreflang="no" lang="no">Norsk bokmål</a>
         </div>
 
-        <button type="button" class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle Theme">
+        <button type="button" class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle Theme" data-i18n-aria="themeLabel">
           <svg id="theme-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
@@ -2368,7 +2367,7 @@
             </p>
 
             <!-- Global Keyboard Shortcut Banner -->
-            <div class="hero-shortcut-banner" onclick="openShortcutsModal()" role="button" tabindex="0" title="Click to view all keyboard shortcuts">
+            <div class="hero-shortcut-banner" data-keyboard-click onclick="openShortcutsModal()" role="button" tabindex="0" title="Click to view all keyboard shortcuts">
               <span class="shortcut-keys"><kbd class="kbd-mod">Alt</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></span>
               <span class="shortcut-text" data-i18n="shortcutHero">Launch instantly on any page &bull; <u>View all shortcuts</u></span>
             </div>
@@ -2378,7 +2377,7 @@
         <!-- Hero Visual Slot: Screenshot slot (/screenshots/hero.png) falling back to Live Miniature -->
         <div class="hero-visual-slot">
           <!-- 1. Hero Screenshot Slot (if /screenshots/hero.png exists) -->
-          <div id="hero-screenshot-frame" class="hero-screenshot-frame" style="display: none;" onclick="openHeroLightbox()">
+          <div id="hero-screenshot-frame" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Enlarge workspace screenshot" data-i18n-aria="openWorkspaceLabel" data-keyboard-click class="hero-screenshot-frame" style="display: none;" onclick="openHeroLightbox()">
             <div class="tour-frame-header">
               <div class="tour-dots-icon">
                 <span class="tour-dot"></span>
@@ -2400,7 +2399,7 @@
             <!-- Playground Interactive Simulator Input Bar -->
             <div class="hero-url-simulator-bar">
               <span class="sim-url-badge">⚡ PLAYGROUND</span>
-              <input type="text" id="playground-url-input" class="playground-input" placeholder="Type your website URL (e.g. myportfolio.com)..." value="brand.io/app" oninput="onPlaygroundUrlChange(this.value)" />
+              <input aria-label="Example website URL" type="text" id="playground-url-input" class="playground-input" placeholder="Type your website URL (e.g. myportfolio.com)..." value="brand.io/app" oninput="onPlaygroundUrlChange(this.value)" />
               <button type="button" class="playground-test-btn" onclick="onPlaygroundTestClick()">Simulate</button>
             </div>
 
@@ -2408,7 +2407,7 @@
               <span>SYNCHRONIZED SCROLL ENGINE</span>
               <div class="sync-dial-wrap">
                 <label for="sync-dial" style="color: var(--text-muted);">Drive Scroll Progress:</label>
-                <input type="range" id="sync-dial" class="sync-slider" min="0" max="100" value="0" oninput="onDriveScroll(this.value / 100)" />
+                <input aria-label="Synchronized scroll position" type="range" id="sync-dial" class="sync-slider" min="0" max="100" value="0" oninput="onDriveScroll(this.value / 100)" />
               <span class="mono-num" id="sync-pct-label">0%</span>
             </div>
             <span class="mono-num" style="color: var(--accent);">⠿ Drag to Reorder</span>
@@ -2432,7 +2431,7 @@
                     </svg>
                   </div>
                   <div class="sim-hero-banner">
-                    <h5>Mobile Stack</h5>
+                    <p class="preview-heading">Mobile Stack</p>
                     <p>Fluid full-width column</p>
                   </div>
                   <div class="sim-box">Product Item 01</div>
@@ -2460,7 +2459,7 @@
                     <span class="mono-num" style="font-size: 0.68rem;">Catalog &bull; Cart &bull; Sign in</span>
                   </div>
                   <div class="sim-hero-banner">
-                    <h5>Tablet Dual-Column Layout</h5>
+                    <p class="preview-heading">Tablet Dual-Column Layout</p>
                     <p>Expanded horizontal rhythm</p>
                   </div>
                   <div class="sim-grid-2">
@@ -2492,7 +2491,7 @@
                     <span class="mono-num" style="font-size: 0.68rem;">Products &bull; Solutions &bull; Docs &bull; Pricing</span>
                   </div>
                   <div class="sim-hero-banner">
-                    <h5>Desktop Multi-Column Canvas</h5>
+                    <p class="preview-heading">Desktop Multi-Column Canvas</p>
                     <p>Wide grid with sidebar &amp; live diagnostics</p>
                   </div>
                   <div class="sim-grid-3">
@@ -2521,7 +2520,7 @@
       <h2 data-i18n="videoTitle">See ViewGrid in action</h2>
       <p data-i18n="videoDescription" style="margin:16px 0">A short walkthrough of synchronized previews, comparison tools and responsive findings.</p>
       <video id="promo-video" controls playsinline preload="none" poster="/videos/poster-en.jpg" aria-label="ViewGrid walkthrough" style="width:100%;aspect-ratio:16/9;border-radius:16px;background:#020617">
-        <source id="promo-source" src="/videos/viewgrid-promo-en.mp4" type="video/mp4">
+        <track kind="captions" srclang="en" label="English" src="/videos/tour-en.vtt" default /><track kind="captions" srclang="tr" label="Türkçe" src="/videos/tour-tr.vtt" /><track kind="captions" srclang="no" label="Norsk bokmål" src="/videos/tour-no.vtt" /><source id="promo-source" src="/videos/viewgrid-promo-en.mp4" type="video/mp4">
         <a id="promo-download" href="/videos/viewgrid-promo-en.mp4">Download video</a>
       </video>
       <p data-i18n="videoNote" style="margin-top:12px">English walkthrough</p>
@@ -2544,7 +2543,7 @@
               <span class="bench-badge" data-i18n="benchBadgeRam">RAM FOOTPRINT</span>
               <span class="bench-metric">Local</span>
             </div>
-            <h4 data-i18n="benchRamHead">Native browser runtime</h4>
+            <h3 data-i18n="benchRamHead">Native browser runtime</h3>
             <p data-i18n="benchRamDesc">No separate desktop runtime. Measure your own workload in browser task tools; memory varies by website.</p>
 
           </div>
@@ -2554,7 +2553,7 @@
               <span class="bench-badge" data-i18n="benchBadgeSync">SCROLL SYNC</span>
               <span class="bench-metric">Sync</span>
             </div>
-            <h4 data-i18n="benchSyncHead">Synchronized interactions</h4>
+            <h3 data-i18n="benchSyncHead">Synchronized interactions</h3>
             <p data-i18n="benchSyncDesc">Scroll, clicks, navigation and optional form/key events are mirrored locally. Latency depends on page and device.</p>
             <div class="bench-pill-list">
               <span class="bench-pill">⚡ Synchronized Scroll</span>
@@ -2568,7 +2567,7 @@
               <span class="bench-badge" data-i18n="benchBadgeLocal">100% PRIVATE</span>
               <span class="bench-metric">100%</span>
             </div>
-            <h4 data-i18n="benchLocalHead">Local analysis &amp; no telemetry</h4>
+            <h3 data-i18n="benchLocalHead">Local analysis &amp; no telemetry</h3>
             <p data-i18n="benchLocalDesc">Analysis runs locally without external services or telemetry. Previewed websites make their own requests; settings are stored locally and reports remain in the workspace session.</p>
             <div class="bench-pill-list">
               <span class="bench-pill">🔒 Zero Cloud Proxying</span>
@@ -2593,7 +2592,7 @@
         <div class="tour-header-row">
           <div>
             <span class="serif-label" data-i18n="tourLabel">Interface tour</span>
-            <h2 style="font-size: 2.8rem;">Explore the workspace modes.</h2>
+            <h2 style="font-size: 2.8rem;" data-i18n="tourHeading">Explore ViewGrid previews and reports.</h2>
             <a href="#design-handoff" class="design-handoff-pill">
               <span class="handoff-icon">🎯</span>
               <span class="handoff-title" data-i18n="handoffPillTitle">Design Handoff &amp; Pixel-Diff:</span>
@@ -2602,16 +2601,16 @@
           </div>
 
           <div class="tour-tabs-bar" role="tablist" aria-label="ViewGrid screenshots">
-            <a href="#showcase-img" role="tab" aria-selected="true" class="tour-tab-btn active" id="tab-workspace" data-showcase-index="0">Workspace</a>
-            <a href="#showcase-img" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-compare" data-showcase-index="1">Compare</a>
-            <a href="#showcase-img" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-local-analysis" data-showcase-index="2">Local Performance</a>
-            <a href="#showcase-img" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-seo-accessibility" data-showcase-index="3">SEO & Accessibility</a>
-            <a href="#showcase-img" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-reports" data-showcase-index="4">Reports</a>
+            <a href="/screenshots/workspace.png" role="tab" aria-selected="true" class="tour-tab-btn active" id="tab-workspace" data-showcase-index="0" aria-controls="showcase-panel">Workspace</a>
+            <a href="/screenshots/compare.png" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-compare" data-showcase-index="1" aria-controls="showcase-panel">Compare</a>
+            <a href="/screenshots/local-analysis.png" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-local-analysis" data-showcase-index="2" aria-controls="showcase-panel">Local Performance</a>
+            <a href="/screenshots/seo-accessibility.png" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-seo-accessibility" data-showcase-index="3" aria-controls="showcase-panel">SEO & Accessibility</a>
+            <a href="/screenshots/reports.png" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-reports" data-showcase-index="4" aria-controls="showcase-panel">Reports</a>
           </div>
         </div>
 
         <!-- 16:10 Framed Showcase -->
-        <div class="tour-frame" onmouseenter="pauseShowcase()" onmouseleave="resumeShowcase()">
+        <div class="tour-frame" id="showcase-panel" role="tabpanel" aria-labelledby="tab-workspace" onmouseenter="pauseShowcase()" onmouseleave="resumeShowcase()">
           <div class="tour-frame-header">
             <div class="tour-dots-icon">
               <span class="tour-dot"></span>
@@ -2621,14 +2620,14 @@
             <span class="tour-frame-url" id="showcase-url-text">viewgrid://workspace</span>
           </div>
 
-          <div class="tour-aspect-stage" id="showcase-stage" onclick="openLightbox()">
+          <div class="tour-aspect-stage" id="showcase-stage" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Enlarge selected screenshot" data-i18n-aria="openGalleryLabel" data-keyboard-click onclick="openLightbox()">
             <!-- Real image with automatic graceful placeholder fallback -->
             <img src="/screenshots/workspace.png" alt="ViewGrid Workspace" class="tour-screenshot-img" id="showcase-img" onerror="onShowcaseImgError(this)" />
             
             <div class="tour-placeholder" id="showcase-fallback" style="display: none;">
               <div class="placeholder-schematic">
                 <span class="mono-num" style="color: var(--accent); font-size: 0.85rem;" id="fallback-badge">WORKSPACE VIEWPORT MATRIX</span>
-                <h4 style="font-size: 1.4rem; margin: 12px 0 8px;" id="fallback-title">Workspace Preview</h4>
+                <h3 style="font-size: 1.4rem; margin: 12px 0 8px;" id="fallback-title">Workspace Preview</h3>
                 <p style="font-size: 0.95rem; color: var(--text-muted);">
                   Interactive multi-device responsive testing canvas with synchronized scrolling.
                 </p>
@@ -2650,8 +2649,8 @@
     </section>
 
     <!-- Lightbox Modal for Full-Size Screenshot View -->
-    <div class="tour-lightbox" id="tour-lightbox" onclick="closeLightbox(event)">
-      <button type="button" class="lightbox-close-btn" onclick="closeLightbox()">&times;</button>
+    <div class="tour-lightbox" id="tour-lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-caption" onclick="closeLightbox(event)">
+      <button type="button" class="lightbox-close-btn" onclick="closeLightbox()" aria-label="Close screenshot" data-i18n-aria="closeScreenshotLabel">&times;</button>
       <div class="lightbox-inner">
         <img src="/screenshots/workspace.png" alt="Full size preview" class="lightbox-img" id="lightbox-img" />
         <p style="color: #FFFFFF; margin-top: 14px; font-family: var(--font-mono); font-size: 0.85rem;" id="lightbox-caption">
@@ -2723,17 +2722,17 @@
           <div class="handoff-feature-grid">
             <div class="handoff-feature-card">
               <div class="hf-icon">📐</div>
-              <h4 data-i18n="hfCard1Title">Pixel-Diff Curtain &amp; Opacity</h4>
+              <h3 data-i18n="hfCard1Title">Pixel-Diff Curtain &amp; Opacity</h3>
               <p data-i18n="hfCard1Desc">Drag the split handle or adjust overlay opacity from 0% to 100% to catch minute kerning differences, line-height discrepancies, or 1px margin misalignments.</p>
             </div>
             <div class="handoff-feature-card">
               <div class="hf-icon">🎨</div>
-              <h4 data-i18n="hfCard2Title">Figma Frame Import &amp; Overlays</h4>
+              <h3 data-i18n="hfCard2Title">Figma Frame Import &amp; Overlays</h3>
               <p data-i18n="hfCard2Desc">Load PNG or SVG design mockups directly into any viewport frame as a translucent guide layer while interacting with your live code.</p>
             </div>
             <div class="handoff-feature-card">
               <div class="hf-icon">🤝</div>
-              <h4 data-i18n="hfCard3Title">Faster Design QA Cycles</h4>
+              <h3 data-i18n="hfCard3Title">Faster Design QA Cycles</h3>
               <p data-i18n="hfCard3Desc">Take screenshot comparisons that designers can verify in seconds. Eliminate endless back-and-forth Slack messages about button alignment and font sizes.</p>
             </div>
           </div>
@@ -2761,11 +2760,11 @@
 
         <div class="compare-cards-row">
           <div class="compare-side-card card-before">
-            <h4 data-i18n="beforeTitle">DevTools Device Mode</h4>
+            <h3 data-i18n="beforeTitle">DevTools Device Mode</h3>
             <p data-i18n="beforeText">One screen at a time. Dragging the window border breaks your focus. You check phone, forget tablet, and miss the mid-tier breakpoint bugs.</p>
           </div>
           <div class="compare-side-card card-after">
-            <h4 data-i18n="afterTitle">ViewGrid Workspace</h4>
+            <h3 data-i18n="afterTitle">ViewGrid Workspace</h3>
             <p data-i18n="afterText">Phone, tablet and desktop stay side by side. Scroll once, and all three follow. Layout shifts and alignment bugs are impossible to miss.</p>
           </div>
         </div>
@@ -2783,27 +2782,27 @@
     <section class="section-how" id="how">
       <div class="container how-grid">
         <div class="how-steps-col">
-          <span class="serif-label" data-i18n="howLabel">How it works</span>
+          <h2 class="serif-label" data-i18n="howLabel">How it works</h2>
 
-          <div class="how-step active" id="step-1" data-step="1" onmouseenter="activateStep(1)" onclick="activateStep(1)">
+          <div class="how-step active" id="step-1" data-step="1" role="button" tabindex="0" aria-pressed="true" data-keyboard-click onmouseenter="activateStep(1)" onclick="activateStep(1)">
             <span class="step-number">01</span>
             <h3 class="step-title" data-i18n="step1Title">Open the workspace</h3>
             <p class="step-desc" data-i18n="step1Desc">Click ViewGrid in your browser toolbar from any tab you want to inspect. A dedicated, distraction-free workspace opens immediately.</p>
           </div>
 
-          <div class="how-step" id="step-2" data-step="2" onmouseenter="activateStep(2)" onclick="activateStep(2)">
+          <div class="how-step" id="step-2" data-step="2" role="button" tabindex="0" aria-pressed="false" data-keyboard-click onmouseenter="activateStep(2)" onclick="activateStep(2)">
             <span class="step-number">02</span>
             <h3 class="step-title" data-i18n="step2Title">Type any URL or localhost</h3>
             <p class="step-desc" data-i18n="step2Desc">Test live production websites, staging links, or your local dev server at localhost:3000. No tunnels, cloud proxies, or server setup required.</p>
           </div>
 
-          <div class="how-step" id="step-3" data-step="3" onmouseenter="activateStep(3)" onclick="activateStep(3)">
+          <div class="how-step" id="step-3" data-step="3" role="button" tabindex="0" aria-pressed="false" data-keyboard-click onmouseenter="activateStep(3)" onclick="activateStep(3)">
             <span class="step-number">03</span>
             <h3 class="step-title" data-i18n="step3Title">Pick device presets</h3>
             <p class="step-desc" data-i18n="step3Desc">Choose standard phones, tablets, and laptops, or specify custom pixel bounds. Flip orientations between portrait and landscape with one click.</p>
           </div>
 
-          <div class="how-step" id="step-4" data-step="4" onmouseenter="activateStep(4)" onclick="activateStep(4)">
+          <div class="how-step" id="step-4" data-step="4" role="button" tabindex="0" aria-pressed="false" data-keyboard-click onmouseenter="activateStep(4)" onclick="activateStep(4)">
             <span class="step-number">04</span>
             <h3 class="step-title" data-i18n="step4DescHead">Scroll and click once</h3>
             <p class="step-desc" data-i18n="step4Desc">Interact with any device. Every other viewport replicates your scroll and click coordinates in real time without feedback loops or echo lag.</p>
@@ -2827,9 +2826,7 @@
     <!-- FULL-BLEED STATEMENT BAND (Varying Rhythm) -->
     <div class="statement-band">
       <div class="container">
-        <h2>
-          Websites don’t exist at one screen size. <em>Why test them like they do?</em>
-        </h2>
+        <h2 data-i18n="storyHeading">Test more than one screen size.</h2>
       </div>
     </div>
 
@@ -2837,51 +2834,51 @@
     <section class="section-features" id="features">
       <div class="container">
         <span class="serif-label" data-i18n="featLabel">Features</span>
-        <h2 style="font-size: 2.8rem; margin-bottom: 24px;">Everything needed to inspect responsive craft.</h2>
+        <h2 style="font-size: 2.8rem; margin-bottom: 24px;" data-i18n="featuresHeading">Tools for responsive testing and local analysis.</h2>
 
         <div class="feature-index-list">
-          <div class="feature-index-item" tabindex="0">
+          <div class="feature-index-item">
             <div class="item-name" data-i18n="idxPresets">Device presets</div>
             <div class="item-detail" data-i18n="idxPresetsDesc">Curated dimensions for popular phones, tablets, and laptops, plus freeform custom pixel inputs.</div>
             <div><span class="item-diagram">375 × 812 &bull; 768 × 1024 &bull; 1280 × 800</span></div>
           </div>
 
-          <div class="feature-index-item" tabindex="0">
+          <div class="feature-index-item">
             <div class="item-name" data-i18n="idxCurtain">Split-diff curtain</div>
             <div class="item-detail" data-i18n="idxCurtainDesc">Superimpose two viewports and drag an optical divider to detect 1-pixel font jumps or wrapping shifts.</div>
             <div><span class="item-diagram">&harr; Draggable Optical Divider</span></div>
           </div>
 
-          <div class="feature-index-item" tabindex="0">
+          <div class="feature-index-item">
             <div class="item-name" data-i18n="idxUA">Per-viewport user-agent</div>
             <div class="item-detail" data-i18n="idxUADesc">Spoof mobile and tablet User-Agent strings per frame so server-rendered mobile HTML and assets load correctly.</div>
             <div><span class="item-diagram">Mobile UA / Touch Emulation</span></div>
           </div>
 
-          <div class="feature-index-item" tabindex="0">
+          <div class="feature-index-item">
             <div class="item-name" data-i18n="idxIframes">Works on protected sites</div>
             <div class="item-detail" data-i18n="idxIframesDesc">Safely strips X-Frame-Options and CSP headers solely for sub-frames inside the ViewGrid tab.</div>
             <div><span class="item-diagram">DNR &bull; webRequest Sub-Frame Filter</span></div>
           </div>
 
-          <div class="feature-index-item" tabindex="0">
+          <div class="feature-index-item">
             <div class="item-name" data-i18n="idxScreenshots">Full-canvas screenshots</div>
             <div class="item-detail" data-i18n="idxScreenshotsDesc">Capture individual viewports or the entire multi-device workspace into full-resolution PNG files.</div>
             <div><span class="item-diagram">One-Click PNG Export</span></div>
           </div>
 
-          <div class="feature-index-item" tabindex="0">
+          <div class="feature-index-item">
             <div class="item-name" data-i18n="idxLocal">100% Local processing</div>
             <div class="item-detail" data-i18n="idxLocalDesc">Zero analytical tracking, zero external beacons, zero remote servers. Works offline and on private VPNs.</div>
             <div><span class="item-diagram">Localhost &bull; VPN Safe &bull; Zero Telemetry</span></div>
           </div>
-          <div class="feature-index-item" tabindex="0">
+          <div class="feature-index-item">
             <div class="item-name" data-i18n="idxAnalysis">Local analysis, when you need it</div>
             <div class="item-detail" data-i18n="idxAnalysisDesc">Open Analysis, choose a mobile or desktop preview and run the check. One DOM scan collects performance observations, SEO, limited accessibility checks and GEO signals. Each tab shows only its own scope. Copy or download a Markdown report for the selected tab. Results remain available after closing the dialog during the workspace session; page or viewport changes mark them as stale. Rerun the check to refresh them.</div>
             <div><span class="item-diagram">DOM &bull; FCP &bull; Markdown</span></div>
           </div>
 
-          <div class="feature-index-item" tabindex="0" onclick="openShortcutsModal()" style="cursor: pointer;">
+          <div class="feature-index-item" onclick="openShortcutsModal()" role="button" tabindex="0" data-keyboard-click style="cursor: pointer;">
             <div class="item-name" data-i18n="idxShortcuts">Keyboard-first workflow</div>
             <div class="item-detail" data-i18n="idxShortcutsDesc">Launch workspace with Alt+Shift+V / ⌥⇧V, toggle compare diff with D, show cheatsheet with ?</div>
             <div><span class="item-diagram"><kbd class="kbd-mod">Alt</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> &bull; <kbd>D</kbd> &bull; <kbd>?</kbd></span></div>
@@ -2906,9 +2903,10 @@
           Drag the curtain handle below to compare how the layout renders at 375px versus 1280px. Notice where text drops awkwardly or buttons misalign.
         </p>
 
+        <div class="accessible-comparison-control"><label for="comparison-range" data-i18n="comparisonControl">Comparison divider position</label><input id="comparison-range" type="range" min="10" max="90" value="50" /></div>
         <div class="diff-stage-wrap" id="diff-stage">
           <div class="diff-pane diff-pane-left" id="diff-left" style="width: 50%;">
-            <div class="diff-mock-page">
+            <div class="diff-mock-page" aria-hidden="true">
               <span class="mono-num" style="color: var(--accent); font-size: 0.8rem;">[375px MOBILE BREAKPOINT]</span>
               <h3 style="font-size: 1.6rem; margin: 12px 0 8px;">Single-Column Header</h3>
               <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 320px;">
@@ -2921,7 +2919,7 @@
           </div>
 
           <div class="diff-pane diff-pane-right" id="diff-right" style="width: 50%;">
-            <div class="diff-mock-page">
+            <div class="diff-mock-page" aria-hidden="true">
               <span class="mono-num" style="color: var(--accent-secondary); font-size: 0.8rem;">[1280px DESKTOP BREAKPOINT]</span>
               <h3 style="font-size: 1.6rem; margin: 12px 0 8px;">Expanded Horizontal Nav</h3>
               <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 500px;">
@@ -2934,7 +2932,7 @@
             </div>
           </div>
 
-          <div class="diff-divider-line" id="diff-line" style="left: 50%;" onmousedown="onStartDiff(event)" ontouchstart="onStartDiff(event)">
+          <div class="diff-divider-line" aria-hidden="true" id="diff-line" style="left: 50%;" onmousedown="onStartDiff(event)" ontouchstart="onStartDiff(event)">
             <div class="diff-handle-knob">&harr;</div>
           </div>
         </div>
@@ -2964,7 +2962,7 @@
             </div>
             <div class="diagram-row passed">
               <span>ViewGrid workspace:</span>
-              <span style="color: #2B8A3E;">Allowed (Scoped Sub-Frame Rule)</span>
+              <span style="color: #17672a;">Allowed (Scoped Sub-Frame Rule)</span>
             </div>
             <p style="color: var(--text-faint); font-size: 0.76rem; margin-top: 4px;">
               Zero cloud proxy servers. Network rules execute locally in Chromium DNR and Firefox webRequest.
@@ -2988,33 +2986,33 @@
         <h2 style="font-size: 2.4rem; margin-bottom: 8px;" data-i18n="usecaseTitle">Built for daily frontend rhythm.</h2>
         <p style="color: var(--text-muted); margin-bottom: 24px;" data-i18n="usecaseSub">Scroll through the scenarios where ViewGrid replaces manual browser gymnastics.</p>
 
-        <div class="horizontal-strip">
+        <div class="horizontal-strip" tabindex="0" role="region" aria-label="Product highlights" data-i18n-aria="highlightsLabel">
           <div class="usecase-card">
-            <h4>Checking a breakpoint</h4>
+            <h3>Checking a breakpoint</h3>
             <p>Write a CSS media query, hit save, and see mobile, tablet, and desktop redraw instantly without touching DevTools.</p>
             <span class="usecase-tag">CSS &bull; Layout Tuning</span>
           </div>
 
           <div class="usecase-card">
-            <h4>QA before release</h4>
+            <h3>QA before release</h3>
             <p>Run through a checkout flow or registration form once. Verify input styling across three screen widths simultaneously.</p>
             <span class="usecase-tag">Pre-Flight &bull; Forms</span>
           </div>
 
           <div class="usecase-card">
-            <h4>Designer &amp; Dev handoff</h4>
+            <h3>Designer &amp; Dev handoff</h3>
             <p>Compare Figma breakpoint specifications against live production implementation using the optical split-diff slider.</p>
             <span class="usecase-tag">Figma &bull; Spec Verification</span>
           </div>
 
           <div class="usecase-card">
-            <h4>Testing a localhost app</h4>
+            <h3>Testing a localhost app</h3>
             <p>Works right out of the box with localhost:3000, Vite dev servers, Next.js, Rails, or Docker containers.</p>
             <span class="usecase-tag">Localhost &bull; Dev Server</span>
           </div>
 
           <div class="usecase-card">
-            <h4>Client review &amp; demo</h4>
+            <h3>Client review &amp; demo</h3>
             <p>Take one comprehensive full-canvas screenshot showing your client how their new site responds across all screen sizes.</p>
             <span class="usecase-tag">Exports &bull; Client Delivery</span>
           </div>
@@ -3087,7 +3085,7 @@
 
         <!-- Visually quiet manual install section -->
         <div class="quiet-manual-box">
-          <h5>Install manually or develop locally (Release ZIP)</h5>
+          <h3 data-i18n="manualHeading">Manual installation and local development</h3>
           <p>If you prefer offline installation or loading unpacked developer builds, download the verified archives:</p>
           <ol>
             <li>Download and unzip <code>viewgrid-1.0.4-chromium.zip</code> (or <code>viewgrid-1.0.4-firefox.zip</code>) from <a href="https://github.com/sinansarikaya/viewgrid/releases" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">GitHub Releases</a>.</li>
@@ -3147,6 +3145,15 @@
         </div>
       </div>
     </section>
+<section class="accessible-guide container" id="accessible-tour">
+<h2 data-i18n="writtenTourTitle">Written product walkthrough</h2>
+<p data-i18n="writtenTourIntro">The silent visual tour above is also described below. No audio is required.</p>
+<ol><li data-i18n="tourStep1">Open a selected website in ViewGrid and compare phone, tablet, laptop and desktop previews.</li><li data-i18n="tourStep2">Use the comparison tools to review the same page at different widths.</li><li data-i18n="tourStep3">Run local loading observations for mobile and desktop; these are not Lighthouse or Core Web Vitals scores.</li><li data-i18n="tourStep4">Review local SEO and limited accessibility checks. Uncertain results require human review.</li><li data-i18n="tourStep5">Copy or download section-specific Markdown reports and review saved local analysis history.</li></ol>
+<h2 data-i18n="accessibilityTitle">Accessibility and support</h2>
+<p data-i18n="accessibilityText">Navigate with Tab, activate controls with Enter or Space, and close dialogs with Escape. Gallery tabs use arrow keys, Home and End. The site respects reduced motion and browser zoom. Automated checks do not establish full accessibility conformance.</p>
+<p><span data-i18n="accessibilityContact">If something prevents you from using this site, tell us which page and assistive technology you use:</span> <a href="mailto:contact@sinansarikaya.dev">contact@sinansarikaya.dev</a>.</p>
+<p data-i18n="maintainerInfo">Created and maintained by Sinan Sarıkaya. ViewGrid is free and open source. Its source, release history and issue tracker are public.</p>
+</section>
   </main>
 
   <!-- 10. Footer with Personality -->
@@ -3189,9 +3196,9 @@
       <div class="shortcuts-modal-header">
         <div>
           <span class="mono-num" style="color: var(--accent); font-size: 0.76rem; letter-spacing: 0.06em;">KEYBOARD CHEATSHEET</span>
-          <h3 id="shortcuts-modal-title" style="font-size: 1.4rem; margin: 4px 0 0;">ViewGrid Shortcuts</h3>
+          <h3 id="shortcuts-modal-title" data-i18n="shortcutTitle" style="font-size: 1.4rem; margin: 4px 0 0;">ViewGrid Shortcuts</h3>
         </div>
-        <button type="button" class="lightbox-close-btn" onclick="closeShortcutsModal()" aria-label="Close shortcuts">&times;</button>
+        <button type="button" class="lightbox-close-btn" onclick="closeShortcutsModal()" aria-label="Close shortcuts" data-i18n-aria="closeShortcutsLabel">&times;</button>
       </div>
 
       <div class="shortcuts-table">
@@ -3265,6 +3272,8 @@
   </div>
 
   <!-- Central JavaScript Engine -->
+  <script src="/site-copy.js"></script>
+  <script src="/accessibility.js"></script>
   <script src="/gallery.js"></script>
   <script>
     /* -------------------------------------------------------------
@@ -3595,14 +3604,9 @@
        3. LANGUAGE MANAGER (Browser Detection & LocalStorage)
        ------------------------------------------------------------- */
     function detectLanguage() {
-      try {
-        const stored = localStorage.getItem('viewgrid_lang');
-        if (stored && ['en', 'tr', 'no'].includes(stored)) return stored;
-      } catch (e) {}
-
-      const navLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-      if (navLang.startsWith('tr')) return 'tr';
-      if (navLang.startsWith('no') || navLang.startsWith('nb') || navLang.startsWith('nn')) return 'no';
+      const path = window.location.pathname;
+      if (path === '/tr/' || path.startsWith('/tr/') || path.includes('/changelog/tr/')) return 'tr';
+      if (path === '/no/' || path.startsWith('/no/') || path.includes('/changelog/no/')) return 'no';
       return 'en';
     }
 
@@ -3637,7 +3641,7 @@
         btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
       });
 
-      const dict = translations[lang] || translations.en;
+      const dict = { ...(translations[lang] || translations.en), ...(window.viewgridSiteCopy?.[lang] || {}) };
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (dict[key]) el.innerHTML = dict[key];
@@ -4028,7 +4032,7 @@
               <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; font-family: var(--font-mono);">LOCAL DEV OR REMOTE URL:</div>
               <div style="background: var(--bg-surface); border: 1.5px solid var(--border-dark); padding: 10px 14px; font-family: var(--font-mono); font-size: 0.88rem; display: flex; align-items: center; justify-content: space-between; border-radius: 3px;">
                 <span id="typing-url-text" style="color: var(--text); font-weight: 500;">http://localhost:3000</span>
-                <span style="width: 8px; height: 8px; border-radius: 50%; background: #2B8A3E; box-shadow: 0 0 6px rgba(43,138,62,0.6);"></span>
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #17672a; box-shadow: 0 0 6px rgba(43,138,62,0.6);"></span>
               </div>
               <p style="font-size: 0.74rem; color: var(--text-faint); margin-top: 10px; font-family: var(--font-mono);">
                 Direct socket connection &bull; No cloud tunnels &bull; Local offline safe
