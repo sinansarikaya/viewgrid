@@ -6,9 +6,9 @@ if (window.top !== window && (location.ancestorOrigins?.length ? /^(chrome|moz)-
   const original = container.register.bind(container);
   const verified = new Promise<boolean>(resolve => {
     const receive = (event: MessageEvent) => {
-      if (event.source !== window || event.data?.type !== 'vg/preview-worker-context') return;
+      if (event.source !== window.parent || !/^(chrome|moz)-extension:\/\//.test(event.origin) || event.data?.type !== 'vg/preview-identity') return;
       window.removeEventListener('message', receive);
-      resolve(event.data.verified === true);
+      resolve(true);
     };
     window.addEventListener('message', receive);
     // Fail open if the agent is unavailable; normal registration is retained.

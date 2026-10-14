@@ -3,9 +3,9 @@
     "en": {
       "title": "Every update. Every detail.",
       "eyebrow": "CHANGELOG",
-      "intro": "Improvements, fixes and the decisions behind them. The current extension version remains 1.0.3.",
+      "intro": "Improvements, fixes and the decisions behind them. The current extension version is 1.0.4.",
       "current": "Current version",
-      "same": "Same version. Improved build.",
+      "same": "Local analysis. A calmer workspace.",
       "build": "The build ID in the workspace identifies the installed package.",
       "download": "Get the latest tested build",
       "source": "Full changelog on GitHub",
@@ -16,9 +16,9 @@
     "tr": {
       "title": "Her güncelleme. Her ayrıntı.",
       "eyebrow": "DEĞİŞİKLİK GÜNLÜĞÜ",
-      "intro": "İyileştirmeler, düzeltmeler ve bunların arkasındaki kararlar. Güncel eklenti sürümü 1.0.3 olarak kalıyor.",
+      "intro": "İyileştirmeler, düzeltmeler ve bunların arkasındaki kararlar. Güncel eklenti sürümü 1.0.4.",
       "current": "Güncel sürüm",
-      "same": "Aynı sürüm. İyileştirilmiş derleme.",
+      "same": "Yerel analiz. Daha sakin çalışma alanı.",
       "build": "Çalışma alanındaki derleme kimliği, yüklediğiniz paketi gösterir.",
       "download": "Test edilmiş güncel paketi indir",
       "source": "GitHub’da tüm değişiklikler",
@@ -29,9 +29,9 @@
     "no": {
       "title": "Hver oppdatering. Hver detalj.",
       "eyebrow": "ENDRINGSLOGG",
-      "intro": "Forbedringer, rettelser og valgene bak dem. Gjeldende utvidelsesversjon er fortsatt 1.0.3.",
+      "intro": "Forbedringer, rettelser og valgene bak dem. Gjeldende utvidelsesversjon er 1.0.4.",
       "current": "Gjeldende versjon",
-      "same": "Samme versjon. Forbedret bygg.",
+      "same": "Lokal analyse. Et roligere arbeidsområde.",
       "build": "Bygg-ID-en i arbeidsområdet viser hvilken pakke du har installert.",
       "download": "Last ned nyeste testede bygg",
       "source": "Full endringslogg på GitHub",
@@ -41,6 +41,43 @@
     }
   },
   "entries": [
+    {
+      "version": "1.0.4",
+      "date": "2026-10-14",
+      "en": {
+        "title": "Local analysis, when you need it",
+        "points": [
+          "Version 1.0.4 packages the analysis engine in ViewGrid: no extra installation, API key or external analysis service.",
+          "Open Analysis, choose a mobile or desktop preview and run the check. One DOM scan collects performance observations, SEO, limited accessibility checks and GEO signals. Each tab shows only its own scope.",
+          "Performance shows browser navigation and First Contentful Paint (FCP) observations when available. These are not Lighthouse scores, CrUX field data or Core Web Vitals ratings. Missing observations are marked as unavailable.",
+          "Review metadata, headings, links and structured-data signals from the current rendered page. Accessibility checks are limited automatic suggestions, not a complete WCAG audit or certification. GEO describes page structure signals; it does not measure or guarantee visibility in AI answers. No site-wide crawl or security scan is performed.",
+          "Copy or download a Markdown report for the selected tab. Results remain available after closing the dialog during the workspace session; page or viewport changes mark them as stale. Rerun the check to refresh them.",
+          "Panels and the issues drawer toggle open and closed from the same control. Softer transitions respect reduced motion. Use 21 device profiles and 5 preset sets to inspect phone, tablet, laptop and desktop layouts."
+        ]
+      },
+      "tr": {
+        "title": "İhtiyaç duyduğunuzda yerel analiz",
+        "points": [
+          "Sürüm 1.0.4 analiz motorunu ViewGrid içinde paketler: ek kurulum, API anahtarı veya harici analiz servisi gerekmez.",
+          "Analiz bölümünü açın, mobil veya masaüstü önizlemesini seçin ve kontrolü başlatın. Tek DOM taraması performans gözlemlerini, SEO, sınırlı erişilebilirlik kontrollerini ve GEO sinyallerini toplar. Her sekme yalnız kendi kapsamını gösterir.",
+          "Performans, mevcut olduğunda tarayıcı gezinme ve İlk İçerikli Boyama (FCP) gözlemlerini gösterir. Bunlar Lighthouse skoru, CrUX saha verisi veya Core Web Vitals derecesi değildir. Eksik gözlemler kullanılamıyor olarak belirtilir.",
+          "Geçerli sayfanın işlenmiş halindeki meta verileri, başlıkları, bağlantıları ve yapılandırılmış veri sinyallerini inceleyin. Erişilebilirlik kontrolleri sınırlı otomatik önerilerdir; tam WCAG denetimi veya sertifika değildir. GEO sayfa yapısı sinyallerini açıklar; yapay zekâ yanıtlarında görünürlüğü ölçmez veya garanti etmez. Site geneli crawl ve güvenlik taraması yapılmaz.",
+          "Seçili sekmenin Markdown raporunu kopyalayın veya indirin. Sonuçlar pencere kapatıldığında çalışma alanı oturumu boyunca korunur; sayfa veya görünüm değişince eski olarak işaretlenir. Güncellemek için analizi yeniden çalıştırın.",
+          "Panel ve sorunlar çekmecesi aynı kontrolle açılıp kapanır. Yumuşak geçişler azaltılmış hareket tercihini dikkate alır. Telefon, tablet, dizüstü ve masaüstü düzenlerini 21 cihaz profili ve 5 hazır set ile inceleyin."
+        ]
+      },
+      "no": {
+        "title": "Lokal analyse når du trenger den",
+        "points": [
+          "Versjon 1.0.4 inkluderer analysemotoren i ViewGrid: ingen ekstra installasjon, API-nøkkel eller ekstern analysetjeneste.",
+          "Åpne Analyse, velg en mobil- eller desktopvisning og start kontrollen. Én DOM-skanning samler ytelsesobservasjoner, SEO, begrensede tilgjengelighetskontroller og GEO-signaler. Hver fane viser bare sitt eget omfang.",
+          "Ytelse viser nettleserens navigasjons- og First Contentful Paint-observasjoner (FCP) når de er tilgjengelige. Dette er ikke Lighthouse-poeng, CrUX-feltdata eller Core Web Vitals-vurderinger. Manglende observasjoner merkes som utilgjengelige.",
+          "Se metadata, overskrifter, lenker og signaler fra strukturerte data på den gjeldende gjengitte siden. Tilgjengelighetskontroller er begrensede automatiske forslag, ikke en full WCAG-revisjon eller sertifisering. GEO beskriver sidestruktursignaler; det måler eller garanterer ikke synlighet i KI-svar. Ingen gjennomgang av hele nettstedet eller sikkerhetsskanning utføres.",
+          "Kopier eller last ned en Markdown-rapport for den valgte fanen. Resultatene beholdes i arbeidsøkten når dialogen lukkes; side- eller visningsendringer markerer dem som utdaterte. Kjør analysen på nytt for å oppdatere dem.",
+          "Paneler og problemoversikten åpnes og lukkes med samme kontroll. Mykere overganger respekterer redusert bevegelse. Bruk 21 enhetsprofiler og 5 forhåndsvalgte sett for mobil, nettbrett, bærbar PC og desktop."
+        ]
+      }
+    },
     {
       "version": "1.0.3",
       "date": "2026-10-08",

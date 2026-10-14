@@ -30,6 +30,7 @@ for (const entry of fs.readdirSync(distRoot)) {
 
 fs.rmSync(targetDir, { recursive: true, force: true });
 fs.mkdirSync(targetDir, { recursive: true });
+fs.cpSync(path.join(root, 'src', '_locales'), path.join(targetDir, '_locales'), { recursive: true });
 
 // 1. UI build
 await viteBuild({
@@ -42,12 +43,14 @@ await viteBuild({
 for (const [entry, outfile] of [
   ['src/background/index.ts', 'background.js'],
   ['src/content/agent.ts', 'content/agent.js'],
+  ['src/content/local-analysis-agent.ts', 'content/local-analysis.js'],
   ['src/content/world-inject.ts', 'world-inject.js'],
 ]) {
   await esbuild.build({
     entryPoints: [path.join(root, entry)],
     bundle: true,
     format: 'iife',
+    minify: entry === 'src/content/local-analysis-agent.ts',
     target: ['firefox128', 'chrome120'],
     outfile: path.join(targetDir, outfile),
     logLevel: 'warning',
@@ -74,6 +77,10 @@ fingerprint(path.join(root, 'src'));
 for (const file of ['scripts/manifest.mjs', 'scripts/build.mjs', 'scripts/gen-icons.mjs', 'vite.ui.config.ts']) hash.update(fs.readFileSync(path.join(root, file)));
 hash.update(fs.readFileSync(path.join(root, 'package.json')));
 fs.writeFileSync(path.join(targetDir, 'build-info.json'), JSON.stringify({ version: buildManifest(target, iconFiles).version, build: hash.digest('hex').slice(0, 12) }, null, 2) + '\n');
+fs.copyFileSync(path.join(root, 'THIRD_PARTY_NOTICES.md'), path.join(targetDir, 'THIRD_PARTY_NOTICES.md'));
+fs.mkdirSync(path.join(targetDir, 'licenses'), { recursive: true });
+fs.copyFileSync(path.join(root, 'node_modules/axe-core/LICENSE'), path.join(targetDir, 'licenses/axe-core-MPL-2.0.txt'));
+fs.copyFileSync(path.join(root, 'node_modules/axe-core/LICENSE-3RD-PARTY.txt'), path.join(targetDir, 'licenses/axe-core-THIRD-PARTY.txt'));
 
 // NOTE: each browser build lands exclusively in dist/<target>/.
 // Use --source-dir dist/firefox or dist/chromium explicitly.

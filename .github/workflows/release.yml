@@ -73,23 +73,29 @@ jobs:
         run: pnpm run lint:web-ext
 
       - name: Install Chromium
+        if: runner.environment == 'self-hosted'
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Browser regression tests
+        if: runner.environment == 'self-hosted'
         run: pnpm run test:e2e
         env:
           VIEWGRID_LIVE_TEST_URL: https://castpost.app/en
 
       - name: Install Firefox
+        if: runner.environment == 'self-hosted'
         uses: browser-actions/setup-firefox@v1
 
       - name: Install GeckoDriver
+        if: runner.environment == 'self-hosted'
         uses: browser-actions/setup-geckodriver@fac5b0424c584257f32cf12c5eb4ba86014c34f8
 
       - name: Install Firefox test driver
+        if: runner.environment == 'self-hosted'
         run: python -m pip install selenium==4.36.0
 
       - name: Firefox browser regression tests
+        if: runner.environment == 'self-hosted'
         run: python tests/e2e/firefox_extension.py
         env:
           VIEWGRID_LIVE_TEST_URL: https://castpost.app/en

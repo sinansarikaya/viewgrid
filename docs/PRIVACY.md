@@ -1,6 +1,16 @@
-# ViewGrid privacy — version 1.0.3
+# ViewGrid privacy — version 1.0.4
 
 ViewGrid does not send analytics, crash reports, screenshots, issue results or workspace settings to a ViewGrid server. There is no cloud proxy, account service or AI provider integration in this release.
+
+## 2026-10-14: yerel analiz
+
+Yerel Performans, SEO/erişilebilirlik ve GEO kontrolleri eklentiye paketlenen ViewGrid motorunda çalışır. Hedef URL, sayfa içeriği veya sonuçlar Google/CrUX, ViewGrid sunucusu ya da başka bir analiz servisine gönderilmez. API anahtarı veya ayrı uygulama kurulumu yoktur. Seçilen siteler normal tarayıcı isteklerini üretmeye devam eder; bu sitelerin gizlilik politikaları geçerlidir. localhost ve yerel ağdaki hazır görünümler de desteklenir.
+
+Motor yalnız kullanıcı başlatınca yüklenir; hazır önizlemenin DOM'unu ve mevcut tarayıcı yükleme zamanlarını inceler. Form değerleri, HTML parçaları ve axe öğe hedefleri sonuçlara eklenmez. Ayrıntılı kapsam/bütçe: [Yerel analiz](ANALYSIS_SETUP.md).
+
+Analiz geçmişi cihazdaki extension storage içinde en fazla 20 kayıt ve 256 KiB sınırıyla saklanır. Geçmiş/dışa aktarımda URL query/fragment, kullanıcı ajanı ve etkilenen öğenin metin/selector/snippet içeriği çıkarılır. Başarısız veya eksik ölçüm sıfır puan yapılmaz. Önceki harici analiz kayıtları kaynak etiketi korunarak okunabilir. İndirilen HTML/JSON/PDF dosyalarını kullanıcı ayrıca silmelidir. Responsive sorun raporları farklıdır; paylaşmadan içerik ve URL'leri inceleyin.
+
+Rapor için ayrıca seçilen ekran görüntüsü çalışma alanında bellekte tutulur; dışarı gönderilmez ve analiz geçmişine yazılmaz. HTML/JSON/PDF içine kullanıcı seçimiyle eklenir. En fazla 6 MiB/32 megapiksel PNG kabul edilir. Görüntü pikselleri kişisel veri içerebilir; otomatik sansürlenmez. Paylaşmadan inceleyin.
 
 ## Data on your device
 

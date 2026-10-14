@@ -1,0 +1,11 @@
+.checkbox { display:inline-flex; align-items:center; gap:10px; min-height:32px; padding:2px 0; color:var(--text); cursor:pointer; line-height:1.45; }
+.control { position:relative; display:inline-flex; flex-shrink:0; width:20px; height:20px; }
+.control .input { appearance:none; box-sizing:border-box; padding:0; margin:0; width:20px; height:20px; border:2px solid var(--text-dim); border-radius:4px; background:var(--panel-2); cursor:inherit; }
+.check { position:absolute; top:2px; left:2px; opacity:0; color:var(--accent-text); pointer-events:none; }
+.control .input:checked { background:var(--accent); border-color:var(--accent); }
+.input:checked + .check { opacity:1; }
+.input:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.checkbox:hover .input:not(:disabled) { border-color:var(--accent); }
+.disabled { opacity:.55; cursor:not-allowed; }
+@media (prefers-reduced-motion:no-preference) { .input { transition:background-color 120ms ease,border-color 120ms ease; } .check { transition:opacity 120ms ease; } }
+@media (forced-colors:active) { .control .input { appearance:auto; } .check { display:none; } }

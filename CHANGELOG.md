@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2026-10-14
+
+Local analysis, workspace improvements and synchronization guards. Full notes: [Türkçe · English · Norsk bokmål](docs/RELEASE_NOTES_1.0.4.md).
+
+### Türkçe
+
+- Harici analiz servisi ve ek kurulum gerektirmeyen yerel motor: varsayılan mobil + masaüstü, yükleme gözlemleri, DOM tabanlı SEO, axe erişilebilirlik ve deneysel GEO.
+- Bölüme özel Markdown kopyalama/indirme, rapor dili, doğru kapsam/kontrol sayıları, başarısız/belirsiz sonuç ayrımı ve oturumda korunup hedef değişince eski işaretlenen sonuçlar.
+- Merkezden zoom, ortak profil kartları, yumuşak ve azaltılmış harekete duyarlı geçişler; aç/kapat panel düğmeleri ve dış tık/Escape ile kapanan menüler.
+- Giriş/form/tuş senkronizasyonu aynı origin ile sınırlandırılır. Tür, autocomplete ve ad/ID üzerinden tanınan parola, tek kullanımlık kod ve ödeme alanlarında yakalama ve uygulama engellenir. Önizleme bağlantısı gerçek üst çalışma alanı, doğrudan iframe kimliği ve doğrulanmış frame/document kaydıyla kontrol edilir; sayfanın kendi oluşturduğu mesajlar bağlantı kanıtı sayılmaz.
+- Yerel gözlemler Lighthouse/CrUX skoru, tam site crawl, DAST veya uygunluk sertifikası değildir. GEO görünürlük garantisi sunmaz; sıfır bulgu uygunluğu kanıtlamaz.
+
+### English
+
+- Local engine without an external analysis service or additional installation: mobile + desktop by default, loading observations, DOM-based SEO, axe accessibility and experimental GEO.
+- Section-specific Markdown copy/download, report language, accurate scope/check counts, failed/uncertain outcomes and session results marked stale when the target changes.
+- Centered zoom, shared profile cards, soft transitions respecting reduced motion; panel toggle buttons and outside-click/Escape menu dismissal.
+- Input/form/key synchronization is restricted to the same origin. Capture and replay are blocked for password, one-time-code and payment fields recognized by type, autocomplete and name/ID guards. Preview binding checks the actual parent workspace, direct iframe identity and verified frame/document registration; page-created messages are not accepted as binding evidence.
+- Local observations are not Lighthouse/CrUX scores, whole-site crawling, DAST or compliance certification. GEO offers no visibility guarantee; zero findings do not establish compliance.
+
+### Norsk bokmål
+
+- Lokal motor uten ekstern analysetjeneste eller ekstra installasjon: mobil + datamaskin som standard, observasjoner av innlasting, DOM-basert SEO, tilgjengelighet med axe og eksperimentell GEO.
+- Markdown-kopiering/nedlasting for hver del, rapportspråk, riktige omfang-/sjekkantall, mislykkede/usikre resultater og øktresultater merket som utdaterte når målet endres.
+- Zoom rundt midten, felles profilkort, myke overganger med redusert bevegelse; panelknapper som åpner/lukker og menylukking med klikk utenfor/Escape.
+- Synkronisering av inndata/skjemaer/tastetrykk begrenses til samme origin. Innsamling og gjengivelse blokkeres for passord, engangskoder og betalingsfelt som gjenkjennes gjennom type, autocomplete og navn/ID. Forhåndsvisningen kontrolleres mot det faktiske overordnede arbeidsområdet, direkte iframe-identitet og bekreftet frame/document-registrering; meldinger opprettet av siden godtas ikke som bevis på tilknytning.
+- Lokale observasjoner er ikke Lighthouse-/CrUX-poeng, gjennomgang av hele nettstedet, DAST eller samsvarssertifisering. GEO garanterer ikke synlighet; ingen funn beviser ikke samsvar.
+
+---
+
 ## Scan reliability corrections to 1.0.3 - 2026-10-08
 
 The version remains 1.0.3; changes are confined to scan metrics, assessment, reporting and related documentation/tests.

@@ -1,5 +1,9 @@
 import { safeHttpUrl } from './framing';
 
+export function isFirefoxWorkspace(workspaceUrl: string): boolean {
+  return new URL(workspaceUrl).protocol === 'moz-extension:';
+}
+
 /** Never fall back to an unfiltered browsingData operation. */
 export function workerRemovalOptions(url: string, firefox: boolean) {
   if (!safeHttpUrl(url)) throw new Error('Preview URL must use HTTP or HTTPS');

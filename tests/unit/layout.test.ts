@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   autoAlignPositions,
+  canAutoAlignViewports,
   calculateSnapGuides,
   canAddViewports,
   clampZoom,
@@ -10,7 +11,7 @@ import {
   moveViewport,
   swapOrientation,
 } from '../../src/core/workspace/layout';
-import { MAX_VIEWPORTS, VIEWPORT_WARN, type DeviceProfile } from '../../src/core/types';
+import { MAX_VIEWPORTS, VIEWPORT_WARN, type DeviceProfile, type ViewportState } from '../../src/core/types';
 
 const dev = (w: number, h: number): DeviceProfile => ({
   id: 'x',
@@ -95,5 +96,30 @@ describe('viewport math', () => {
     const res = calculateSnapGuides(target, others, 10);
     expect(res.x).toBe(100);
     expect(res.guides.some((g) => g.type === 'v' && g.pos === 100)).toBe(true);
+  });
+
+  it('enables alignment only when free layout has a visible position change', () => {
+    const viewport = (id: string, position?: ViewportState['position']): ViewportState => ({
+      id, deviceId: 'x', orientation: 'portrait', zoom: 0.5,
+      minimized: false, hidden: false, url: '', position,
+    });
+    const profileOf = () => dev(390, 844);
+    const displaced = [viewport('a', { x: 100, y: 100 })];
+    for (const mode of ['grid', 'row', 'col'] as const) {
+      expect(canAutoAlignViewports(mode, displaced, profileOf)).toBe(false);
+    }
+    expect(canAutoAlignViewports('free', [], profileOf)).toBe(false);
+    expect(canAutoAlignViewports('free', [viewport('a')], profileOf)).toBe(false);
+    expect(canAutoAlignViewports('free', displaced, profileOf)).toBe(true);
+
+    const aligned = [viewport('a', { x: 24, y: 24 }), viewport('b', { x: 283, y: 24 })];
+    expect(canAutoAlignViewports('free', aligned, profileOf)).toBe(false);
+    expect(canAutoAlignViewports('free', [viewport('a'), viewport('b')], profileOf)).toBe(true);
+    const resized = aligned.map(v => ({ ...v, zoom: 1 }));
+    expect(canAutoAlignViewports('free', resized, profileOf)).toBe(true);
+    const rotated = aligned.map(v => ({ ...v, orientation: 'landscape' as const }));
+    expect(canAutoAlignViewports('free', rotated, profileOf)).toBe(true);
+    expect(canAutoAlignViewports('free', [...aligned].reverse(), profileOf)).toBe(true);
+    expect(canAutoAlignViewports('free', [viewport('a', { x: NaN, y: Infinity })], profileOf)).toBe(false);
   });
 });

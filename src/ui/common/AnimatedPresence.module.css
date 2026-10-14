@@ -1,0 +1,16 @@
+.presence { display: contents; }
+.presence[data-kind="drawer"][data-state="open"] > * { animation: drawerIn 180ms cubic-bezier(.2,.8,.2,1) both; }
+.presence[data-kind="drawer"][data-state="closing"] > * { animation: drawerOut 180ms ease-in both; pointer-events: none; }
+.presence[data-kind="menu"][data-state="open"] > * { animation: surfaceIn 180ms ease-out both; }
+.presence[data-kind="menu"][data-state="closing"] > * { animation: surfaceOut 180ms ease-in both; pointer-events: none; }
+.presence[data-kind="modal"][data-state="open"] > * { animation: fadeIn 180ms ease-out both; }
+.presence[data-kind="modal"][data-state="open"] > * > * { animation: surfaceIn 180ms cubic-bezier(.2,.8,.2,1) both; }
+.presence[data-kind="modal"][data-state="closing"] > * { animation: fadeOut 180ms ease-in both; pointer-events: none; }
+.presence[data-kind="modal"][data-state="closing"] > * > * { animation: surfaceOut 180ms ease-in both; }
+@keyframes drawerIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes drawerOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+@keyframes surfaceIn { from { transform: translateY(8px) scale(.985); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes surfaceOut { from { transform: translateY(0) scale(1); opacity: 1; } to { transform: translateY(8px) scale(.985); opacity: 0; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .presence[data-kind][data-state] > *, .presence[data-kind][data-state] > * > * { animation: none; transition: none; } }

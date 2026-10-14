@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Icon } from '../common/Icon';
+import { Button } from '../common/Button';
 import { useStore } from './store';
 import { getTranslation } from './i18n';
 import { effectiveSize } from '../../core/workspace/layout';
@@ -11,7 +13,7 @@ import {
   requestCapture,
 } from './bridge';
 import s from './CompareModal.module.css';
-import { getDeviceCategoryIcon } from './utils';
+import { getDeviceCategoryIconName } from './utils';
 
 export function CompareModal() {
   const st = useStore();
@@ -201,45 +203,45 @@ export function CompareModal() {
         {/* Top Header */}
         <div className={s.header}>
           <div className={s.headerTitle}>
-            <span>⚖</span>
+            <Icon name="scale" />
             <span>{t.compareTitle}</span>
           </div>
 
           <div className={s.controls}>
             {/* View Mode Toggle: Dual Split, Curtain Overlay, Side by Side */}
             <div className={s.modeToggle}>
-              <button
+              <Button
                 type="button"
                 className={`${s.modeBtn} ${mode === 'split' ? s.modeBtnActive : ''}`}
                 onClick={() => setMode('split')}
                 title={t.compareSplit}
               >
-                ⫴ {t.compareSplit}
-              </button>
-              <button
+                <Icon name="splitHorizontal" /> {t.compareSplit}
+              </Button>
+              <Button
                 type="button"
                 className={`${s.modeBtn} ${mode === 'curtain' ? s.modeBtnActive : ''}`}
                 onClick={() => setMode('curtain')}
                 title={t.compareCurtain}
               >
-                ▥ {t.compareCurtain}
-              </button>
-              <button
+                <Icon name="curtain" /> {t.compareCurtain}
+              </Button>
+              <Button
                 type="button"
                 className={`${s.modeBtn} ${mode === 'side-by-side' ? s.modeBtnActive : ''}`}
                 onClick={() => setMode('side-by-side')}
                 title={t.compareSideBySide}
               >
-                ⫿ {t.compareSideBySide}
-              </button>
-              <button
+                <Icon name="columns" /> {t.compareSideBySide}
+              </Button>
+              <Button
                 type="button"
                 className={`${s.modeBtn} ${mode === 'figma' ? s.modeBtnActive : ''}`}
                 onClick={() => setMode('figma')}
                 title="Compare an exported design image"
               >
-                🎨 Design Overlay
-              </button>
+                <Icon name="palette" /> Design Overlay
+              </Button>
             </div>
 
             {/* Select Device A */}
@@ -268,35 +270,35 @@ export function CompareModal() {
 
             {/* Reset / Equalize Split Button (Split or Curtain Mode) */}
             {mode !== 'side-by-side' && mode !== 'figma' && (
-              <button
+              <Button
                 type="button"
                 className={s.actionBtn}
                 onClick={mode === 'curtain' ? snapToNatural : snapTo50}
                 title={mode === 'curtain' ? 'Doğal Cihaz Oranına Eşitle' : t.resetSplit}
               >
-                🎯 {mode === 'curtain' ? `Doğal Oran (%${naturalRatioA})` : t.resetSplit}
-              </button>
+                <Icon name="target" /> {mode === 'curtain' ? `Doğal Oran (%${naturalRatioA})` : t.resetSplit}
+              </Button>
             )}
 
             {/* Screenshot Button */}
-            <button
+            <Button
               type="button"
               className={s.actionBtn}
               onClick={handleTakeScreenshot}
               title={t.shotOne}
             >
-              📷 {t.shotOne.split(' ')[0]}
-            </button>
+              <Icon name="camera" /> {t.shotOne.split(' ')[0]}
+            </Button>
 
             {/* Close Button */}
-            <button
+            <Button
               type="button"
               className={s.closeBtn}
               onClick={() => st.setCompareOpen(false)}
               title="Kapat (Esc)"
             >
-              ✕
-            </button>
+              <Icon name="close" />
+            </Button>
           </div>
         </div>
 
@@ -346,14 +348,14 @@ export function CompareModal() {
                         <option value="overlay">Overlay</option>
                       </select>
                     </div>
-                    <button
+                    <Button
                       type="button"
                       className={s.actionBtn}
                       onClick={() => setFigmaSrc('')}
                       style={{ fontSize: 11 }}
                     >
                       Mockup'ı Kaldır
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -391,7 +393,7 @@ export function CompareModal() {
                 </div>
               ) : (
                 <div className={s.figmaDropzone}>
-                  <span style={{ fontSize: 40 }}>🎨</span>
+                  <Icon name="palette" size={40} />
                   <h4 style={{ margin: 0, fontSize: 16 }}>Figma Mockup Görseli Yükleyin</h4>
                   <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
                     Tasarım mockup'ınızı (PNG veya SVG) yükleyerek canlı {profA?.name || 'cihaz'} üzerinde piksel piksel karşılaştırın.
@@ -431,21 +433,21 @@ export function CompareModal() {
               >
                 <div className={s.paneHeader}>
                   <div className={s.paneTitle}>
-                    <span>{getDeviceCategoryIcon(profA?.category)}</span>
+                    <span><Icon name={getDeviceCategoryIconName(profA?.category)} /></span>
                     <span>A: {profA?.name}</span>
                   </div>
                   <div className={s.paneMeta}>
                     <span>
                       {sizeA.width}×{sizeA.height} ({Math.round(splitScaleA * 100)}%)
                     </span>
-                    <button
+                    <Button
                       type="button"
                       className={s.paneActionBtn}
                       onClick={() => setOrientA((o) => (o === 'portrait' ? 'landscape' : 'portrait'))}
                       title="Yön değiştir"
                     >
-                      🔄
-                    </button>
+                      <Icon name="refresh" />
+                    </Button>
                   </div>
                 </div>
 
@@ -482,21 +484,21 @@ export function CompareModal() {
               >
                 <div className={s.paneHeader}>
                   <div className={s.paneTitle}>
-                    <span>{getDeviceCategoryIcon(profB?.category)}</span>
+                    <span><Icon name={getDeviceCategoryIconName(profB?.category)} /></span>
                     <span>B: {profB?.name}</span>
                   </div>
                   <div className={s.paneMeta}>
                     <span>
                       {sizeB.width}×{sizeB.height} ({Math.round(splitScaleB * 100)}%)
                     </span>
-                    <button
+                    <Button
                       type="button"
                       className={s.paneActionBtn}
                       onClick={() => setOrientB((o) => (o === 'portrait' ? 'landscape' : 'portrait'))}
                       title="Yön değiştir"
                     >
-                      🔄
-                    </button>
+                      <Icon name="refresh" />
+                    </Button>
                   </div>
                 </div>
 
@@ -545,36 +547,36 @@ export function CompareModal() {
                     snapTo50();
                   }}
                 >
-                  ↔
+                  <Icon name="arrowLeftRight" />
                 </div>
               </div>
 
               {/* Bottom Quick-Snap Floating Pills */}
               <div className={s.bottomFloatingBar}>
-                <button
+                <Button
                   type="button"
                   className={`${s.snapPill} ${splitPercent >= 65 ? s.snapPillActive : ''}`}
                   onClick={snapFocusA}
                   title="A Cihazına Odaklan (%75)"
                 >
-                  ◀ {profA?.name} (%{Math.round(splitPercent)})
-                </button>
-                <button
+                  <Icon name="chevronLeft" /> {profA?.name} (%{Math.round(splitPercent)})
+                </Button>
+                <Button
                   type="button"
                   className={`${s.snapPill} ${Math.abs(splitPercent - 50) < 3 ? s.snapPillActive : ''}`}
                   onClick={snapTo50}
                   title="Eşit Böl (%50 / %50)"
                 >
-                  🎯 50 / 50
-                </button>
-                <button
+                  <Icon name="target" /> 50 / 50
+                </Button>
+                <Button
                   type="button"
                   className={`${s.snapPill} ${splitPercent <= 35 ? s.snapPillActive : ''}`}
                   onClick={snapFocusB}
                   title="B Cihazına Odaklan (%75)"
                 >
-                  (%{Math.round(100 - splitPercent)}) {profB?.name} ▶
-                </button>
+                  (%{Math.round(100 - splitPercent)}) {profB?.name} <Icon name="chevronRight" />
+                </Button>
               </div>
             </div>
           ) : mode === 'curtain' ? (
@@ -604,7 +606,7 @@ export function CompareModal() {
               >
                 <div className={s.curtainHeaderA}>
                   <div className={s.curtainTitle}>
-                    {getDeviceCategoryIcon(profA?.category)} A: {profA?.name}
+                    <Icon name={getDeviceCategoryIconName(profA?.category)} /> A: {profA?.name}
                   </div>
                   <span className={s.curtainBadgeDims}>
                     {sizeA.width}×{sizeA.height}
@@ -635,7 +637,7 @@ export function CompareModal() {
               >
                 <div className={s.curtainHeaderB}>
                   <div className={s.curtainTitle}>
-                    {getDeviceCategoryIcon(profB?.category)} B: {profB?.name}
+                    <Icon name={getDeviceCategoryIconName(profB?.category)} /> B: {profB?.name}
                   </div>
                   <span className={s.curtainBadgeDims}>
                     {sizeB.width}×{sizeB.height}
@@ -671,7 +673,7 @@ export function CompareModal() {
                 title="Sürükleyin veya çift tıklayarak doğal cihaz oranına eşitleyin"
               >
                 <div className={s.curtainDividerTag}>
-                  ◀ {profA?.name} | {profB?.name} ▶
+                  <Icon name="chevronLeft" /> {profA?.name} | {profB?.name} <Icon name="chevronRight" />
                 </div>
                 <div
                   className={s.curtainHandle}
@@ -681,13 +683,13 @@ export function CompareModal() {
                     snapToNatural();
                   }}
                 >
-                  ↔
+                  <Icon name="arrowLeftRight" />
                 </div>
               </div>
 
               {/* Bottom Badges & Controls */}
               <div className={s.bottomFloatingBar}>
-                <button
+                <Button
                   type="button"
                   className={s.paneActionBtn}
                   onClick={(e) => {
@@ -696,9 +698,9 @@ export function CompareModal() {
                   }}
                   title="A Cihazının Yönünü Değiştir"
                 >
-                  🔄 A
-                </button>
-                <button
+                  <Icon name="refresh" /> A
+                </Button>
+                <Button
                   type="button"
                   className={`${s.snapPill} ${Math.abs(splitPercent - naturalRatioA) < 2 ? s.snapPillActive : ''}`}
                   onClick={(e) => {
@@ -707,9 +709,9 @@ export function CompareModal() {
                   }}
                   title="Cihazların gerçek fiziksel boyut oranına eşitle"
                 >
-                  📱 Doğal Cihaz Oranı (%{naturalRatioA} / %{100 - naturalRatioA})
-                </button>
-                <button
+                  <Icon name="deviceMobile" /> Doğal Cihaz Oranı (%{naturalRatioA} / %{100 - naturalRatioA})
+                </Button>
+                <Button
                   type="button"
                   className={`${s.snapPill} ${Math.abs(splitPercent - 50) < 2 ? s.snapPillActive : ''}`}
                   onClick={(e) => {
@@ -718,9 +720,9 @@ export function CompareModal() {
                   }}
                   title="Eşit Böl (%50 / %50)"
                 >
-                  🎯 %50 / %50
-                </button>
-                <button
+                  <Icon name="target" /> %50 / %50
+                </Button>
+                <Button
                   type="button"
                   className={s.paneActionBtn}
                   onClick={(e) => {
@@ -729,9 +731,9 @@ export function CompareModal() {
                   }}
                   title="B Cihazının Yönünü Değiştir"
                 >
-                  🔄 B
-                </button>
-                <button
+                  <Icon name="refresh" /> B
+                </Button>
+                <Button
                   type="button"
                   className={s.snapPill}
                   style={{ background: 'rgba(56, 189, 248, 0.25)', borderColor: '#38bdf8', color: '#38bdf8', fontWeight: 700 }}
@@ -741,8 +743,8 @@ export function CompareModal() {
                   }}
                   title="İki cihazı bağımsız pencerede görmek için Dual Split moduna geçin"
                 >
-                  ⫴ Dual Split
-                </button>
+                  <Icon name="splitHorizontal" /> Dual Split
+                </Button>
               </div>
             </div>
           ) : (
@@ -754,20 +756,20 @@ export function CompareModal() {
               <div className={s.sideCard}>
                 <div className={s.sideCardHeader}>
                   <span>
-                    {getDeviceCategoryIcon(profA?.category)} A: {profA?.name}
+                    <Icon name={getDeviceCategoryIconName(profA?.category)} /> A: {profA?.name}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>
                       {sizeA.width}×{sizeA.height} ({Math.round(sideScaleA * 100)}%)
                     </span>
-                    <button
+                    <Button
                       type="button"
                       className={s.paneActionBtn}
                       onClick={() => setOrientA((o) => (o === 'portrait' ? 'landscape' : 'portrait'))}
                       title="Yön değiştir"
                     >
-                      🔄
-                    </button>
+                      <Icon name="refresh" />
+                    </Button>
                   </div>
                 </div>
                 <div
@@ -797,20 +799,20 @@ export function CompareModal() {
               <div className={s.sideCard}>
                 <div className={s.sideCardHeader}>
                   <span>
-                    {getDeviceCategoryIcon(profB?.category)} B: {profB?.name}
+                    <Icon name={getDeviceCategoryIconName(profB?.category)} /> B: {profB?.name}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>
                       {sizeB.width}×{sizeB.height} ({Math.round(sideScaleB * 100)}%)
                     </span>
-                    <button
+                    <Button
                       type="button"
                       className={s.paneActionBtn}
                       onClick={() => setOrientB((o) => (o === 'portrait' ? 'landscape' : 'portrait'))}
                       title="Yön değiştir"
                     >
-                      🔄
-                    </button>
+                      <Icon name="refresh" />
+                    </Button>
                   </div>
                 </div>
                 <div

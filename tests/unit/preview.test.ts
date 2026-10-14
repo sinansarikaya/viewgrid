@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { uncachedHeaders, workerRemovalOptions } from '../../src/core/security/preview';
+import { isFirefoxWorkspace, uncachedHeaders, workerRemovalOptions } from '../../src/core/security/preview';
 import { applyScrollRatios } from '../../src/core/sync/protocol';
 
 describe('cached preview preparation', () => {
+  it('identifies the browser from its extension origin, not shared webRequest APIs', () => {
+    expect(isFirefoxWorkspace('chrome-extension://ours/workspace.html')).toBe(false);
+    expect(workerRemovalOptions('https://castpost.app/en', isFirefoxWorkspace('chrome-extension://ours/workspace.html'))).toEqual({ origins: ['https://castpost.app'] });
+    expect(isFirefoxWorkspace('moz-extension://ours/workspace.html')).toBe(true);
+  });
   it('uses an exact Chromium origin, including scheme and port', () => {
     expect(workerRemovalOptions('https://castpost.app/en?x=1', false)).toEqual({ origins: ['https://castpost.app'] });
     expect(workerRemovalOptions('http://localhost:3000/', false)).toEqual({ origins: ['http://localhost:3000'] });

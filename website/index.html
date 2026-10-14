@@ -33,7 +33,7 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "ViewGrid",
-    "softwareVersion": "1.0.3",
+    "softwareVersion": "1.0.4",
     "operatingSystem": "Browser Extension (Chromium, Firefox)",
     "applicationCategory": "DeveloperApplication",
     "description": "Multi-viewport responsive testing workspace for Chrome and Firefox with synchronized scrolling, device presets, and Figma mockup overlay.",
@@ -2266,7 +2266,7 @@
           <circle cx="14" cy="23" r="2.5" />
           <circle cx="23" cy="23" r="2.5" />
         </svg>
-        <span class="brand-title">ViewGrid</span><span class="site-version">v1.0.3</span>
+        <span class="brand-title">ViewGrid</span><span class="site-version">v1.0.4</span>
       </a>
 
       <nav class="nav-links" aria-label="Main Navigation">
@@ -2522,8 +2522,8 @@
         <a id="promo-download" href="/videos/viewgrid-promo-en.mp4">Download video</a>
       </video>
       <p data-i18n="videoNote" style="margin-top:12px">English walkthrough</p>
-      <p data-i18n="scanUpdate">Version 1.0.3: improved overflow and text-clipping checks, touch-target measurements and printable scan reports. Findings are review suggestions, not a complete accessibility audit.</p>
-      <a href="https://github.com/sinansarikaya/viewgrid/releases/tag/v1.0.3" data-i18n="latestBuild">Download the latest tested 1.0.3 build</a>
+      <p data-i18n="scanUpdate">Version 1.0.4 packages the analysis engine in ViewGrid: no extra installation, API key or external analysis service. Performance shows browser navigation and First Contentful Paint (FCP) observations when available. These are not Lighthouse scores, CrUX field data or Core Web Vitals ratings. Missing observations are marked as unavailable.</p>
+      <a href="https://github.com/sinansarikaya/viewgrid/releases/tag/v1.0.4" data-i18n="latestBuild">Download the latest tested 1.0.4 build</a>
     </section>
 
     <!-- ARCHITECTURE & LOW-MEMORY BENCHMARK SECTION -->
@@ -2565,8 +2565,8 @@
               <span class="bench-badge" data-i18n="benchBadgeLocal">100% PRIVATE</span>
               <span class="bench-metric">100%</span>
             </div>
-            <h4 data-i18n="benchLocalHead">Local-first &amp; privacy safe</h4>
-            <p data-i18n="benchLocalDesc">No remote proxy servers, no telemetry, no tracking pixels. Test staging servers, localhost, and authenticated sessions behind VPNs with complete peace of mind.</p>
+            <h4 data-i18n="benchLocalHead">Local analysis &amp; no telemetry</h4>
+            <p data-i18n="benchLocalDesc">Analysis runs locally without external services or telemetry. Previewed websites make their own requests; settings are stored locally and reports remain in the workspace session.</p>
             <div class="bench-pill-list">
               <span class="bench-pill">🔒 Zero Cloud Proxying</span>
               <span class="bench-pill">🛡️ Preserves Local Cookies</span>
@@ -2872,6 +2872,11 @@
             <div class="item-detail" data-i18n="idxLocalDesc">Zero analytical tracking, zero external beacons, zero remote servers. Works offline and on private VPNs.</div>
             <div><span class="item-diagram">Localhost &bull; VPN Safe &bull; Zero Telemetry</span></div>
           </div>
+          <div class="feature-index-item" tabindex="0">
+            <div class="item-name" data-i18n="idxAnalysis">Local analysis, when you need it</div>
+            <div class="item-detail" data-i18n="idxAnalysisDesc">Open Analysis, choose a mobile or desktop preview and run the check. One DOM scan collects performance observations, SEO, limited accessibility checks and GEO signals. Each tab shows only its own scope. Copy or download a Markdown report for the selected tab. Results remain available after closing the dialog during the workspace session; page or viewport changes mark them as stale. Rerun the check to refresh them.</div>
+            <div><span class="item-diagram">DOM &bull; FCP &bull; Markdown</span></div>
+          </div>
 
           <div class="feature-index-item" tabindex="0" onclick="openShortcutsModal()" style="cursor: pointer;">
             <div class="item-name" data-i18n="idxShortcuts">Keyboard-first workflow</div>
@@ -3072,7 +3077,7 @@
             </a>
 
             <p class="store-live-note" id="install-live-line">
-              <span class="store-badge-live">● GitHub Version 1.0.3</span> &bull; Official WebExtension Stores &bull; Zero Telemetry
+              <span class="store-badge-live">● GitHub Version 1.0.4</span> &bull; Official WebExtension Stores &bull; Zero Telemetry
             </p>
           </div>
         </div>
@@ -3082,7 +3087,7 @@
           <h5>Install manually or develop locally (Release ZIP)</h5>
           <p>If you prefer offline installation or loading unpacked developer builds, download the verified archives:</p>
           <ol>
-            <li>Download and unzip <code>viewgrid-1.0.3-chromium.zip</code> (or <code>viewgrid-1.0.3-firefox.zip</code>) from <a href="https://github.com/sinansarikaya/viewgrid/releases" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">GitHub Releases</a>.</li>
+            <li>Download and unzip <code>viewgrid-1.0.4-chromium.zip</code> (or <code>viewgrid-1.0.4-firefox.zip</code>) from <a href="https://github.com/sinansarikaya/viewgrid/releases" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">GitHub Releases</a>.</li>
             <li>In Chrome/Brave/Edge: open <code>chrome://extensions</code>, enable Developer Mode, and click <em>"Load unpacked"</em>.</li>
             <li>In Firefox: open <code>about:debugging#/runtime/this-firefox</code> and click <em>"Load Temporary Add-on…"</em>.</li>
           </ol>
@@ -3109,7 +3114,7 @@
         <div class="faq-wrapper">
           <details class="faq-item">
             <summary data-i18n="faqQ1">Does ViewGrid collect any personal data?</summary>
-            <p data-i18n="faqA1">ViewGrid doesn't collect, transmit or store your data. Everything runs in your browser. We have zero servers, zero analytics trackers, and zero telemetry.</p>
+            <p data-i18n="faqA1">ViewGrid does not send telemetry or analysis data to an external service. Settings are stored locally and reports stay in the workspace session. Previewed websites make their own network requests.</p>
           </details>
 
           <details class="faq-item">
@@ -3259,7 +3264,7 @@
   <script>
     /* -------------------------------------------------------------
        1. STORE STATUS & CONFIGURATION
-       Both Chrome Web Store and Firefox AMO are approved & live; tested GitHub packages are v1.0.3.
+       Both Chrome Web Store and Firefox AMO are approved & live; tested GitHub packages are v1.0.4.
        ------------------------------------------------------------- */
     const STORES_PENDING = false;
 
@@ -3337,7 +3342,7 @@
         faqLabel: "FAQ",
         faqTitle: "Frequently asked questions.",
         faqQ1: "Does ViewGrid collect any personal data?",
-        faqA1: "ViewGrid doesn't collect, transmit or store your data. Everything runs in your browser. We have zero servers, zero analytics trackers, and zero telemetry.",
+        faqA1: "ViewGrid does not send telemetry or analysis data to an external service. Settings are stored locally and reports stay in the workspace session. Previewed websites make their own network requests.",
         faqQ2: "Can I test local development servers?",
         faqA2: "Yes. ViewGrid works directly with localhost:3000, 127.0.0.1, internal VPN addresses, and staging environments without requiring reverse proxies or tunnels.",
         faqQ3: "Why doesn't synchronized scrolling get stuck in loops?",
@@ -3360,8 +3365,8 @@
         benchSyncHead: "Synchronized interactions",
         benchSyncDesc: "Scroll, clicks, navigation and optional form/key events are mirrored locally. Latency depends on page and device.",
         benchBadgeLocal: "100% PRIVATE",
-        benchLocalHead: "Local-first & privacy safe",
-        benchLocalDesc: "No remote proxy servers, no telemetry, no tracking pixels. Test staging servers, localhost, and authenticated sessions behind VPNs with complete peace of mind.",
+        benchLocalHead: "Local analysis & no telemetry",
+        benchLocalDesc: "Analysis runs locally without external services or telemetry. Previewed websites make their own requests; settings are stored locally and reports remain in the workspace session.",
         handoffPillTitle: "Design Handoff & Pixel-Diff:",
         handoffPillText: "Compare live breakpoints against Figma mockups with zero pixel drift →",
         handoffLabel: "Design Handoff & Pixel-Diff",
@@ -3596,9 +3601,13 @@
       return 'en';
     }
 
-    Object.assign(translations.en, { navChangelog: 'Changelog', navVideo: 'Video', videoTitle: 'See ViewGrid in action', videoDescription: 'A short walkthrough of synchronized previews, comparison tools and responsive findings.', videoNote: 'English walkthrough', scanUpdate: 'Version 1.0.3: improved overflow and text-clipping checks, touch-target measurements and printable scan reports. Findings are review suggestions, not a complete accessibility audit.', latestBuild: 'Download the latest tested 1.0.3 build' });
-    Object.assign(translations.tr, { navChangelog: 'Değişiklikler', navVideo: 'Video', videoTitle: 'ViewGrid’i çalışırken görün', videoDescription: 'Eş zamanlı önizlemeler, karşılaştırma araçları ve duyarlı tasarım bulgularını keşfedin.', videoNote: 'Türkçe tanıtım videosu', scanUpdate: 'Sürüm 1.0.3: geliştirilmiş taşma ve metin kırpılması kontrolleri, dokunma alanı ölçümleri ve yazdırılabilir tarama raporları. Bulgular incelenecek önerilerdir; tam erişilebilirlik denetimi değildir.', latestBuild: 'Test edilmiş güncel 1.0.3 paketini indir' });
-    Object.assign(translations.no, { navChangelog: 'Endringslogg', navVideo: 'Video', videoTitle: 'Se ViewGrid i bruk', videoDescription: 'En kort gjennomgang av synkroniserte visninger, sammenligning og responsive funn.', videoNote: 'Videoen vises på engelsk', scanUpdate: 'Versjon 1.0.3: forbedrede kontroller for overløp, avklippet tekst og berøringsmål, samt utskrivbare rapporter. Funn er forslag til vurdering, ikke en full tilgjengelighetskontroll.', latestBuild: 'Last ned den nyeste testede 1.0.3-pakken' });
+    Object.assign(translations.en, { navChangelog: 'Changelog', navVideo: 'Video', videoTitle: 'See ViewGrid in action', videoDescription: 'A short walkthrough of synchronized previews, comparison tools and responsive findings.', videoNote: 'English walkthrough', scanUpdate: 'Version 1.0.4 packages the analysis engine in ViewGrid: no extra installation, API key or external analysis service. Performance shows browser navigation and First Contentful Paint (FCP) observations when available. These are not Lighthouse scores, CrUX field data or Core Web Vitals ratings. Missing observations are marked as unavailable.', latestBuild: 'Download the latest tested 1.0.4 build' });
+    Object.assign(translations.tr, { navChangelog: 'Değişiklikler', navVideo: 'Video', videoTitle: 'ViewGrid’i çalışırken görün', videoDescription: 'Eş zamanlı önizlemeler, karşılaştırma araçları ve duyarlı tasarım bulgularını keşfedin.', videoNote: 'Türkçe tanıtım videosu', scanUpdate: 'Sürüm 1.0.4: geliştirilmiş taşma ve metin kırpılması kontrolleri, dokunma alanı ölçümleri ve yazdırılabilir tarama raporları. Bulgular incelenecek önerilerdir; tam erişilebilirlik denetimi değildir.', latestBuild: 'Test edilmiş güncel 1.0.4 paketini indir' });
+    Object.assign(translations.no, { navChangelog: 'Endringslogg', navVideo: 'Video', videoTitle: 'Se ViewGrid i bruk', videoDescription: 'En kort gjennomgang av synkroniserte visninger, sammenligning og responsive funn.', videoNote: 'Videoen vises på engelsk', scanUpdate: 'Versjon 1.0.4: forbedrede kontroller for overløp, avklippet tekst og berøringsmål, samt utskrivbare rapporter. Funn er forslag til vurdering, ikke en full tilgjengelighetskontroll.', latestBuild: 'Last ned den nyeste testede 1.0.4-pakken' });
+
+    Object.assign(translations.en, {"scanUpdate": "Version 1.0.4 packages the analysis engine in ViewGrid: no extra installation, API key or external analysis service. Performance shows browser navigation and First Contentful Paint (FCP) observations when available. These are not Lighthouse scores, CrUX field data or Core Web Vitals ratings. Missing observations are marked as unavailable.", "idxAnalysis": "Local analysis, when you need it", "idxAnalysisDesc": "Open Analysis, choose a mobile or desktop preview and run the check. One DOM scan collects performance observations, SEO, limited accessibility checks and GEO signals. Each tab shows only its own scope. Copy or download a Markdown report for the selected tab. Results remain available after closing the dialog during the workspace session; page or viewport changes mark them as stale. Rerun the check to refresh them.", "idxPresetsDesc": "Panels and the issues drawer toggle open and closed from the same control. Softer transitions respect reduced motion. Use 21 device profiles and 5 preset sets to inspect phone, tablet, laptop and desktop layouts.", "benchLocalDesc": "Analysis reads the selected preview’s rendered DOM and browser timing entries locally, only when you request a check. No Google, CrUX or external analysis API is contacted. Reports remain in the workspace session when the dialog closes and may include page URLs, content snippets and selectors. Copying or downloading a report is your explicit action; review its contents before sharing. Previewed websites still make their own network requests and follow their own privacy policies. Workspace preferences and custom devices are stored locally.", "faqA1": "ViewGrid does not send telemetry or analysis data to an external service. Workspace settings are stored locally and reports stay in the workspace session. Previewed websites make their own network requests."});
+    Object.assign(translations.tr, {"scanUpdate": "Sürüm 1.0.4 analiz motorunu ViewGrid içinde paketler: ek kurulum, API anahtarı veya harici analiz servisi gerekmez. Performans, mevcut olduğunda tarayıcı gezinme ve İlk İçerikli Boyama (FCP) gözlemlerini gösterir. Bunlar Lighthouse skoru, CrUX saha verisi veya Core Web Vitals derecesi değildir. Eksik gözlemler kullanılamıyor olarak belirtilir.", "idxAnalysis": "İhtiyaç duyduğunuzda yerel analiz", "idxAnalysisDesc": "Analiz bölümünü açın, mobil veya masaüstü önizlemesini seçin ve kontrolü başlatın. Tek DOM taraması performans gözlemlerini, SEO, sınırlı erişilebilirlik kontrollerini ve GEO sinyallerini toplar. Her sekme yalnız kendi kapsamını gösterir. Seçili sekmenin Markdown raporunu kopyalayın veya indirin. Sonuçlar pencere kapatıldığında çalışma alanı oturumu boyunca korunur; sayfa veya görünüm değişince eski olarak işaretlenir. Güncellemek için analizi yeniden çalıştırın.", "idxPresetsDesc": "Panel ve sorunlar çekmecesi aynı kontrolle açılıp kapanır. Yumuşak geçişler azaltılmış hareket tercihini dikkate alır. Telefon, tablet, dizüstü ve masaüstü düzenlerini 21 cihaz profili ve 5 hazır set ile inceleyin.", "benchLocalDesc": "Analiz, yalnız kontrol başlattığınızda seçili önizlemenin işlenmiş DOM içeriğini ve tarayıcı zamanlama kayıtlarını yerel olarak okur. Google, CrUX veya harici analiz API’sine istek gönderilmez. Pencere kapatılınca raporlar çalışma alanı oturumunda kalır; sayfa URL’leri, içerik parçaları ve seçiciler içerebilir. Rapor kopyalama veya indirme sizin açık işleminizdir; paylaşmadan önce içeriği inceleyin. Önizlenen siteler kendi ağ isteklerini yapmaya ve kendi gizlilik politikalarına tabi olmaya devam eder. Çalışma alanı tercihleri ve özel cihazlar yerel olarak saklanır.", "faqA1": "ViewGrid telemetri veya analiz verilerini harici servise göndermez. Çalışma alanı ayarları yerel olarak saklanır ve raporlar çalışma alanı oturumunda kalır. Önizlenen siteler kendi ağ isteklerini yapar."});
+    Object.assign(translations.no, {"scanUpdate": "Versjon 1.0.4 inkluderer analysemotoren i ViewGrid: ingen ekstra installasjon, API-nøkkel eller ekstern analysetjeneste. Ytelse viser nettleserens navigasjons- og First Contentful Paint-observasjoner (FCP) når de er tilgjengelige. Dette er ikke Lighthouse-poeng, CrUX-feltdata eller Core Web Vitals-vurderinger. Manglende observasjoner merkes som utilgjengelige.", "idxAnalysis": "Lokal analyse når du trenger den", "idxAnalysisDesc": "Åpne Analyse, velg en mobil- eller desktopvisning og start kontrollen. Én DOM-skanning samler ytelsesobservasjoner, SEO, begrensede tilgjengelighetskontroller og GEO-signaler. Hver fane viser bare sitt eget omfang. Kopier eller last ned en Markdown-rapport for den valgte fanen. Resultatene beholdes i arbeidsøkten når dialogen lukkes; side- eller visningsendringer markerer dem som utdaterte. Kjør analysen på nytt for å oppdatere dem.", "idxPresetsDesc": "Paneler og problemoversikten åpnes og lukkes med samme kontroll. Mykere overganger respekterer redusert bevegelse. Bruk 21 enhetsprofiler og 5 forhåndsvalgte sett for mobil, nettbrett, bærbar PC og desktop.", "benchLocalDesc": "Analysen leser den valgte visningens gjengitte DOM og nettlesertider lokalt, bare når du starter en kontroll. Ingen Google-, CrUX- eller ekstern analyse-API kontaktes. Rapporter beholdes i arbeidsøkten når dialogen lukkes og kan inneholde sideadresser, innholdsutdrag og selektorer. Kopiering eller nedlasting skjer på ditt initiativ; gjennomgå innholdet før du deler det. Nettstedene i visningene sender fortsatt egne nettverksforespørsler og har egne personvernregler. Arbeidsområdeinnstillinger og egne enheter lagres lokalt.", "faqA1": "ViewGrid sender ikke telemetri eller analysedata til eksterne tjenester. Innstillinger lagres lokalt, og rapporter beholdes i arbeidsøkten. Nettstedene i visningene sender egne nettverksforespørsler."});
 
     let currentLang = detectLanguage();
 

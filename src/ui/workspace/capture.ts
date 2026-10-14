@@ -11,7 +11,10 @@ export async function captureViewport(content: HTMLElement): Promise<Blob> {
   if (busy) throw new Error('A capture is already running');
   const frame = content.querySelector('iframe');
   if (!frame) throw new Error('Viewport is not loaded');
-  const width = parseFloat(frame.style.width), height = parseFloat(frame.style.height);
+  // Logical CSS dimensions remain unchanged by the displayed transform scale.
+  // They can originate from a stylesheet rather than an inline style.
+  const frameStyle = getComputedStyle(frame);
+  const width = parseFloat(frameStyle.width), height = parseFloat(frameStyle.height);
   const screenW = window.innerWidth, screenH = window.innerHeight;
   const tiles = captureTiles(width, height, screenW, screenH);
   const restored = new Map<HTMLElement, string | null>();

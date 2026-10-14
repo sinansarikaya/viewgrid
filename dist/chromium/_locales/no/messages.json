@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "ViewGrid — Responsive Viewer"
+  },
+  "extensionDescription": {
+    "message": "Test responsive visninger side om side, synkroniser og kjør lokal analyse. Grensesnitt på norsk bokmål, engelsk og tyrkisk."
+  },
+  "openWorkspace": {
+    "message": "Åpne ViewGrid-arbeidsområdet"
+  }
+}

@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { localAnalysisUrlSchema } from '../../lib/validation/local-analysis';
+import type { AnalysisBatch } from '../../core/analysis/schema';
+import { summarizeAnalysis, type AnalysisFailureCounts, type AnalysisSectionStates } from '../../core/analysis/summary';
 import {
   DEFAULT_SYNC,
   type DeviceProfile,
@@ -30,19 +33,31 @@ import { defaultWorkspace, parseWorkspace } from '../../core/workspace/serialize
 import { uid } from '../../core/util/id';
 import { b } from '../../platform/browser';
 import { hasHostAccess } from './bridge';
+import { fitGridZooms, fitWorkspaceZoom } from '../../core/workspace/fit';
+import { BEFORE_REORDER } from './reorder-events';
 
 export interface StoreState {
   model: WorkspaceModel;
   customDevices: DeviceProfile[];
+    favoriteDeviceIds: string[];
+    recentDeviceIds: string[];
+    deviceGroups: Record<string, string[]>;
+    toggleDeviceFavorite(id: string): void;
+    saveDeviceGroup(name: string, ids: string[]): void;
+    deleteDeviceGroup(name: string): void;
   savedWorkspaces: Record<string, WorkspaceModel>;
   focusedId: string | null;
   focusMode: boolean;
+  starterFitPending: boolean;
+  fitZooms: Record<string, number>;
   issues: Issue[];
   scanning: boolean;
   scanId: string | null;
   scanCoverage: Record<string, number>;
   scanPending: string[];
   scanFailed: string[];
+  scanFailureReasons: Record<string,'timeout'|'unreachable'|'message'|'measurement'>;
+  scanNotice: 'no-target'|'permission'|'cancelled'|null;
   scanTruncated: string[];
   scannedAt: number | null;
   pickerOpen: boolean;
@@ -51,6 +66,9 @@ export interface StoreState {
   granted: boolean;
   urlDraft: string;
   previewGeneration: number;
+  analysisRevision: number;
+  analysisSummary: { url: string; generation: number; counts: AnalysisFailureCounts; sections: AnalysisSectionStates } | null;
+  setAnalysisSummary(batch: AnalysisBatch | null): void;
   language: 'tr' | 'en' | 'no';
   languageExplicitlySet?: boolean;
 
@@ -60,7 +78,7 @@ export interface StoreState {
 
   // actions
   setLanguage(lang: 'tr' | 'en' | 'no'): void;
-  fitToScreen(): void;
+  fitToScreen(announce?: boolean): void;
   setAllZoom(zoom: number): void;
   hydrate(): Promise<void>;
   persist(): Promise<void>;
@@ -168,6 +186,9 @@ function persistPayload(s: StoreState) {
   return {
     model: s.model,
     customDevices: s.customDevices,
+      favoriteDeviceIds: s.favoriteDeviceIds,
+      recentDeviceIds: s.recentDeviceIds,
+      deviceGroups: s.deviceGroups,
     savedWorkspaces: s.savedWorkspaces,
     language: s.language,
     languageExplicitlySet: s.languageExplicitlySet,
@@ -186,12 +207,18 @@ function schedulePersist(get: () => StoreState) {
 export const useStore = create<StoreState>((set, get) => ({
   model: defaultWorkspace(),
   customDevices: [],
+    favoriteDeviceIds: [],
+    recentDeviceIds: [],
+    deviceGroups: {},
   savedWorkspaces: {},
   focusedId: null,
   focusMode: false,
+  starterFitPending: false,
+  fitZooms: {},
   issues: [],
   scanning: false,
   scanCoverage: {}, scanId: null, scanPending: [], scanFailed: [], scanTruncated: [], scannedAt: null,
+  scanFailureReasons: {}, scanNotice:null,
   pickerOpen: false,
   drawerOpen: false,
   compareOpen: false,
@@ -204,6 +231,15 @@ export const useStore = create<StoreState>((set, get) => ({
   granted: true,
   urlDraft: '',
   previewGeneration: 0,
+  analysisRevision: 0,
+  analysisSummary: null,
+  setAnalysisSummary(batch) {
+    const state = get();
+    const current = localAnalysisUrlSchema.safeParse(state.model.url);
+    const requested = batch ? localAnalysisUrlSchema.safeParse(batch.requestedUrl) : null;
+    const result = batch && current.success && requested?.success && requested.data === current.data ? summarizeAnalysis(batch) : null;
+    set({ analysisSummary: result ? { url: state.model.url, generation: state.previewGeneration, counts: result.counts, sections: result.sectionStates } : null });
+  },
   language: defaultLanguage(),
 
   setSettingsOpen(v) {
@@ -229,14 +265,18 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   visibleViewports() {
-    const { model, focusMode, focusedId } = get();
-    if (focusMode && focusedId) return model.viewports.filter((v) => v.id === focusedId && !v.hidden);
-    return model.viewports.filter((v) => !v.hidden);
+    const { model, focusMode, focusedId, fitZooms } = get();
+    const visible = model.viewports.filter(viewport => !viewport.hidden && (!focusMode || !focusedId || viewport.id === focusedId));
+    return visible.map(viewport => fitZooms[viewport.id] === undefined ? viewport : { ...viewport, zoom: fitZooms[viewport.id]! });
   },
 
   async hydrate() {
+    let seeded = false;
     let model = defaultWorkspace();
     let customDevices: DeviceProfile[] = [];
+      let favoriteDeviceIds: string[] = [];
+      let recentDeviceIds: string[] = [];
+      let deviceGroups: Record<string, string[]> = {};
     let savedWorkspaces: Record<string, WorkspaceModel> = {};
     let language: 'tr' | 'en' | 'no' = defaultLanguage();
     let languageExplicitlySet = false;
@@ -249,6 +289,12 @@ export const useStore = create<StoreState>((set, get) => ({
         const parsed = parseWorkspace(data.model);
         if (parsed.ok && parsed.model) model = parsed.model;
         if (Array.isArray(data.customDevices)) customDevices = data.customDevices;
+          const ids = (value: unknown): string[] => Array.isArray(value) ? [...new Set(value.filter((id): id is string => typeof id === 'string' && id.length < 120))].slice(0, 200) : [];
+          favoriteDeviceIds = ids(data.favoriteDeviceIds);
+          recentDeviceIds = ids(data.recentDeviceIds).slice(0, 12);
+          if (data.deviceGroups && typeof data.deviceGroups === 'object') {
+            deviceGroups = Object.fromEntries(Object.entries(data.deviceGroups).filter(([name]) => name.trim().length > 0 && name.length <= 60).slice(0, 20).map(([name, value]) => [name, ids(value).slice(0, 16)]));
+          }
         if (data.savedWorkspaces && typeof data.savedWorkspaces === 'object') savedWorkspaces = data.savedWorkspaces;
         if (data.languageExplicitlySet && data.language && ['tr', 'en', 'no'].includes(data.language)) {
           language = data.language;
@@ -272,6 +318,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (urlParam) {
       model = { ...model, url: urlParam, viewports: model.viewports.map((v) => ({ ...v, url: urlParam })) };
       if (model.viewports.length === 0) {
+        seeded = true;
         // seed a sensible starter set on first launch with a URL
         model.viewports = ['iphone-15-pro', 'ipad-air', 'laptop-1280', 'desktop-1080p'].map((deviceId) => ({
           id: uid('vp'),
@@ -293,7 +340,13 @@ export const useStore = create<StoreState>((set, get) => ({
     }
     set({
       model,
+      analysisSummary: null,
+      starterFitPending: seeded,
+      fitZooms: {},
       customDevices,
+        favoriteDeviceIds,
+        recentDeviceIds,
+        deviceGroups,
       savedWorkspaces,
       granted,
       urlDraft: model.url,
@@ -303,6 +356,7 @@ export const useStore = create<StoreState>((set, get) => ({
       bypassCacheOnLoad,
     });
     document.documentElement.dataset.theme = model.theme;
+    // Only the new starter workspace is fitted automatically. Saved zooms remain untouched.
   },
 
   async persist() {
@@ -324,6 +378,7 @@ export const useStore = create<StoreState>((set, get) => ({
   setAllZoom(zoom) {
     const z = clampZoom(zoom);
     set((s) => ({
+      fitZooms: {},
       model: {
         ...s.model,
         viewports: s.model.viewports.map((v) => ({ ...v, zoom: z })),
@@ -331,27 +386,29 @@ export const useStore = create<StoreState>((set, get) => ({
     }));
     schedulePersist(get);
   },
-  fitToScreen() {
+  fitToScreen(announce = true) {
     const { visibleViewports, profileOf } = get();
     const visible = visibleViewports();
     if (visible.length === 0) return;
-    const availW = Math.max(320, window.innerWidth - 64);
-    const availH = Math.max(300, window.innerHeight - 130);
-    const cols = Math.max(1, Math.min(visible.length, Math.ceil(Math.sqrt(visible.length))));
-    const rows = Math.ceil(visible.length / cols);
-    let maxCardW = 0;
-    let maxCardH = 0;
-    for (const v of visible) {
-      const p = profileOf(v);
-      const size = effectiveSize(p, v.orientation);
-      maxCardW = Math.max(maxCardW, size.width);
-      maxCardH = Math.max(maxCardH, size.height);
+    const canvas = document.querySelector('main');
+    if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) return;
+    const sizes = visible.map((v) => effectiveSize(profileOf(v), v.orientation));
+    if (get().model.layout === 'grid') {
+      const chrome = visible.map(viewport => {
+        const card = document.querySelector(`[data-viewport-id="${CSS.escape(viewport.id)}"]`);
+        const header = card?.querySelector('[draggable]')?.getBoundingClientRect();
+        const content = card?.querySelector('iframe')?.parentElement?.getBoundingClientRect();
+        const frame = card?.querySelector('iframe')?.parentElement?.parentElement?.closest('[class*="frameContainer"]')?.getBoundingClientRect();
+        return { fixedWidth: 20, fixedHeight: (header?.height ?? 40) + 26, scaledWidth: content && frame ? Math.max(0, frame.width - content.width) / viewport.zoom : 12, scaledHeight: content && frame ? Math.max(0, frame.height - content.height) / viewport.zoom : 24 };
+      });
+      const zooms = fitGridZooms(sizes, { width: canvas.clientWidth, height: canvas.clientHeight }, chrome);
+      const byId = new Map(visible.map((viewport, index) => [viewport.id, zooms[index]!]));
+      set({ fitZooms: Object.fromEntries(byId) });
+      if (announce) get().showToast(get().language === 'tr' ? 'Görünümler sığdırıldı; kayıtlı zoom değişmedi.' : get().language === 'no' ? 'Visningene er tilpasset; lagret zoom er uendret.' : 'Viewports fitted; saved zoom is unchanged.');
+      return;
     }
-    const scaleW = availW / (cols * (maxCardW + 40));
-    const scaleH = availH / (rows * (maxCardH + 80));
-    let bestZoom = Math.min(scaleW, scaleH);
-    bestZoom = Math.max(0.2, Math.min(1.2, Math.round(bestZoom * 20) / 20));
-    get().setAllZoom(bestZoom);
+    const zoom = fitWorkspaceZoom(sizes, { width: canvas.clientWidth, height: canvas.clientHeight }, get().model.layout);
+    set({ fitZooms: Object.fromEntries(visible.map(viewport => [viewport.id, zoom])) });
   },
   setUrlDraft(u) {
     set({ urlDraft: u });
@@ -366,7 +423,9 @@ export const useStore = create<StoreState>((set, get) => ({
         viewports: s.model.viewports.map((v) => ({ ...v, url })),
       },
       previewGeneration: s.previewGeneration + 1,
+      analysisSummary: null,
       urlDraft: url, issues: [], scanId: null, scanning: false, scannedAt: null,
+      scanPending: [], scanFailed: [], scanTruncated: [], scanCoverage: {}, scanNotice: null, scanFailureReasons: {},
     }));
     schedulePersist(get);
   },
@@ -392,10 +451,28 @@ export const useStore = create<StoreState>((set, get) => ({
       hidden: false,
       url: model.url,
     };
-    set((s) => ({ model: { ...s.model, viewports: [...s.model.viewports, vp] }, focusedId: vp.id }));
+      set((s) => ({ model: { ...s.model, viewports: [...s.model.viewports, vp] }, focusedId: vp.id, recentDeviceIds: [profile.id, ...s.recentDeviceIds.filter(id => id !== profile.id)].slice(0, 12) }));
     if (check.warn) get().showToast(`More than 8 viewports — performance may drop`);
     schedulePersist(get);
   },
+
+    toggleDeviceFavorite(id) {
+      set(s => ({ favoriteDeviceIds: s.favoriteDeviceIds.includes(id) ? s.favoriteDeviceIds.filter(value => value !== id) : [...s.favoriteDeviceIds, id].slice(-200) }));
+      schedulePersist(get);
+    },
+    saveDeviceGroup(name, ids) {
+      const safeName = name.trim().slice(0, 60);
+      if (!safeName) return;
+      const known = new Set([...BUILTIN_DEVICES, ...get().customDevices].map(device => device.id));
+      const selected = [...new Set(ids)].filter(id => known.has(id)).slice(0, 16);
+      if (!selected.length) return;
+      set(s => ({ deviceGroups: Object.fromEntries([...Object.entries(s.deviceGroups).filter(([key]) => key !== safeName), [safeName, selected]].slice(-20)) }));
+      schedulePersist(get);
+    },
+    deleteDeviceGroup(name) {
+      set(s => ({ deviceGroups: Object.fromEntries(Object.entries(s.deviceGroups).filter(([key]) => key !== name)) }));
+      schedulePersist(get);
+    },
 
   addPreset(name) {
     const preset = BUILTIN_PRESETS.find((p) => p.name === name);
@@ -469,6 +546,7 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   setZoom(id, zoom) {
+    set({ fitZooms: {} });
     const z = clampZoom(zoom);
     set((s) => ({
       model: { ...s.model, viewports: s.model.viewports.map((v) => (v.id === id ? { ...v, zoom: z } : v)) },
@@ -530,6 +608,7 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   reorder(from, to) {
+    if(typeof document!=='undefined')document.dispatchEvent(new Event(BEFORE_REORDER));
     set((s) => ({ model: { ...s.model, viewports: moveViewport(s.model.viewports, from, to) } }));
     schedulePersist(get);
   },
@@ -539,6 +618,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const from = list.findIndex((v) => v.id === fromId);
     const to = list.findIndex((v) => v.id === toId);
     if (from !== -1 && to !== -1 && from !== to) {
+      if(typeof document!=='undefined')document.dispatchEvent(new Event(BEFORE_REORDER));
       set((s) => ({ model: { ...s.model, viewports: moveViewport(s.model.viewports, from, to) } }));
       schedulePersist(get);
     }
@@ -650,7 +730,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (!m) return;
     const parsed = parseWorkspace(structuredClone(m));
     if (parsed.ok && parsed.model) {
-      set({ model: { ...parsed.model, name }, urlDraft: parsed.model.url });
+      set({ model: { ...parsed.model, name }, urlDraft: parsed.model.url, fitZooms: {}, analysisSummary: null, previewGeneration: get().previewGeneration + 1 });
       schedulePersist(get);
       get().showToast(`Loaded "${name}"`);
     }
@@ -686,7 +766,25 @@ export { effectiveSize, swapOrientation, DEFAULT_SYNC, MAX_VIEWPORTS };
 
 // Measurements describe a particular set of pages and dimensions, never a later layout.
 useStore.subscribe((state, previous) => {
-  if (state.model.viewports !== previous.model.viewports && (state.issues.length || state.scanId)) {
-    useStore.setState({ issues: [], scanId: null, scanning: false, scanPending: [], scanFailed: [], scanTruncated: [], scannedAt: null });
+  if (state.model.viewports !== previous.model.viewports && (state.issues.length || state.scanId || state.scanNotice || state.scanFailed.length || Object.keys(state.scanCoverage).length)) {
+    useStore.setState({ issues: [], scanId: null, scanning: false, scanPending: [], scanFailed: [], scanTruncated: [], scanCoverage: {}, scanNotice: null, scanFailureReasons: {}, scannedAt: null });
+  }
+});
+
+// Zoom and card positioning only affect presentation, while these fields change measured pages.
+function analysisPreviewKey(state: StoreState): string {
+  return JSON.stringify({
+    url: state.model.url,
+    focused: state.focusMode ? state.focusedId : null,
+    focusMode: state.focusMode,
+    viewports: state.model.viewports.map(viewport => ({
+      id: viewport.id, url: viewport.url, deviceId: viewport.deviceId, custom: viewport.custom,
+      orientation: viewport.orientation, hidden: viewport.hidden, minimized: viewport.minimized, colorScheme: viewport.colorScheme,
+    })),
+  });
+}
+useStore.subscribe((state, previous) => {
+  if (analysisPreviewKey(state) !== analysisPreviewKey(previous)) {
+    useStore.setState({ analysisSummary: null, analysisRevision: state.analysisRevision + 1 });
   }
 });

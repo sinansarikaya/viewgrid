@@ -1,4 +1,5 @@
 import React from 'react';
+import { LocalAnalysisGuide } from '../components/LocalAnalysisGuide';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { siteConfig } from '../data/site.config';
@@ -28,6 +29,7 @@ export function Docs() {
                 <li><a href="#viewports">Viewports & Devices</a></li>
                 <li><a href="#sync">Interaction Synchronization</a></li>
                 <li><a href="#compare">Visual Diff & Compare</a></li>
+                <li><a href="#local-analysis">Local Analysis (EN / TR / NO)</a></li>
                 <li><a href="#headers">XFO / CSP Header Relaxer</a></li>
                 <li><a href="#ua">User-Agent Spoofing</a></li>
               </ul>
@@ -56,6 +58,8 @@ export function Docs() {
                 Unlike single-viewport DevTools or cloud-proxy emulators, ViewGrid renders real, live browser frames simultaneously in your browser with synchronized scrolling, clicks, and drag comparison.
               </p>
             </section>
+
+            <LocalAnalysisGuide />
 
             {/* 2. Installation */}
             <section id="install" className="docs-section">
@@ -219,7 +223,7 @@ Content-Security-Policy: frame-ancestors 'none'</code>
                 When you navigate inside a ViewGrid workspace tab, the extension registers a temporary session rule via DeclarativeNetRequest (Chromium) or webRequest (Firefox) to strip these headers strictly for sub_frame requests originating inside your workspace tab.
               </p>
               <p>
-                <strong>Security guarantee:</strong> Normal browser tabs in other windows are never affected. Once you close the workspace tab, the temporary rule is automatically removed.
+                Framing exceptions apply within workspace tabs. Chromium removes XFO and CSP response headers for subframes; Firefox removes XFO and the frame-ancestors directive for direct previews. Normal tabs retain their framing headers. Preparing a preview can remove the selected site’s service-worker registrations, including those used by normal tabs; a later visit can register them again.
               </p>
             </section>
           </article>

@@ -9,21 +9,11 @@
 import { LoopGuard, applyScrollRatios, scrollRatios, selectorPath } from '../core/sync/protocol';
 import { runCoreDetectors } from '../core/issues/detectors';
 import { collectMetrics } from './metrics';
+import { isSensitiveControl, carriesInputData } from '../core/security/sync';
 import { safeHttpUrl } from '../core/security/framing';
 import type { SyncEnvelope } from '../core/types';
 
-// Fast early exit for non-viewport contexts (e.g. normal browser tabs):
-// ViewGrid viewports ALWAYS have window.name starting with "viewgrid:"
-const frameName: string = typeof window !== 'undefined' ? (window.name || '') : '';
-if (frameName.startsWith('viewgrid:')) {
-  const g = globalThis as any;
-  if (!g.__viewgridAgentInstalled) {
-    g.__viewgridAgentInstalled = true;
-    initAgent(frameName.slice('viewgrid:'.length));
-  }
-} else if (typeof window !== 'undefined' && window.top !== window && location.ancestorOrigins?.[0]?.startsWith('chrome-extension://')) {
-  // Chromium can clear window.name on cross-site document replacement. Recover
-  // the identity only from our extension parent, matched to its actual iframe.
+if (typeof window !== 'undefined' && window.top !== window) {
   const extBrowser = (globalThis as any).browser || (globalThis as any).chrome;
   const extensionOrigin = extBrowser?.runtime?.getURL('')?.replace(/\/$/, '');
   const identify = (event: MessageEvent) => {
@@ -67,7 +57,7 @@ if (frameName.startsWith('viewgrid:')) {
   }
 }
 
-function initAgent(viewportId: string) {
+export function initAgent(viewportId: string) {
   const g = globalThis as any;
   const extBrowser = g.browser || g.chrome;
   const guard = new LoopGuard(Math.floor(performance.timeOrigin * 1000));
@@ -89,7 +79,7 @@ function initAgent(viewportId: string) {
       epoch: guard.currentEpoch,
       seq,
       ts: Date.now(),
-      payload,
+      payload: carriesInputData(channel) ? { ...payload, origin: location.origin } : payload,
     };
     try {
       if (channel === 'scroll') {
@@ -126,7 +116,7 @@ function initAgent(viewportId: string) {
   for (const kind of ['keydown', 'keyup'] as const) document.addEventListener(kind, e => {
     if (!e.isTrusted || e.ctrlKey || e.metaKey || e.altKey) return;
     const el = e.target instanceof Element ? e.target : null;
-    if (!el) return;
+    if (!el || isSensitiveControl(el)) return;
     emit('key', { selector: selectorPath(el), kind, key: e.key, code: e.code, shiftKey: e.shiftKey });
   }, true);
 
@@ -191,7 +181,7 @@ function initAgent(viewportId: string) {
     (ev) => {
       if (suppressed()) return;
       const el = ev.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
-      if (!el || !el.tagName) return;
+      if (!el || !el.tagName || isSensitiveControl(el)) return;
       emit('input', {
         selector: selectorPath(el),
         value: el.value,
@@ -206,7 +196,7 @@ function initAgent(viewportId: string) {
     (ev) => {
       if (suppressed()) return;
       const el = ev.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
-      if (!el || !el.tagName) return;
+      if (!el || !el.tagName || isSensitiveControl(el)) return;
       emit('form', {
         selector: selectorPath(el),
         value: el.value,
@@ -273,11 +263,15 @@ function initAgent(viewportId: string) {
     }
 
     if (msg.type === 'vg/agent-scan') {
+      try {
       const metrics = collectMetrics(document, window, !Array.isArray(msg.touchViewportIds) || msg.touchViewportIds.includes(viewportId));
       const issues = runCoreDetectors(metrics).map(i => ({ ...i, data: { ...i.data, url: location.href, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight } }));
       extBrowser?.runtime
         ?.sendMessage?.({ type: 'vg/scan-result', viewportId, scanId: msg.scanId, issues, scannedElements: metrics.scannedElements, truncated: metrics.truncated })
         ?.catch?.(() => {});
+      } catch {
+        extBrowser?.runtime?.sendMessage?.({type:'vg/scan-result',viewportId,scanId:msg.scanId,issues:[],errorCode:'MEASUREMENT_FAILED'})?.catch?.(()=>{});
+      }
     }
   });
 
@@ -420,6 +414,7 @@ function initAgent(viewportId: string) {
 
   function apply(env: SyncEnvelope) {
     const p = env.payload ?? {};
+    if (carriesInputData(env.channel) && p.origin !== location.origin) return;
     switch (env.channel) {
       case 'scroll':
         // Suppress the replay echo, but do not lock a user's new gesture for 120ms.
@@ -449,6 +444,7 @@ function initAgent(viewportId: string) {
       case 'key': {
         suppress(100);
         const target = document.querySelector(String(p.selector || '')) || document.activeElement;
+        if (isSensitiveControl(target)) return;
         target?.dispatchEvent(new KeyboardEvent(p.kind === 'keyup' ? 'keyup' : 'keydown', { key: String(p.key || ''), code: String(p.code || ''), shiftKey: !!p.shiftKey, bubbles: true, cancelable: true }));
         break;
       }
@@ -456,7 +452,7 @@ function initAgent(viewportId: string) {
       case 'form': {
         suppress(100);
         const target = document.querySelector(String(p.selector ?? '')) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
-        if (target) {
+        if (target && !isSensitiveControl(target)) {
           if (typeof p.value === 'string' && target.value !== p.value) {
             const proto = target instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : target instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
             Object.getOwnPropertyDescriptor(proto, 'value')?.set?.call(target, p.value);

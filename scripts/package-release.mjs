@@ -127,15 +127,16 @@ try {
 
 ignored_dirs = {
     'node_modules', 'release', '.git', '.npm', '.config', '__pycache__',
-    '.ai-rules', 'audits', 'audit', 'test-results', 'playwright-report', '.turbo', '.cache'
+    '.ai-rules', 'rules', 'prompts', 'audits', 'audit', 'scratch', 'output', 'test-results', 'playwright-report', 'playwright-regression', '.turbo', '.cache'
 }
 ignored_exts = {'.DS_Store'}
+local_rule_files = {'AGENTS.md', 'ai-rules.md', 'TASKS.md', 'ANALYSIS_MODAL_REVIEW.md', 'LOCAL_ANALYSIS_VALIDATION.md', 'REPORT_UX_VALIDATION.md', 'RELEASE_READINESS_1.0.3.md'}
 
 with zipfile.ZipFile("${sourceZip.replace(/\\/g, '/')}", "w", zipfile.ZIP_DEFLATED) as z:
     for root, dirs, files in os.walk("${root.replace(/\\/g, '/')}"):
         dirs[:] = [d for d in dirs if d not in ignored_dirs and not d.startswith('.')]
         for file in files:
-            if file in ignored_exts or file.endswith('.pyc') or file == '.env':
+            if file in ignored_exts or file in local_rule_files or file.endswith('.pyc') or (file.startswith('.env') and file != '.env.example'):
                 continue
             full = os.path.join(root, file)
             rel = os.path.relpath(full, "${root.replace(/\\/g, '/')}")

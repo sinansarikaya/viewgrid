@@ -42,7 +42,7 @@ function Popup() {
             setGranted(ok);
           }}
         >
-          {granted ? 'Access: granted ✓' : 'Enable site access'}
+          {granted ? 'Access: granted' : 'Enable site access'}
         </button>
       </div>
       <div className="status">

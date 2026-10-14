@@ -1,5 +1,11 @@
 # Roadmap, Versioning, Git & Release Strategy — ViewGrid
 
+## Güncel uygulama sırası — 2026-10-11
+
+Kod başlangıcı 1.0.3; mağaza sürümleri doğrulanmadı. Aktif plan: 1.0.4 koruma/Firefox doğrulama, 1.1.0 shell/kart UI, 1.2.0 cihaz seçici, 1.3.0 PSI performans, 1.4.0 CrUX/SEO/a11y, 1.5.0 raporlar, 1.6.0 BETA GEO. İş paketleri ve kapılar `IMPLEMENTATION_PLAN.md`, testler `FEATURE_TEST_MATRIX.md`, devam noktası `TEAM_HANDOFF.md` içindedir. Sürüm numarası yalnız kapılar geçtiğinde güncellenir. Yerel commit serbest; push/merge/dağıtım/mağaza yayını kapsam dışı.
+
+Aşağıdaki eski yol haritası tarihsel plan olarak korunmuştur; uygulanmış özellik kanıtı veya yeni kapsam sınırı değildir. Eski tanıtım girişiminin “uygulama değişiklikleri kapsam dışı” kararı yalnız o girişime aittir.
+
 Roadmap horizon: Planning → MVP (v0.1.x) → V2 (v0.2–0.4) → V3 (v0.5–0.7) → Future (v1.0+).
 Feature IDs (F-xxx) refer to `docs/PRD.md` §7. Feasibility notes refer to
 `docs/ARCHITECTURE.md` → API Capability Matrix.

@@ -98,6 +98,7 @@ export interface VgBrowser {
     executeScript(opts: {
       target: { tabId: number; allFrames?: boolean; frameIds?: number[] };
       files?: string[];
+      func?: () => unknown;
     }): Promise<unknown>;
   };
   cookies?: {
@@ -307,6 +308,7 @@ export const b: VgBrowser = {
         executeScript(opts: {
           target: { tabId: number; allFrames?: boolean; frameIds?: number[] };
           files?: string[];
+      func?: () => unknown;
         }): Promise<unknown> {
           if (!raw.scripting?.executeScript) return Promise.resolve();
           return promisify(raw.scripting.executeScript, raw.scripting, opts);

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import { Icon } from '../common/Icon';
 import s from './styles.module.css';
 import { useStore } from './store';
 import type { ViewportState } from '../../core/types';
@@ -7,14 +8,19 @@ import { clampZoom, displayedSize, effectiveSize } from '../../core/workspace/la
 import { DeviceFrame } from './DeviceFrame';
 import { getTranslation } from './i18n';
 
-import { getDeviceCategoryIcon } from './utils';
+import { getDeviceCategoryIconName } from './utils';
 import { preparePreview, sendAgentCmd } from './bridge';
+import { Button } from '../common/Button';
+import { useGeometryClass } from '../common/useGeometryClass';
+import cardStyles from './ViewportCard.module.css';
 
 interface Props {
   vp: ViewportState;
   index: number;
   isDragging?: boolean;
   isDropTarget?: boolean;
+  isReordering?: boolean;
+  onPointerReorder?: (id:string,event:React.PointerEvent<HTMLButtonElement>)=>void;
   isFreeLayout?: boolean;
   onRegister: (id: string, el: HTMLElement | null) => void;
   onShot: () => void;
@@ -31,6 +37,8 @@ export function ViewportCard({
   index,
   isDragging,
   isDropTarget,
+  isReordering,
+  onPointerReorder,
   isFreeLayout,
   onRegister,
   onShot,
@@ -43,11 +51,71 @@ export function ViewportCard({
 }: Props) {
   const st = useStore();
   const t = getTranslation(st.language);
+  const cardText = {
+    tr: { reorder: 'Sürükleyip sıralayın', settings: 'Cihaz ayarları' },
+    en: { reorder: 'Drag to reorder', settings: 'Device settings' },
+    no: { reorder: 'Dra for å endre rekkefølge', settings: 'Enhetsinnstillinger' },
+  }[st.language];
   const profile = st.profileOf(vp);
   const logical = effectiveSize(profile, vp.orientation);
-  const display = displayedSize(logical, vp.zoom);
+  const fitted = st.fitZooms[vp.id] !== undefined;
+  const display = displayedSize(logical, vp.zoom, fitted);
   const contentRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuId = React.useId();
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [menuPlacement, setMenuPlacement] = React.useState({ above: false, maxHeight: 480, shift: 0 });
+  useLayoutEffect(() => {
+    if (!menuOpen) return;
+    const positionMenu = () => {
+      const anchor = menuRef.current?.getBoundingClientRect();
+      const body = menuRef.current?.querySelector<HTMLElement>('[aria-hidden]');
+      if (!anchor || !body) return;
+      const below = Math.max(0, window.innerHeight - anchor.bottom - 8);
+      const above = Math.max(0, anchor.top - 8);
+      const opensAbove = below < Math.min(body.scrollHeight + 22, 480) && above > below;
+      const width = body.getBoundingClientRect().width;
+      const desiredLeft = anchor.right - width;
+      const left = Math.max(8, Math.min(window.innerWidth - width - 8, desiredLeft));
+      setMenuPlacement({ above: opensAbove, maxHeight: Math.max(24, opensAbove ? above : below), shift: left - desiredLeft });
+    };
+    positionMenu();
+    window.addEventListener('resize', positionMenu);
+    window.addEventListener('scroll', positionMenu, true);
+    return () => {
+      window.removeEventListener('resize', positionMenu);
+      window.removeEventListener('scroll', positionMenu, true);
+    };
+  }, [menuOpen, menuId]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !menuRef.current?.contains(event.target)) setMenuOpen(false);
+    };
+    const closeEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setMenuOpen(false);
+      menuRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    };
+    const closeOnFrameFocus = () => {
+      if (document.activeElement instanceof HTMLIFrameElement) setMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOutside, true);
+    document.addEventListener('keydown', closeEscape, true);
+    window.addEventListener('blur', closeOnFrameFocus);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside, true);
+      document.removeEventListener('keydown', closeEscape, true);
+      window.removeEventListener('blur', closeOnFrameFocus);
+    };
+  }, [menuOpen]);
+  // The grip owns a pointer-capture reorder; the rest of the header keeps native drag.
+  // Firefox still starts native drag on the draggable header after a prevented
+  // pointerdown and then fires pointercancel, so grip-started dragstart is cancelled.
+  const gripPointerRef = useRef(false);
   const [attempt, setAttempt] = React.useState(0);
   const [preview, setPreview] = React.useState<{ url: string; generation: number; ready: boolean; error?: string }>({ url: '', generation: -1, ready: false });
   const previewReady = preview.ready && preview.url === vp.url && preview.generation === st.previewGeneration;
@@ -128,12 +196,19 @@ export function ViewportCard({
       }));
     }
   };
+  const geometryClass = useGeometryClass({
+    '--vg-display-width': display.width, '--vg-display-height': display.height,
+    '--vg-logical-width': logical.width, '--vg-logical-height': logical.height,
+    '--vg-menu-max-height': menuPlacement.maxHeight, '--vg-menu-shift': menuPlacement.shift,
+    '--vg-scale': fitted ? vp.zoom : clampZoom(vp.zoom), '--vg-touch-x': touchPos.x, '--vg-touch-y': touchPos.y,
+  });
 
   return (
     <div
       data-viewport-id={vp.id}
-      className={`${s.card} ${st.focusedId === vp.id ? s.cardFocused : ''} ${isDragging ? s.cardDragging : ''} ${isDropTarget ? s.cardDropTarget : ''}`}
+      className={`${s.card} ${menuOpen ? cardStyles.cardMenuOpen : ''} ${geometryClass} ${st.focusedId === vp.id ? s.cardFocused : ''} ${isDragging ? s.cardDragging : ''} ${isDropTarget ? s.cardDropTarget : ''} ${menuOpen && !isDragging ? cardStyles.cardMenuOpen : ''}`}
       onDragOver={(e) => {
+        if(!isReordering)return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         const rect = e.currentTarget.getBoundingClientRect();
@@ -141,6 +216,7 @@ export function ViewportCard({
         onDragOverCard?.(index, isAfter ? 'after' : 'before');
       }}
       onDrop={(e) => {
+        if(!isReordering)return;
         e.preventDefault();
         const rect = e.currentTarget.getBoundingClientRect();
         const isAfter = e.clientX - rect.left > rect.width / 2;
@@ -150,13 +226,16 @@ export function ViewportCard({
     >
       {isDropTarget && (
         <div className={s.dropTargetBadge}>
-          <span>⇄</span>
-          <span>Bunun Yerine Koy</span>
+          <Icon name="arrowDown" />
+          <span>{t.dropHere}</span>
         </div>
       )}
       <div
-        className={s.cardHeader}
+        className={`${s.cardHeader} ${cardStyles.header}`}
         draggable={!isFreeLayout}
+        onPointerDownCapture={(e) => {
+          gripPointerRef.current = e.target instanceof Element && Boolean(e.target.closest('[data-reorder-grip]'));
+        }}
         onMouseDown={(e) => {
           if (isFreeLayout && onFreeDrag) {
             e.preventDefault();
@@ -166,6 +245,10 @@ export function ViewportCard({
         }}
         onDragStart={(e) => {
           if (isFreeLayout) return;
+          if (gripPointerRef.current) {
+            e.preventDefault();
+            return;
+          }
           e.dataTransfer.setData('text/viewgrid-card-id', vp.id);
           e.dataTransfer.setData('text/plain', vp.id);
           e.dataTransfer.effectAllowed = 'move';
@@ -176,31 +259,50 @@ export function ViewportCard({
           onDragEndCard?.();
         }}
       >
-        <span className={s.deviceIcon} style={{ cursor: 'grab' }} title="Sürükleyip sıralayın">⠿ {getDeviceCategoryIcon(profile.category)}</span>
+        <div className={cardStyles.deviceInfo}>
+        <Button iconOnly data-reorder-grip="" className={cardStyles.drag} aria-label={`${cardText.reorder}: ${profile.name}`} title={`${cardText.reorder} · Alt+↑ / Alt+↓`} onPointerDown={isFreeLayout ? undefined : event=>onPointerReorder?.(vp.id,event)} onKeyDown={event=>{
+          if(!event.altKey || !['ArrowUp','ArrowDown','Home','End','ArrowLeft','ArrowRight'].includes(event.key))return;
+          event.preventDefault();event.stopPropagation();
+          if(isFreeLayout){const pos=vp.position??{x:24,y:24};st.setPosition(vp.id,{x:Math.max(0,pos.x+(event.key==='ArrowLeft'?-20:event.key==='ArrowRight'?20:0)),y:Math.max(0,pos.y+(event.key==='ArrowUp'?-20:event.key==='ArrowDown'?20:0))});return;}
+          const list=st.visibleViewports(),index=list.findIndex(item=>item.id===vp.id);
+          const target=event.key==='Home'?0:event.key==='End'?list.length-1:Math.max(0,Math.min(list.length-1,index+(event.key==='ArrowUp'||event.key==='ArrowLeft'?-1:1)));
+          if(list[target])st.reorderById(vp.id,list[target]!.id);
+        }}><Icon name="grip" /></Button>
+        <span className={s.deviceIcon}><Icon name={getDeviceCategoryIconName(profile.category)} /></span>
         <strong>{profile.name}</strong>
         <span className={s.dim}>
           {logical.width}×{logical.height}
         </span>
-        <span className={s.dprChip}>{profile.devicePixelRatio}x</span>
-        <div
-          className={s.cardActions}
-          onMouseDown={(e) => e.stopPropagation()}
-          draggable={false}
-        >
+        </div>
+          <label className={cardStyles.zoom} onMouseDown={(event) => event.stopPropagation()} draggable={false}>
           <select
-            className={s.iconBtn}
+            className={cardStyles.zoomSelect}
             value={vp.zoom}
             onChange={(e) => st.setZoom(vp.id, Number(e.target.value))}
             title={t.zoomPresets}
+            aria-label={st.language === 'tr' ? 'Gösterim zoom’u (CSS ölçüsü değişmez)' : st.language === 'no' ? 'Visningszoom (CSS-størrelse uendret)' : 'Display zoom (CSS size unchanged)'}
           >
             {[...ZOOM_PRESETS, vp.zoom].filter((z, i, a) => a.indexOf(z) === i).sort((a, b) => a - b).map((z) => (
-              <option key={z} value={z}>{Math.round(z * 100)}%</option>
+              <option key={z} value={z} disabled={fitted && !ZOOM_PRESETS.includes(z)}>{fitted && !ZOOM_PRESETS.includes(z) ? 'Fit ' : ''}{Math.round(z * 100)}%</option>
             ))}
           </select>
+          </label>
+        <div
+          className={`${s.cardActions} ${cardStyles.actions}`}
+          onMouseDown={(e) => e.stopPropagation()}
+          draggable={false}
+        >
+          <Button className={s.iconBtn} title={t.shotOne} aria-label={t.shotOne} onClick={onShot}><Icon name="camera" /></Button>
+          <div ref={menuRef} className={cardStyles.menu}>
+            <Button tooltip={cardText.settings} iconOnly className={cardStyles.menuTrigger} aria-label={profile.name + ' ' + cardText.settings} aria-expanded={menuOpen} aria-controls={menuId} onClick={() => setMenuOpen(open => !open)}><Icon name="moreHorizontal" /></Button>
+            <div id={menuId} className={`${cardStyles.menuBody} ${menuOpen ? cardStyles.menuOpen : ''} ${menuPlacement.above ? cardStyles.menuAbove : ''}`} aria-hidden={!menuOpen} {...(!menuOpen ? { inert: '' } : {})}>
+          <span className={s.dprChip} title={st.language === 'tr' ? 'DPR: cihaz bilgisi, gerçek cihaz emülasyonu değildir' : st.language === 'no' ? 'DPR: enhetsmetadata, ikke ekte enhetsemulering' : 'DPR: device metadata, not real device emulation'}>DPR {profile.devicePixelRatio}x</span>
 
-          {/* Color Scheme Override (Auto / Dark / Light) */}
-          <button
+          <Button title={t.orientation} aria-label={t.orientation} onClick={() => st.toggleOrientation(vp.id)}><Icon name="orientation" /> {t.orientation}</Button>
+          <Button onClick={() => void sendAgentCmd([vp.id], 'reload')} title={st.language === 'tr' ? 'Bu görünümü yenile' : st.language === 'no' ? 'Last denne visningen på nytt' : 'Reload this viewport'}>{st.language === 'tr' ? 'Görünümü yenile' : st.language === 'no' ? 'Last visningen på nytt' : 'Reload viewport'}</Button>
+          <Button
             className={s.iconBtn}
+            aria-label={vp.colorScheme === 'dark' ? t.colorSchemeDark : vp.colorScheme === 'light' ? t.colorSchemeLight : t.colorSchemeAuto}
             title={
               vp.colorScheme === 'dark'
                 ? t.colorSchemeDark
@@ -216,19 +318,17 @@ export function ViewportCard({
               } catch {}
               sendAgentCmd([vp.id], 'setColorScheme', undefined, { scheme: next });
             }}
-            style={{ cursor: 'pointer' }}
           >
-            {vp.colorScheme === 'dark' ? '🌙' : vp.colorScheme === 'light' ? '☀️' : '🌗'}
-          </button>
+            <Icon name={vp.colorScheme === "dark" ? "moon" : vp.colorScheme === "light" ? "sun" : "halfMoon"} />
+          </Button>
 
           {/* Hardware Finish Selector for iPhone 15 & MacBook */}
           {(profile.id.includes('iphone-15') || profile.category === 'laptop') && (
             <select
-              className={s.iconBtn}
+              className={`${s.iconBtn} ${cardStyles.finish}`}
               value={vp.frameFinish || 'default'}
               onChange={(e) => st.setFrameFinish(vp.id, e.target.value)}
               title={t.finish}
-              style={{ fontSize: 10, padding: '2px 4px' }}
             >
               {profile.id.includes('iphone-15') ? (
                 <>
@@ -246,14 +346,14 @@ export function ViewportCard({
             </select>
           )}
 
-          <button className={s.iconBtn} title={t.orientation} onClick={() => st.toggleOrientation(vp.id)}>⟳</button>
-          <button className={s.iconBtn} title={t.shotOne} onClick={onShot}>📷</button>
-          <button className={s.iconBtn} title={t.duplicate} onClick={() => st.duplicate(vp.id)}>⧉</button>
-          <button className={s.iconBtn} title={vp.minimized ? t.restore : t.minimize} onClick={() => st.toggleMinimized(vp.id)}>
-            {vp.minimized ? '▢' : '—'}
-          </button>
-          <button className={s.iconBtn} title={t.hide} onClick={() => st.toggleHidden(vp.id)}>👁</button>
-          <button className={s.iconBtn} title={t.remove} onClick={() => st.removeViewport(vp.id)}>✕</button>
+          <Button className={s.iconBtn} title={t.duplicate} onClick={() => st.duplicate(vp.id)}><Icon name="copy" /> {t.duplicate}</Button>
+          <Button className={s.iconBtn} title={vp.minimized ? t.restore : t.minimize} onClick={() => st.toggleMinimized(vp.id)}>
+            <Icon name={vp.minimized ? "square" : "minus"} /> {vp.minimized ? t.restore : t.minimize}
+          </Button>
+          <Button className={s.iconBtn} title={t.hide} onClick={() => st.toggleHidden(vp.id)}><Icon name="eye" /> {t.hide}</Button>
+          <Button className={s.iconBtn} title={t.remove} onClick={() => st.removeViewport(vp.id)}><Icon name="close" /> {t.remove}</Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -270,8 +370,7 @@ export function ViewportCard({
           >
             <div
               ref={contentRef}
-              className={`${s.content} ${st.model.touchCursor && profile.touchSupport ? s.touchCursorArea : ''}`}
-              style={{ width: display.width, height: display.height, position: 'relative' }}
+              className={`${s.content} ${cardStyles.content} ${st.model.touchCursor && profile.touchSupport ? s.touchCursorArea : ''}`}
               onPointerMove={handlePointerMove}
               onPointerDown={() => setTouchPos((p) => ({ ...p, active: true }))}
               onPointerUp={() => setTouchPos((p) => ({ ...p, active: false }))}
@@ -280,22 +379,20 @@ export function ViewportCard({
               <iframe
                 ref={iframeRef}
                 key={`${vp.id}:${vp.url}:${st.previewGeneration}:${attempt}:${previewReady}`}
-                className={s.iframe}
+                className={`${s.iframe} ${cardStyles.preview}`}
                 tabIndex={-1}
                 name={`viewgrid:${vp.id}`}
                 src={previewReady ? vp.url || 'about:blank' : 'about:blank'}
-                style={{ width: logical.width, height: logical.height, transform: `scale(${clampZoom(vp.zoom)})` }}
                 title={`${profile.name} viewport`}
                 onLoad={onInjected}
               />
-              {!previewReady && <div role={preview.error ? 'alert' : 'status'} style={{ position: 'absolute', inset: 0, padding: 16, background: 'var(--panel)', color: 'var(--text)', overflow: 'auto' }}>
+              {!previewReady && <div role={preview.error ? 'alert' : 'status'} className={cardStyles.loading}>
                 <p>{preview.error || (st.language === 'tr' ? 'Önizleme hazırlanıyor…' : 'Preparing preview…')}</p>
-                {preview.error && <button onClick={() => setAttempt(value => value + 1)}>{st.language === 'tr' ? 'Tekrar dene' : 'Retry'}</button>}
+                {preview.error && <Button onClick={() => setAttempt(value => value + 1)}>{st.language === 'tr' ? 'Tekrar dene' : 'Retry'}</Button>}
               </div>}
               {st.model.touchCursor && profile.touchSupport && touchPos.visible && (
                 <div
-                  className={`${s.touchDot} ${touchPos.active ? s.touchDotActive : ''}`}
-                  style={{ left: touchPos.x, top: touchPos.y }}
+                  className={`${s.touchDot} ${cardStyles.touch} ${touchPos.active ? s.touchDotActive : ''}`}
                 />
               )}
             </div>

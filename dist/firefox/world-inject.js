@@ -6,9 +6,9 @@
     const original = container.register.bind(container);
     const verified = new Promise((resolve) => {
       const receive = (event) => {
-        if (event.source !== window || event.data?.type !== "vg/preview-worker-context") return;
+        if (event.source !== window.parent || !/^(chrome|moz)-extension:\/\//.test(event.origin) || event.data?.type !== "vg/preview-identity") return;
         window.removeEventListener("message", receive);
-        resolve(event.data.verified === true);
+        resolve(true);
       };
       window.addEventListener("message", receive);
       window.setTimeout(() => {

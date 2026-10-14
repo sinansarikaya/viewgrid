@@ -404,3 +404,7 @@ Husky, GitHub Actions (typecheck/lint/test/web-ext-lint), `web-ext` run for dev 
   "settings": { "theme": "dark", "frames": true, "labels": true }
 }
 ```
+
+## 17. Yerel analiz motoru (1.0.4)
+
+Workspace → `lib/api/local-analysis.ts` → doğrulanmış background/frame yönlendirmesi → talep üzerine `content/local-analysis.js` → DOM kolektörü + axe-core → şema doğrulaması → UI/geçmiş/rapor. Bu yol `fetch` veya dış analiz endpoint'i içermez. Kolektör sınırları ve yerel/harici sonuç ayrımı `docs/ANALYSIS_SETUP.md` içindedir. Önceki axe erteleme kararı bu sürümde sabit, sınırlı kural paketi için değiştirildi; ana content agent'a axe eklenmedi.

@@ -1,4 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Icon } from '../common/Icon';
+import { Tooltip } from '../common/Tooltip';
+import { useFitTracking } from './useFitTracking';
+import { useReorderMotion } from './useReorderMotion';
 import s from './styles.module.css';
 import { useStore } from './store';
 import { ViewportCard } from './ViewportCard';
@@ -16,14 +20,23 @@ import { startScan } from './scan';
 import { groupIssues, primaryIssues } from '../../core/issues/report';
 import { captureViewport, isCapturing } from './capture';
 import { LoopGuard } from '../../core/sync/protocol';
-import { effectiveSize, gridColumns, calculateSnapGuides, type GuideLine, type Bounds } from '../../core/workspace/layout';
-import type { LayoutMode, AlignItemsMode, JustifyContentMode } from '../../core/types';
+import { effectiveSize, gridColumns, canAutoAlignViewports, calculateSnapGuides, type GuideLine, type Bounds } from '../../core/workspace/layout';
+import type { AlignItemsMode, JustifyContentMode } from '../../core/types';
 import { ZOOM_PRESETS } from '../../core/types';
 import { getTranslation, type Language } from './i18n';
 import { Toast } from './Toast';
 import { SettingsModal } from './SettingsModal';
 import { BenchmarkModal } from './BenchmarkModal';
 import { workspaceHello, workspaceMessage } from './bridge';
+import { CompareModal } from './CompareModal';
+import { b } from '../../platform/browser';
+import { Button } from '../common/Button';
+import { WorkspaceSidebar } from './WorkspaceSidebar';
+import { WorkspaceActions } from './WorkspaceActions';
+import { AnalysisPanel } from './AnalysisPanel';
+import { AnimatedPresence } from '../common/AnimatedPresence';
+import { sanitizeReportScreenshot, MAX_REPORT_SCREENSHOT_BYTES, type ReportScreenshot } from '../../core/reports/screenshots';
+import { loadBuildFingerprint } from '../../lib/api/build-info';
 
 function matchesShortcut(e: KeyboardEvent, comboStr?: string): boolean {
   if (!comboStr) return false;
@@ -42,26 +55,31 @@ function matchesShortcut(e: KeyboardEvent, comboStr?: string): boolean {
   if (!mainKey) return false;
   return e.key.toLowerCase() === mainKey;
 }
-import { CompareModal } from './CompareModal';
-import { b } from '../../platform/browser';
 
 export function App({ hub: _hub }: { hub: LoopGuard }) {
   const st = useStore();
   const t = getTranslation(st.language);
+  useFitTracking();
+  React.useLayoutEffect(() => {
+    if (!st.starterFitPending) return;
+    st.fitToScreen();
+    useStore.setState({ starterFitPending: false });
+  }, [st.starterFitPending, st.fitToScreen]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRefs = useRef(new Map<string, HTMLElement>());
   const [menuOpen, setMenuOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
+  const [analysisSection, setAnalysisSection] = useState<'performance' | 'seo' | 'reports' | 'geo' | null>(null);
   const version = b.runtime.getManifest().version || 'unknown';
   const [build, setBuild] = useState('');
+
   useEffect(() => {
     let mounted = true;
-    void fetch(b.runtime.getURL('build-info.json')).then(response => response.json()).then(info => {
-      if (mounted && typeof info.build === 'string') setBuild(info.build);
-    }).catch(() => {});
+    void loadBuildFingerprint().then(fingerprint => {
+      if (mounted && fingerprint) setBuild(fingerprint);
+    });
     return () => { mounted = false; };
   }, []);
-
 
   // Enforce initial scroll to top on launch (prevents browser/iframe from yanking down)
   const userInteracted = useRef(false);
@@ -119,7 +137,31 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     else contentRefs.current.delete(id);
   }, []);
 
-  const doScan = useCallback(() => { void startScan(); }, []);
+  const doScan = useCallback(() => {
+    const state = useStore.getState();
+    if (state.drawerOpen) state.setDrawerOpen(false);
+    else if (state.scannedAt || state.scanning) state.setDrawerOpen(true);
+    else void startScan();
+  }, []);
+  const captureReportViewport = useCallback(async (): Promise<ReportScreenshot> => {
+    const state = useStore.getState();
+    const visible = state.visibleViewports().filter(viewport => !viewport.minimized);
+    const viewport = visible.find(viewport => viewport.id === state.focusedId) ?? visible[0];
+    const content = viewport && contentRefs.current.get(viewport.id);
+    if (!viewport || !content || isCapturing()) throw new Error('REPORT_SCREENSHOT_UNAVAILABLE');
+    const device = state.profileOf(viewport);
+    const size = effectiveSize(device, viewport.orientation);
+    const configuredUrl = viewport.url || state.model.url;
+    const blob = await captureViewport(content);
+    if (blob.size > MAX_REPORT_SCREENSHOT_BYTES) throw new Error('REPORT_SCREENSHOT_TOO_LARGE');
+    const pngDataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('REPORT_SCREENSHOT_ENCODING_FAILED'));
+      reader.onerror = () => reject(new Error('REPORT_SCREENSHOT_ENCODING_FAILED'));
+      reader.readAsDataURL(blob);
+    });
+    return sanitizeReportScreenshot({ viewportName: device.name, previewUrl: configuredUrl, cssWidth: size.width, cssHeight: size.height, capturedAt: new Date().toISOString(), pngDataUrl });
+  }, []);
   const shotOne = useCallback(async (viewportId: string) => {
     const state = useStore.getState(), tr = getTranslation(state.language);
     const v = state.model.viewports.find(v => v.id === viewportId), el = contentRefs.current.get(viewportId);
@@ -131,6 +173,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
       state.showToast(tr.screenshotSaved);
     } catch (e) { state.showToast(`${tr.screenshotFailed}: ${(e as Error).message}`); }
   }, []);
+
   const shotAll = useCallback(async () => {
     if (isCapturing()) return;
     const state = useStore.getState(), tr = getTranslation(state.language);
@@ -163,6 +206,13 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     await workspaceMessage({ type: 'vg/hard-reload' });
   }, []);
 
+  const handleScrollToTopAll = useCallback(() => {
+    if (canvasRef.current) {
+      canvasRef.current.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
+    sendAgentCmd('all', 'scrollToTop');
+  }, []);
+
   // Ping background to register workspace tabId reliably
   useEffect(() => {
     void workspaceHello();
@@ -175,6 +225,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const sState = useStore.getState();
+      if (document.querySelector('[role="dialog"]') || sState.settingsOpen || sState.compareOpen || sState.pickerOpen || sState.benchmarkOpen) return;
       const key = e.key.toLowerCase();
       if (e.key === 'Escape') {
         sState.setPickerOpen(false);
@@ -237,6 +288,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
   }, [shotOne, shotAll, doScan, handleHardReload]);
 
   const visible = st.visibleViewports();
+  useReorderMotion(visible.map(viewport=>viewport.id).join('|'),st.model.layout);
   const canvasClass =
     st.model.layout === 'grid'
       ? s.canvasGrid
@@ -253,43 +305,56 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     draggingId: null,
     targetIndex: null,
   });
+  const dragRef=useRef(dragState);
+  const pointerCleanup=useRef<(()=>void)|null>(null);
+  useEffect(()=>()=>pointerCleanup.current?.(),[]);
 
   const handleDragStart = useCallback((id: string) => {
-    setDragState({ draggingId: id, targetIndex: null });
+    dragRef.current={draggingId:id,targetIndex:null};setDragState(dragRef.current);
   }, []);
 
   const handleDragEnd = useCallback(() => {
-    setDragState({ draggingId: null, targetIndex: null });
+    dragRef.current={draggingId:null,targetIndex:null};setDragState(dragRef.current);
   }, []);
 
   const handleDragOverCard = useCallback((idx: number) => {
-    setDragState((s) => (s.targetIndex === idx ? s : { ...s, targetIndex: idx }));
+    if(dragRef.current.targetIndex===idx)return;
+    dragRef.current={...dragRef.current,targetIndex:idx};setDragState(dragRef.current);
   }, []);
 
   const handleDropCard = useCallback((idx: number) => {
-    setDragState((curr) => {
-      if (curr.draggingId) {
-        const fromIndex = visible.findIndex((v) => v.id === curr.draggingId);
-        if (fromIndex !== -1 && idx !== -1 && fromIndex !== idx) {
-          st.reorder(fromIndex, idx);
-        }
-      }
-      return { draggingId: null, targetIndex: null };
-    });
-  }, [visible, st]);
+    const state=useStore.getState(),target=state.visibleViewports()[idx];
+    if(state.model.layout!=='free' && target && dragRef.current.draggingId && target.id!==dragRef.current.draggingId) state.reorderById(dragRef.current.draggingId,target.id);
+    handleDragEnd();
+  }, [handleDragEnd]);
 
-  const handleDropOnSkeleton = useCallback(() => {
-    setDragState((curr) => {
-      if (curr.draggingId && curr.targetIndex !== null) {
-        const fromIndex = visible.findIndex((v) => v.id === curr.draggingId);
-        const target = curr.targetIndex;
-        if (fromIndex !== -1 && target !== -1 && fromIndex !== target) {
-          st.reorder(fromIndex, target);
-        }
-      }
-      return { draggingId: null, targetIndex: null };
-    });
-  }, [visible, st]);
+  const handlePointerReorder=useCallback((id:string,event:React.PointerEvent<HTMLButtonElement>)=>{
+    if(event.button!==0)return;
+    event.preventDefault();event.stopPropagation();
+    pointerCleanup.current?.();
+    const handle=event.currentTarget,start={x:event.clientX,y:event.clientY};
+    handle.setPointerCapture(event.pointerId);
+    let moving=false;
+    const move=(pointer:PointerEvent)=>{
+      if(pointer.pointerId!==event.pointerId)return;
+      if(!moving && Math.hypot(pointer.clientX-start.x,pointer.clientY-start.y)<6)return;
+      if(!moving){moving=true;handleDragStart(id);}
+      const cards=[...document.querySelectorAll<HTMLElement>('main [data-viewport-id]')];
+      const index=cards.findIndex(card=>{const b=card.getBoundingClientRect();return pointer.clientX>=b.left && pointer.clientX<=b.right && pointer.clientY>=b.top && pointer.clientY<=b.bottom;});
+      handleDragOverCard(index);
+    };
+    const cleanup=()=>{
+      document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',cancel);document.removeEventListener('keydown',key);
+      if(handle.hasPointerCapture(event.pointerId))handle.releasePointerCapture(event.pointerId);
+      pointerCleanup.current=null;
+    };
+    const up=(pointer:PointerEvent)=>{if(pointer.pointerId!==event.pointerId)return;cleanup();if(moving)handleDropCard(dragRef.current.targetIndex??-1);};
+    const abort=()=>{cleanup();handleDragEnd();};
+    const cancel=(pointer:PointerEvent)=>{if(pointer.pointerId===event.pointerId)abort();};
+    const key=(keyboard:KeyboardEvent)=>{if(keyboard.key==='Escape')abort();};
+    pointerCleanup.current=cleanup;
+    document.addEventListener('pointermove',move);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',cancel);document.addEventListener('keydown',key);
+  },[handleDragStart,handleDragOverCard,handleDropCard,handleDragEnd]);
 
   const [activeGuides, setActiveGuides] = useState<GuideLine[]>([]);
 
@@ -349,24 +414,60 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     [],
   );
 
-  const draggedVp = visible.find((v) => v.id === dragState.draggingId);
-  const draggedProf = draggedVp ? st.profileOf(draggedVp) : null;
-  const draggedLogical = draggedProf && draggedVp ? effectiveSize(draggedProf, draggedVp.orientation) : null;
-  const skeletonW = draggedLogical && draggedVp ? Math.round(draggedLogical.width * draggedVp.zoom) + 24 : 260;
-  const skeletonH = draggedLogical && draggedVp ? Math.round(draggedLogical.height * draggedVp.zoom) + 60 : 340;
-  const fromIdx = dragState.draggingId ? visible.findIndex((v) => v.id === dragState.draggingId) : -1;
+
+  // Dynamic CSSOM stylesheet manager (eliminates all inline style JSX)
+  useEffect(() => {
+    let styleEl = document.getElementById('viewgrid-dynamic-geometry') as HTMLStyleElement | null;
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = 'viewgrid-dynamic-geometry';
+      document.head.appendChild(styleEl);
+    }
+
+    const rules: string[] = [];
+
+    // 2. Free-form card positions & guides
+    if (st.model.layout === 'free') {
+      visible.forEach((v) => {
+        const px = Number.isFinite(v.position?.x) ? v.position!.x : 24;
+        const py = Number.isFinite(v.position?.y) ? v.position!.y : 24;
+        rules.push(`[data-vp-pos="${CSS.escape(v.id)}"] { left: ${px}px !important; top: ${py}px !important; }`);
+      });
+
+      activeGuides.forEach((g, i) => {
+        if (!Number.isFinite(g.pos)) return;
+        if (g.type === 'v') {
+          rules.push(`[data-guide-v="${i}"] { left: ${g.pos}px !important; }`);
+        } else {
+          rules.push(`[data-guide-h="${i}"] { top: ${g.pos}px !important; }`);
+        }
+      });
+    }
+
+    styleEl.textContent = rules.join('\n');
+
+    return () => {
+      styleEl?.remove();
+    };
+  }, [st.model.layout, visible, activeGuides]);
 
   return (
     <div className={s.app}>
-      <div className={s.toolbar}>
-        <span className={s.brand}>ViewGrid <small data-testid="extension-version" style={{ fontSize: 10, fontWeight: 400 }}>v{version}</small></span>
-        <button className={s.iconBtn} title={t.back} onClick={() => sendAgentCmd('all', 'back')}>←</button>
-        <button className={s.iconBtn} title={t.forward} onClick={() => sendAgentCmd('all', 'forward')}>→</button>
-        <button className={s.iconBtn} title={t.reloadAll} onClick={() => sendAgentCmd('all', 'reload')}>⟳</button>
-        <button className={s.iconBtn} title={t.hardReloadAll} onClick={() => void handleHardReload()} style={{ fontSize: 13 }}>🧹</button>
+      {/* —— Top Toolbar —— */}
+      <header className={s.toolbar}>
+        <span className={s.brand}>
+          ViewGrid <small data-testid="extension-version" className={s.versionTag}>v{version}</small>
+        </span>
+        <Button variant="default" className={s.iconBtn} title={t.back} aria-label={t.back} onClick={() => sendAgentCmd('all', 'back')}><Icon name="arrowLeft" /></Button>
+        <Button variant="default" className={s.iconBtn} title={t.forward} aria-label={t.forward} onClick={() => sendAgentCmd('all', 'forward')}><Icon name="arrowRight" /></Button>
+        <Button variant="default" className={s.iconBtn} title={t.reloadAll} aria-label={t.reloadAll} onClick={() => sendAgentCmd('all', 'reload')}><Icon name="refresh" /></Button>
+        <Button variant="default" className={s.iconBtn} title={t.hardReloadAll} aria-label={t.hardReloadAll} onClick={() => void handleHardReload()}><Icon name="trash" /></Button>
+
+        {/* URL Bar — Keep as the very first input on the page for E2E selector compliance */}
         <div className={s.url}>
           <input
             placeholder={t.urlPlaceholder}
+            aria-label={t.urlPlaceholder}
             value={st.urlDraft}
             onChange={(e) => st.setUrlDraft(e.target.value)}
             onKeyDown={(e) => {
@@ -376,196 +477,86 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
               }
             }}
           />
-          <button className="primary" onClick={() => { st.applyUrl(st.urlDraft); void injectAgents(); }}>{t.go}</button>
+          <Button variant="primary" onClick={() => { st.applyUrl(st.urlDraft); void injectAgents(); }}>{t.go}</Button>
         </div>
+
         <div className={s.sep} />
-        <button onClick={() => st.setPickerOpen(true)} title={`${t.addDeviceBtn} (A)`}>{t.add}</button>
-        <select
-          value=""
-          onChange={(e) => { if (e.target.value) st.addPreset(e.target.value); e.target.value = ''; }}
-          title={t.presets}
-        >
-          <option value="">{t.presets}</option>
-          {['Mobile Test', 'Standard Responsive', 'iOS + Android', 'Tablet Check', 'Full House'].map((n) => (
-            <option key={n} value={n}>{n}</option>
-          ))}
-        </select>
-        <select
-          value={st.model.layout}
-          onChange={(e) => {
-            const mode = e.target.value as LayoutMode;
-            st.setLayout(mode);
-            if (mode === 'free') {
-              const hasPos = st.model.viewports.some((v) => !!v.position);
-              if (!hasPos) st.autoAlignAll();
-            }
-          }}
-          title={t.layout}
-        >
-          <option value="grid">{t.layoutGrid}</option>
-          <option value="row">{t.layoutRow}</option>
-          <option value="col">{t.layoutCol}</option>
-          <option value="free">{t.layoutFree}</option>
-        </select>
-        <button onClick={() => st.autoAlignAll()} title={t.autoAlignGrid}>{t.autoAlignGrid}</button>
-        {st.model.layout !== 'free' && (
-          <>
-            <select
-              value={st.model.alignItems || 'flex-start'}
-              onChange={(e) => st.setAlignItems(e.target.value as AlignItemsMode)}
-              title={t.alignItemsTitle}
-            >
-              <option value="flex-start">{t.alignTop}</option>
-              <option value="center">{t.alignCenterV}</option>
-              <option value="flex-end">{t.alignBottom}</option>
-            </select>
-            <select
-              value={st.model.justifyContent || 'flex-start'}
-              onChange={(e) => st.setJustifyContent(e.target.value as JustifyContentMode)}
-              title={t.justifyContentTitle}
-            >
-              <option value="flex-start">{t.alignLeft}</option>
-              <option value="center">{t.alignCenterH}</option>
-              <option value="flex-end">{t.alignRight}</option>
-              <option value="space-between">{t.alignSpaceBetween}</option>
-            </select>
-          </>
-        )}
-        <div className={s.sep} />
-        <details style={{ position: 'relative' }}>
-          <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 6 }}>
-            {t.sync} {st.model.sync.scroll ? '●' : '○'}
-          </summary>
-          <div className={s.menu} style={{ top: 32 }}>
-            {(Object.keys(st.model.sync) as (keyof typeof st.model.sync)[]).map((k) => (
-              <label key={k} className={s.menuRow}>
-                <span>{k === 'scroll' ? t.syncScroll : k === 'click' ? t.syncClick : k === 'nav' ? t.syncNav : k === 'reload' ? t.syncReload : k === 'key' ? t.syncKey : k === 'input' ? t.syncInput : t.syncForm}</span>
-                <input
-                  type="checkbox"
-                  checked={st.model.sync[k]}
-                  onChange={(e) => st.setSync(k, e.target.checked)}
-                />
-              </label>
-            ))}
-          </div>
-        </details>
-        <div className={s.sep} />
-        <button onClick={doScan} title={t.issues}>
-          🔍 {groupIssues(primaryIssues(st.issues)).length > 0 ? <span className={s.badge + ' ' + s.warn}>{groupIssues(primaryIssues(st.issues)).length}</span> : t.issues}
-        </button>
-        <button onClick={() => st.setDrawerOpen(!st.drawerOpen)}>{t.panel}</button>
-        <button onClick={() => void shotAll()} title={t.shotAll}>📷</button>
-        <button onClick={() => void shotWorkspace()} title={t.shotWorkspace}>▦</button>
-        <button
-          onClick={() => {
-            if (canvasRef.current) {
-              canvasRef.current.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-            }
-            sendAgentCmd('all', 'scrollToTop');
-          }}
-          title={st.language === 'tr' ? 'En başa kaydır (Tüm cihazlar ve tuval)' : st.language === 'no' ? 'Rull til toppen' : 'Scroll to top (All devices & canvas)'}
-        >
-          ⤒
-        </button>
-        <button onClick={() => st.fitToScreen()} title={t.fitToScreen}>⤢</button>
-        <button onClick={() => st.toggleFocusMode()} title={t.focusMode}>⛶</button>
-        <button onClick={st.toggleFrames} title={t.toggleFrames}>{st.model.frames ? '▣' : '▢'}</button>
-        <button
-          onClick={st.toggleTouchCursor}
-          title={t.touchCursor}
-          style={{
-            background: st.model.touchCursor ? 'var(--accent)' : undefined,
-            color: st.model.touchCursor ? '#000' : undefined,
-            fontWeight: st.model.touchCursor ? 700 : undefined,
-          }}
-        >
-          👆
-        </button>
-        <button
-          onClick={() => {
-            if (st.visibleViewports().length < 2) {
-              st.showToast(t.compareSelectHint);
-              return;
-            }
-            st.setCompareOpen(!st.compareOpen);
-          }}
-          title={t.compareTitle}
-        >
-          ⚖ {t.compare}
-        </button>
-        <button
-          onClick={() => {
-            if (st.visibleViewports().length === 0) {
-              st.showToast(t.compareSelectHint);
-              return;
-            }
-            st.setCompareOpen(true, 'figma');
-          }}
-          title={st.language === 'tr' ? 'Figma Mockup Pixel-Diff Karşılaştırma' : 'Figma Mockup Pixel-Diff Comparison'}
-          style={{
-            background: 'rgba(214, 104, 83, 0.15)',
-            border: '1px solid var(--accent)',
-            color: 'var(--accent)',
-            fontWeight: 700,
-          }}
-        >
-          🎨 Figma Diff
-        </button>
-        <button
+
+        {/* Runtime info & Local mode */}
+        <Button
+          variant="default"
+          className={s.localBenchmarkBtn}
           onClick={() => st.setBenchmarkOpen(true)}
           title={st.language === 'tr' ? 'Çalışma biçimi ve sınırlar' : 'Runtime and limitations'}
-          style={{
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.4)',
-            color: '#10b981',
-            fontWeight: 700,
-            fontSize: 11,
-            padding: '2px 8px',
-          }}
         >
-          ⚡ Local
-        </button>
-        <button onClick={st.toggleTheme} title={t.theme}>{st.model.theme === 'dark' ? '☀' : '◐'}</button>
+          <Icon name="deviceDesktop" /> Local
+        </Button>
+        <details className={s.captureMenu}>
+          <Tooltip content={st.language === 'tr' ? 'Yakalama seçenekleri' : st.language === 'no' ? 'Skjermbildevalg' : 'Capture options'} placement="bottom"><summary><Icon name="camera" />{st.language === 'tr' ? 'Yakalama' : st.language === 'no' ? 'Skjermbilde' : 'Capture'}</summary></Tooltip>
+          <div className={s.menu}>
+            <Button onClick={() => { if (st.focusedId) void shotOne(st.focusedId); else st.showToast(t.compareSelectHint); }}>{t.shotOne}</Button>
+            <Button onClick={() => void shotAll()}>{t.shotAll}</Button>
+            <Button onClick={() => void shotWorkspace()}>{t.shotWorkspace}</Button>
+          </div>
+        </details>
+
+        <div className={s.secondaryControls}>
+        {/* Theme Toggle */}
+        <Button variant="default" onClick={st.toggleTheme} title={t.theme} aria-label={t.theme}>
+          <Icon name={st.model.theme === "dark" ? "sun" : "moon"} />
+        </Button>
 
         {/* Language selector */}
+        <Icon name="globe" />
         <select
           value={st.language}
           onChange={(e) => st.setLanguage(e.target.value as Language)}
           title={t.language}
-          style={{ padding: '2px 6px', fontSize: 11, cursor: 'pointer' }}
+          aria-label={t.language}
+          className={s.langSelect}
         >
-          <option value="tr">🇹🇷 TR</option>
-          <option value="en">🇬🇧 EN</option>
-          <option value="no">🇳🇴 NO</option>
+          <option value="tr">TR</option>
+          <option value="en">EN</option>
+          <option value="no">NO</option>
         </select>
 
-        <button onClick={() => st.setSettingsOpen(true)} title="Ayarlar (Settings)">⚙️</button>
-        <button onClick={() => setMenuOpen(!menuOpen)} title={t.menu}>☰</button>
+        {/* Settings & Workspace Menu */}
+        <Button variant="default" onClick={() => st.setSettingsOpen(true)} title="Ayarlar (Settings)" aria-label={st.language === 'tr' ? 'Ayarlar' : st.language === 'no' ? 'Innstillinger' : 'Settings'}><Icon name="settings" /></Button>
+        <Button variant="default" onClick={() => setMenuOpen(!menuOpen)} title={t.menu} aria-label={t.menu} aria-expanded={menuOpen}><Icon name="menu" /></Button>
+        </div>
 
-        {menuOpen && (
+        <AnimatedPresence open={menuOpen} kind="menu">
           <div className={s.menu}>
             <div className={s.menuRow}>
               <input
                 className={s.url}
-                style={{ flex: 1 }}
                 placeholder={t.workspaceName}
                 value={saveName || st.model.name}
                 onChange={(e) => setSaveName(e.target.value)}
               />
-              <button onClick={() => { st.saveAs(saveName || st.model.name); setSaveName(''); setMenuOpen(false); }}>{t.save}</button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  st.saveAs(saveName || st.model.name);
+                  setSaveName('');
+                  setMenuOpen(false);
+                }}
+              >
+                {t.save}
+              </Button>
             </div>
             {Object.keys(st.savedWorkspaces).map((n) => (
               <div key={n} className={s.menuRow}>
                 <span>{n}</span>
                 <span>
-                  <button className={s.iconBtn} onClick={() => { st.loadSaved(n); setMenuOpen(false); }}>{t.load}</button>
-                  <button className={s.iconBtn} onClick={() => st.deleteSaved(n)}>✕</button>
+                  <Button variant="default" className={s.iconBtn} onClick={() => { st.loadSaved(n); setMenuOpen(false); }}>{t.load}</Button>
+                  <Button variant="danger" className={s.iconBtn} aria-label={`${st.language === 'tr' ? 'Çalışma alanını sil' : st.language === 'no' ? 'Slett arbeidsområde' : 'Delete workspace'}: ${n}`} onClick={() => st.deleteSaved(n)}><Icon name="close" /></Button>
                 </span>
               </div>
             ))}
             {!st.granted && (
-              <button
-                className="primary"
+              <Button
+                variant="primary"
                 onClick={async () => {
                   const ok = await grantHostAccess();
                   st.setGranted(ok);
@@ -574,22 +565,24 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                 }}
               >
                 {t.enableSiteAccess}
-              </button>
+              </Button>
             )}
           </div>
-        )}
-      </div>
+        </AnimatedPresence>
+      </header>
 
+      {/* Host Permission Banner */}
       {!st.granted && (
         <div className={s.permissionBanner}>
           <div className={s.permissionBannerContent}>
-            <span className={s.permissionBannerIcon}>🛡️</span>
+            <span className={s.permissionBannerIcon}><Icon name="shield" /></span>
             <div>
               <div className={s.permissionBannerTitle}>{t.siteAccessRequiredTitle}</div>
               <div className={s.permissionBannerDesc}>{t.siteAccessRequiredDesc}</div>
             </div>
           </div>
-          <button
+          <Button
+            variant="primary"
             className={s.permissionBannerBtn}
             onClick={async () => {
               const ok = await grantHostAccess();
@@ -604,161 +597,196 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
             }}
           >
             {t.enableSiteAccessBtn}
-          </button>
+          </Button>
         </div>
       )}
 
-      <div ref={canvasRef} className={s.canvas}>
-        {visible.length === 0 ? (
-          <div className={s.empty}>
-            <div>{t.noViewports}</div>
-            <button className="primary" onClick={() => st.setPickerOpen(true)}>{t.addDeviceBtn}</button>
-            <div style={{ fontSize: 12 }}>{t.emptyHint}</div>
-          </div>
-        ) : (
-          <div
-            className={canvasClass}
-            style={
-              {
-                '--grid-cols': gridColumns(visible.length, st.model.layout),
-                '--align-items': st.model.alignItems || 'flex-start',
-                '--justify-content': st.model.justifyContent || 'flex-start',
-              } as React.CSSProperties
-            }
-          >
-            {st.model.layout === 'free' &&
-              activeGuides.map((g, i) =>
-                g.type === 'v' ? (
-                  <div key={i} className={s.guideLineV} style={{ left: g.pos }} />
-                ) : (
-                  <div key={i} className={s.guideLineH} style={{ top: g.pos }} />
-                ),
-              )}
-            {visible.map((v, idx) => {
-              if (st.model.layout === 'free') {
-                const posX = v.position?.x ?? 24;
-                const posY = v.position?.y ?? 24;
-                return (
-                  <div key={v.id} className={s.cardFree} style={{ left: posX, top: posY }}>
-                    <ViewportCard
-                      vp={v}
-                      index={idx}
-                      isFreeLayout
-                      onRegister={registerContent}
-                      onShot={() => void shotOne(v.id)}
-                      onInjected={() => void injectAgents()}
-                      onFreeDrag={handleFreeDrag}
-                    />
-                  </div>
-                );
-              }
+      {/* —— Main Layout with Collapsible Sidebar & Canvas Container —— */}
+      <div className={s.mainLayout}>
+        <WorkspaceSidebar
+          onScan={doScan}
+          onScrollToTop={handleScrollToTopAll}
+        ><WorkspaceActions onScan={doScan} onAnalysis={section => setAnalysisSection(current => current === section ? null : section)} /></WorkspaceSidebar>
 
-              const showSkeletonBefore =
-                Boolean(dragState.draggingId) &&
-                dragState.targetIndex === idx &&
-                idx < fromIdx;
-
-              const showSkeletonAfter =
-                Boolean(dragState.draggingId) &&
-                dragState.targetIndex === idx &&
-                idx > fromIdx;
-
-              return (
-                <React.Fragment key={v.id}>
-                  {showSkeletonBefore && (
-                    <div
-                      className={s.dropSkeleton}
-                      style={{ width: skeletonW, height: skeletonH }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        handleDropOnSkeleton();
-                      }}
-                    >
-                      <div className={s.skeletonInner}>
-                        <span className={s.skeletonIcon}>📥</span>
-                        <span>{t.dropHere}</span>
-                      </div>
-                    </div>
-                  )}
-                  <ViewportCard
-                    vp={v}
-                    index={idx}
-                    isDragging={dragState.draggingId === v.id}
-                    isDropTarget={Boolean(dragState.draggingId) && dragState.targetIndex === idx && idx !== fromIdx}
-                    onRegister={registerContent}
-                    onShot={() => void shotOne(v.id)}
-                    onInjected={() => void injectAgents()}
-                    onDragStartCard={handleDragStart}
-                    onDragEndCard={handleDragEnd}
-                    onDragOverCard={handleDragOverCard}
-                    onDropCard={handleDropCard}
-                  />
-                  {showSkeletonAfter && (
-                    <div
-                      className={s.dropSkeleton}
-                      style={{ width: skeletonW, height: skeletonH }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        handleDropOnSkeleton();
-                      }}
-                    >
-                      <div className={s.skeletonInner}>
-                        <span className={s.skeletonIcon}>📥</span>
-                        <span>{t.dropHere}</span>
-                      </div>
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
-            {dragState.draggingId &&
-              dragState.targetIndex === visible.length &&
-              fromIdx !== visible.length - 1 && (
-                <div
-                  className={s.dropSkeleton}
-                  style={{ width: skeletonW, height: skeletonH }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    handleDropOnSkeleton();
-                  }}
+        <div className={s.canvasContainer}>
+          {/* Canvas Header: Layout Mode, Fit to Screen, Auto Align, Align/Justify */}
+          <div className={s.canvasHeader}>
+            <div className={s.canvasHeaderLeft}>
+              <div className={s.modeGroup} role="group" aria-label="Layout modes">
+                <Button
+                  variant="default"
+                  className={[s.modeBtn, st.model.layout === 'grid' ? s.modeBtnActive : ''].join(' ')}
+                  onClick={() => st.setLayout('grid')}
+                  title={t.layoutGrid}
                 >
-                  <div className={s.skeletonInner}>
-                    <span className={s.skeletonIcon}>📥</span>
-                    <span>{t.dropHere}</span>
-                  </div>
-                </div>
+                  <Icon name="layoutGrid" /> {t.layoutGrid}
+                </Button>
+                <Button
+                  variant="default"
+                  className={[s.modeBtn, st.model.layout === 'row' ? s.modeBtnActive : ''].join(' ')}
+                  onClick={() => st.setLayout('row')}
+                  title={t.layoutRow}
+                >
+                  <Icon name="layoutRow" /> {t.layoutRow}
+                </Button>
+                <Button
+                  variant="default"
+                  className={[s.modeBtn, st.model.layout === 'col' ? s.modeBtnActive : ''].join(' ')}
+                  onClick={() => st.setLayout('col')}
+                  title={t.layoutCol}
+                >
+                  <Icon name="layoutCol" /> {t.layoutCol}
+                </Button>
+                <Button
+                  variant="default"
+                  className={[s.modeBtn, st.model.layout === 'free' ? s.modeBtnActive : ''].join(' ')}
+                  onClick={() => {
+                    st.setLayout('free');
+                    const hasPos = st.model.viewports.some((v) => !!v.position);
+                    if (!hasPos) st.autoAlignAll();
+                  }}
+                  title={t.layoutFree}
+                >
+                  <Icon name="layoutFree" /> {t.layoutFree}
+                </Button>
+              </div>
+
+              <Button
+                variant="default"
+                onClick={() => st.autoAlignAll()}
+                disabled={!canAutoAlignViewports(st.model.layout, visible, st.profileOf)}
+                title={t.autoAlignGrid}
+              >
+                <Icon name="gridAlign" /> {t.autoAlignGrid}
+              </Button>
+
+              <Button
+                variant="default"
+                onClick={() => st.fitToScreen()}
+                title={t.fitToScreen}
+              >
+                <Icon name="cornerExpand" /> {t.fitToScreen}
+              </Button>
+            </div>
+
+            <div className={s.canvasHeaderRight}>
+              {st.model.layout !== 'free' && (
+                <>
+                  <select
+                    value={st.model.alignItems || 'flex-start'}
+                    onChange={(e) => st.setAlignItems(e.target.value as AlignItemsMode)}
+                    title={t.alignItemsTitle}
+                  >
+                    <option value="flex-start">{t.alignTop}</option>
+                    <option value="center">{t.alignCenterV}</option>
+                    <option value="flex-end">{t.alignBottom}</option>
+                  </select>
+                  <select
+                    value={st.model.justifyContent || 'flex-start'}
+                    onChange={(e) => st.setJustifyContent(e.target.value as JustifyContentMode)}
+                    title={t.justifyContentTitle}
+                  >
+                    <option value="flex-start">{t.alignLeft}</option>
+                    <option value="center">{t.alignCenterH}</option>
+                    <option value="flex-end">{t.alignRight}</option>
+                    <option value="space-between">{t.alignSpaceBetween}</option>
+                  </select>
+                </>
               )}
+            </div>
           </div>
-        )}
+
+          {/* Canvas Area */}
+          <main ref={canvasRef} className={s.canvas}>
+            {visible.length === 0 ? (
+              <div className={s.empty}>
+                <div>{t.noViewports}</div>
+                <Button variant="primary" onClick={() => st.setPickerOpen(true)}>{t.addDeviceBtn}</Button>
+                <div>{t.emptyHint}</div>
+              </div>
+            ) : (
+              <div
+                className={canvasClass}
+                data-layout={st.model.layout}
+                data-reordering={Boolean(dragState.draggingId)}
+                data-cols={gridColumns(visible.length, st.model.layout)}
+                data-align={st.model.alignItems || 'flex-start'}
+                data-justify={st.model.justifyContent || 'flex-start'}
+              >
+                {st.model.layout === 'free' &&
+                  activeGuides.map((g, i) => (
+                    <div
+                      key={i}
+                      data-guide-v={g.type === 'v' ? i : undefined}
+                      data-guide-h={g.type === 'h' ? i : undefined}
+                      className={g.type === 'v' ? s.guideLineV : s.guideLineH}
+                    />
+                  ))}
+                {visible.map((v, idx) => {
+                  if (st.model.layout === 'free') {
+                    return (
+                      <div
+                        key={v.id}
+                        data-vp-pos={v.id}
+                        className={s.cardFree}
+                      >
+                        <ViewportCard
+                          vp={v}
+                          index={idx}
+                          isFreeLayout
+                          onRegister={registerContent}
+                          onShot={() => void shotOne(v.id)}
+                          onInjected={() => void injectAgents()}
+                          onFreeDrag={handleFreeDrag}
+                        />
+                      </div>
+                    );
+                  }
+
+
+                  return (
+                    <React.Fragment key={v.id}>
+                      <ViewportCard
+                        vp={v}
+                        index={idx}
+                        isDragging={dragState.draggingId === v.id}
+                        isDropTarget={Boolean(dragState.draggingId) && dragState.targetIndex === idx && v.id !== dragState.draggingId}
+                        isReordering={Boolean(dragState.draggingId)}
+                        onRegister={registerContent}
+                        onShot={() => void shotOne(v.id)}
+                        onInjected={() => void injectAgents()}
+                        onDragStartCard={handleDragStart}
+                        onDragEndCard={handleDragEnd}
+                        onDragOverCard={handleDragOverCard}
+                        onDropCard={handleDropCard}
+                        onPointerReorder={handlePointerReorder}
+                      />
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            )}
+          </main>
+        </div>
       </div>
 
-      <div className={s.statusBar}>
+      {/* —— Bottom Status Bar —— */}
+      <footer className={s.statusBar}>
         <span data-testid="extension-build">ViewGrid v{version}{build && ` · ${build}`}</span>
         <span>{visible.length} {t.viewports}</span>
-        <span>{t.layout}: {st.model.layout === 'grid' ? t.layoutGrid : st.model.layout === 'row' ? t.layoutRow : t.layoutCol}</span>
+        <span>{t.layout}: {st.model.layout === 'grid' ? t.layoutGrid : st.model.layout === 'row' ? t.layoutRow : st.model.layout === 'col' ? t.layoutCol : t.layoutFree}</span>
         <span>{t.zoomPresets}: {ZOOM_PRESETS.map((z) => `${z * 100}%`).join(' / ')}</span>
         <span>{t.issues}: {groupIssues(primaryIssues(st.issues)).length}</span>
         <span>{st.granted ? t.siteAccessGranted : t.siteAccessLimited}</span>
-        <span>local-only ●</span>
-      </div>
+        <span>{st.language === 'tr' ? 'Yerel önizleme · analiz isteğe bağlı' : st.language === 'no' ? 'Lokal forhåndsvisning · valgfri analyse' : 'Local previews · optional analysis'}</span>
+      </footer>
 
-      {st.pickerOpen && <DevicePicker />}
-      {st.drawerOpen && <IssuesDrawer />}
-      {st.compareOpen && <CompareModal />}
-      <SettingsModal />
-      <BenchmarkModal />
+      <AnimatedPresence open={st.pickerOpen}><DevicePicker /></AnimatedPresence>
+      <AnimatedPresence open={st.drawerOpen} kind="drawer"><IssuesDrawer /></AnimatedPresence>
+      <AnimatedPresence open={st.compareOpen}><CompareModal /></AnimatedPresence>
+      <AnalysisPanel section={analysisSection ?? 'performance'} isOpen={analysisSection !== null} onClose={() => setAnalysisSection(null)} onCaptureViewport={captureReportViewport} />
+      <AnimatedPresence open={st.settingsOpen}><SettingsModal /></AnimatedPresence>
+      <AnimatedPresence open={st.benchmarkOpen}><BenchmarkModal /></AnimatedPresence>
       <Toast message={st.toast} onClose={() => st.showToast('')} />
     </div>
   );

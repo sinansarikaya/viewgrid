@@ -37,7 +37,7 @@ export const siteConfig = {
     tagline: 'Test every breakpoint at once.',
     subheading: 'View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction. Stop resizing your browser.',
     description: 'ViewGrid is a developer-focused browser extension for Chrome and Firefox that provides a multi-viewport responsive testing workspace. Render phone, tablet, and desktop layouts side-by-side, synchronize scrolling and click interactions, compare breakpoints with split and optical curtain diff sliders, overlay Figma mockups, and automatically unblock X-Frame-Options and CSP headers for sub_frames.',
-    version: '1.0.3',
+    version: '1.0.4',
     canonicalUrl: 'https://viewgrid.sinansarikaya.dev',
     repositoryUrl: 'https://github.com/sinansarikaya/viewgrid',
     issuesUrl: 'https://github.com/sinansarikaya/viewgrid/issues',
@@ -71,6 +71,14 @@ export const siteConfig = {
   ],
 
   features: [
+    {
+      id: 'local-analysis',
+      title: 'On-demand Local Analysis',
+      tagline: 'Performance observations, SEO, accessibility & GEO',
+      description: 'The packaged engine scans the selected mobile or desktop preview locally, without an API key or extra installation. Review browser navigation and FCP observations plus limited DOM checks; copy or download a scoped Markdown report. Results survive dialog closure during the session and are marked stale after page or viewport changes. No Lighthouse scores, CrUX field data, full accessibility certification or AI visibility guarantees.',
+      icon: '🔎',
+      highlight: 'No external analysis service',
+    },
     {
       id: 'multi-viewport',
       title: 'Simultaneous Viewports',
@@ -147,7 +155,7 @@ export const siteConfig = {
       id: 'local-privacy',
       title: '100% Local & Zero Telemetry',
       tagline: 'No analytics, no cloud, no tracking',
-      description: 'ViewGrid executes entirely within your browser. No external API calls, no third-party CDNs, and zero data collection. Ideal for confidential client work and internal staging environments.',
+      description: 'ViewGrid executes entirely within your browser. The analysis engine sends no data to external analysis APIs or telemetry services. Preferences are stored locally and reports remain in the workspace session. Previewed websites make their own network requests; review report contents before sharing.',
       icon: '🔒',
       highlight: 'Completely private',
     },
@@ -215,7 +223,7 @@ export const siteConfig = {
     },
     {
       question: 'Does ViewGrid collect any personal data or send telemetry?',
-      answer: 'No. ViewGrid collects zero personal data, maintains zero analytics beacons, and makes zero remote API requests. Everything runs client-side in your local browser sandbox.',
+      answer: 'No. ViewGrid sends no telemetry or analysis data to external services. Preferences are stored locally, and reports remain in the workspace session. Previewed sites make their own network requests.',
     },
     {
       question: 'How does interaction synchronization work without getting stuck in loops?',
