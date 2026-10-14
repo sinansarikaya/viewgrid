@@ -8,8 +8,9 @@ export function Support() {
 
   return (
     <div className="site-root">
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <Header currentPath="/support/" />
-      <main className="support-main">
+      <main id="main-content" tabIndex={-1} className="support-main">
         <div className="container support-container">
           <div className="section-header">
             <span className="section-tag">COMMUNITY & ASSISTANCE</span>
@@ -24,7 +25,7 @@ export function Support() {
             {/* Channel 1: Bug Report */}
             <div className="support-card">
               <span className="support-icon">🐛</span>
-              <h3>Bug Reports</h3>
+              <h2>Bug Reports</h2>
               <p>
                 Found unexpected behavior or a website framing issue? Open an issue with steps to reproduce on our official GitHub tracker.
               </p>
@@ -41,7 +42,7 @@ export function Support() {
             {/* Channel 2: Feature Request */}
             <div className="support-card">
               <span className="support-icon">💡</span>
-              <h3>Feature Requests</h3>
+              <h2>Feature Requests</h2>
               <p>
                 Have ideas for custom device profiles, new compare modes, or developer workflow enhancements? Let us know in discussions.
               </p>
@@ -58,7 +59,7 @@ export function Support() {
             {/* Channel 3: Documentation */}
             <div className="support-card">
               <span className="support-icon">📖</span>
-              <h3>Technical Docs</h3>
+              <h2>Technical Docs</h2>
               <p>
                 Explore detailed guides on manual installation, keyboard shortcuts, header relaxation troubleshooting, and synchronization.
               </p>
@@ -73,28 +74,28 @@ export function Support() {
             <h2 className="ts-title">Common Troubleshooting Tips</h2>
 
             <div className="ts-item">
-              <h4>1. Why is an iframe showing "Refused to connect" or a blank screen?</h4>
+              <h3>1. Why is an iframe showing "Refused to connect" or a blank screen?</h3>
               <p>
                 Certain high-security websites (e.g. banking portals or Google login pages) explicitly prohibit framing or require full cookie authentication. While ViewGrid automatically strips <code>X-Frame-Options</code> and <code>CSP: frame-ancestors</code> for sub_frames, sites requiring top-level navigation must be tested in a dedicated window.
               </p>
             </div>
 
             <div className="ts-item">
-              <h4>2. How do I test local development servers like Vite, Next.js, or Webpack?</h4>
+              <h3>2. How do I test local development servers like Vite, Next.js, or Webpack?</h3>
               <p>
                 Simply type your local URL (e.g. <code>http://localhost:5173</code> or <code>http://127.0.0.1:3000</code>) into ViewGrid's top address bar. Because ViewGrid runs locally as a native browser extension, it has direct access to your local loopback interfaces with zero proxy lag.
               </p>
             </div>
 
             <div className="ts-item">
-              <h4>3. How do I temporarily test without device frames?</h4>
+              <h3>3. How do I temporarily test without device frames?</h3>
               <p>
                 Click the <strong>▣ Frames</strong> button in the workspace toolbar or press <strong>F</strong> on your keyboard to toggle between authentic hardware bezels and clean borderless cards for maximum screen density.
               </p>
             </div>
 
             <div className="ts-item">
-              <h4>4. Need direct assistance?</h4>
+              <h3>4. Need direct assistance?</h3>
               <p>
                 You can reach the author directly at{' '}
                 <a href="https://sinansarikaya.dev" target="_blank" rel="noopener noreferrer">
@@ -141,7 +142,7 @@ export function Support() {
         .support-icon {
           font-size: 28px;
         }
-        .support-card h3 {
+        .support-card h2 {
           font-size: 18px;
           font-weight: 700;
           color: #ffffff;
@@ -174,7 +175,7 @@ export function Support() {
           padding-bottom: 16px;
           border-bottom: 1px solid var(--border-dim);
         }
-        .ts-item h4 {
+        .ts-item h3 {
           font-size: 15px;
           font-weight: 700;
           color: var(--accent-cyan);

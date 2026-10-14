@@ -69,6 +69,7 @@ export function Header({ currentPath = '/' }: HeaderProps) {
             className="mobile-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
             aria-label="Toggle navigation menu"
           >
             <span className={`hamburger-bar ${mobileMenuOpen ? 'open' : ''}`} />
@@ -78,7 +79,7 @@ export function Header({ currentPath = '/' }: HeaderProps) {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="nav-mobile-dropdown">
+        <nav id="mobile-navigation" className="nav-mobile-dropdown" aria-label="Mobile navigation">
           <div className="container mobile-links">
             {siteConfig.navigation.map((item) => (
               <a
@@ -110,7 +111,7 @@ export function Header({ currentPath = '/' }: HeaderProps) {
               </a>
             </div>
           </div>
-        </div>
+        </nav>
       )}
 
       <style>{`

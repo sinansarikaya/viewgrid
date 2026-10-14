@@ -37,7 +37,7 @@ export function Footer() {
 
           {/* Navigation Links */}
           <div className="footer-col">
-            <h4 className="footer-col-title">Product</h4>
+            <h2 className="footer-col-title">Product</h2>
             <ul className="footer-links">
               <li><a href="/#features">Features</a></li>
               <li><a href="/#how-it-works">How It Works</a></li>
@@ -49,7 +49,7 @@ export function Footer() {
 
           {/* Docs & Legal */}
           <div className="footer-col">
-            <h4 className="footer-col-title">Resources & Legal</h4>
+            <h2 className="footer-col-title">Resources & Legal</h2>
             <ul className="footer-links">
               <li><a href="/docs/">Documentation</a></li>
               <li><a href="/changelog/">Changelog</a></li>
@@ -77,7 +77,7 @@ export function Footer() {
 
           {/* Browser Stores */}
           <div className="footer-col">
-            <h4 className="footer-col-title">Get ViewGrid</h4>
+            <h2 className="footer-col-title">Get ViewGrid</h2>
             <ul className="footer-links">
               <li>
                 {storeLinks.chrome ? (

@@ -1,0 +1,17 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:06.000
+Open the website you choose in ViewGrid. Compare phone, tablet, laptop and desktop widths in one workspace.
+
+00:00:06.000 --> 00:00:12.000
+Use comparison tools to inspect the same page at different widths. Design overlays accept exported PNG or SVG files; no Figma API connection is required.
+
+00:00:12.000 --> 00:00:18.000
+Run mobile and desktop loading observations locally. Available browser timings are shown; no Lighthouse or real-user Core Web Vitals score is produced.
+
+00:00:18.000 --> 00:00:24.000
+Review DOM-based SEO and selected axe accessibility checks. Automatic results are limited; uncertain findings and content quality need human review.
+
+00:00:24.000 --> 00:00:30.000
+Copy or download a Markdown report for each section. Local analysis history keeps up to 20 records; the user controls exported files.
+

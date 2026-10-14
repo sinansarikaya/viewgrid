@@ -1,0 +1,17 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:06.000
+Åpne nettstedet du velger i ViewGrid. Sammenlign mobil, nettbrett, bærbar og stasjonær skjerm i ett arbeidsområde.
+
+00:00:06.000 --> 00:00:12.000
+Sammenlign samme side i ulike bredder. Designlag bruker eksporterte PNG- eller SVG-filer; ingen tilkobling til Figma API kreves.
+
+00:00:12.000 --> 00:00:18.000
+Kjør lokale innlastingsobservasjoner for mobil og datamaskin. Tilgjengelige nettlesertider vises; ingen Lighthouse- eller Core Web Vitals-poeng fra virkelige brukere produseres.
+
+00:00:18.000 --> 00:00:24.000
+Se DOM-baserte SEO-sjekker og utvalgte axe-tilgjengelighetssjekker. Automatiske resultater er begrenset; usikre funn og innholdskvalitet krever menneskelig vurdering.
+
+00:00:24.000 --> 00:00:30.000
+Kopier eller last ned en egen Markdown-rapport for hver del. Lokal analysehistorikk lagrer opptil 20 oppføringer; eksporterte filer er under din kontroll.
+

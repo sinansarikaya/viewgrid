@@ -81,6 +81,9 @@ jobs:
       - name: Build Marketing Website (Vite)
         run: pnpm run build:website
 
+      - name: Verify static website discovery
+        run: node scripts/verify-site-discovery.mjs
+
       - name: Verify website video languages and changelog
         if: runner.environment == 'self-hosted'
         run: node scripts/check-website.mjs

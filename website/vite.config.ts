@@ -1,3 +1,4 @@
+import { generateDiscovery } from '../scripts/generate-discovery.mjs';
 import { generateChangelog } from '../scripts/generate-changelog.mjs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -10,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: __dirname,
-  plugins: [react()],
+  plugins: [react(), { name: 'viewgrid-discovery', apply: 'build', async closeBundle() { await generateDiscovery(path.resolve(__dirname, 'dist')); } }],
   publicDir: path.resolve(__dirname, 'public'),
   build: {
     outDir: path.resolve(__dirname, 'dist'),

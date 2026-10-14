@@ -1,0 +1,17 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:06.000
+Seçtiğiniz siteyi ViewGrid’de açın. Telefon, tablet, dizüstü ve masaüstü genişliklerini aynı çalışma alanında karşılaştırın.
+
+00:00:06.000 --> 00:00:12.000
+Aynı sayfayı farklı genişliklerde karşılaştırın. Tasarım katmanında dışa aktarılan PNG veya SVG dosyaları kullanılır; Figma API bağlantısı gerekmez.
+
+00:00:12.000 --> 00:00:18.000
+Mobil ve masaüstü yükleme gözlemlerini yerel çalıştırın. Tarayıcıda mevcut süreler gösterilir; Lighthouse veya gerçek kullanıcı Core Web Vitals puanı üretilmez.
+
+00:00:18.000 --> 00:00:24.000
+DOM tabanlı SEO ve seçili axe erişilebilirlik kontrollerini inceleyin. Otomatik kapsam sınırlıdır; belirsiz bulgular ve içerik kalitesi insan incelemesi gerektirir.
+
+00:00:24.000 --> 00:00:30.000
+Her bölümün Markdown raporunu ayrı kopyalayın veya indirin. Yerel analiz geçmişi en fazla 20 kayıt saklar; dışa aktarılan dosyalar sizin kontrolünüzdedir.
+

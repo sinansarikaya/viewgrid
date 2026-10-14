@@ -9,8 +9,9 @@ export function Docs() {
 
   return (
     <div className="site-root">
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <Header currentPath="/docs/" />
-      <main className="docs-main">
+      <main id="main-content" tabIndex={-1} className="docs-main">
         <div className="container docs-container">
           {/* Docs Sidebar */}
           <aside className="docs-sidebar" aria-label="Documentation Sidebar">
@@ -164,15 +165,15 @@ export function Docs() {
               </p>
               <div className="compare-mode-cards">
                 <div className="mode-card">
-                  <h4>⫴ Dual-Split Slider</h4>
+                  <h3>⫴ Dual-Split Slider</h3>
                   <p>Displays both devices side-by-side with an interactive draggable divider handle. Easily test how flexible containers behave.</p>
                 </div>
                 <div className="mode-card">
-                  <h4>▥ Overlay Curtain Diff</h4>
+                  <h3>▥ Overlay Curtain Diff</h3>
                   <p>Overlays Device B directly on top of Device A with a vertical reveal curtain. Spot subtle padding shifts and font size discrepancies immediately.</p>
                 </div>
                 <div className="mode-card">
-                  <h4>⫿ Side-by-Side Dual View</h4>
+                  <h3>⫿ Side-by-Side Dual View</h3>
                   <p>Comfortable dual view designed for deep comparative inspection across wide desktop monitors.</p>
                 </div>
               </div>
@@ -386,7 +387,7 @@ Content-Security-Policy: frame-ancestors 'none'</code>
           flex-direction: column;
           gap: 8px;
         }
-        .mode-card h4 {
+        .mode-card h3 {
           font-size: 14px;
           font-weight: 700;
           color: var(--accent-cyan);

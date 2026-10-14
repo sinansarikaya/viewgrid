@@ -1,4 +1,4 @@
-/* global document, window, clearInterval, setInterval, setTimeout, MutationObserver */
+/* global document, window, clearInterval, setTimeout, MutationObserver */
 const showcaseData = [
   {
     "id": "workspace",
@@ -108,12 +108,9 @@ const showcaseData = [
 ];
     let currentShowcaseIndex = 0;
     let showcaseAutoTimer = null;
-    let showcasePaused = false;
-    let showcaseUserInteracted = false;
 
     function selectShowcaseTab(idx) {
       currentShowcaseIndex = idx;
-      showcaseUserInteracted = true;
       renderShowcase();
     }
 
@@ -139,6 +136,7 @@ const showcaseData = [
       const fallbackBadge = document.getElementById('fallback-badge');
 
       if (caption) caption.innerText = item.caption;
+      document.getElementById('showcase-panel')?.setAttribute('aria-labelledby', `tab-${item.id}`);
       if (desc) desc.innerText = item.desc;
       if (urlText) urlText.innerText = 'https://castpost.app/en';
       if (fallbackTitle) fallbackTitle.innerText = `Screenshot: ${item.title}`;
@@ -165,18 +163,10 @@ const showcaseData = [
       if (fallback) { fallback.hidden = false; fallback.classList.add('gallery-fallback-visible'); }
     }
 
-    function startShowcaseTimer() {
-      if (showcaseAutoTimer) clearInterval(showcaseAutoTimer);
-      showcaseAutoTimer = setInterval(() => {
-        if (!showcasePaused && !showcaseUserInteracted) {
-          currentShowcaseIndex = (currentShowcaseIndex + 1) % showcaseData.length;
-          renderShowcase();
-        }
-      }, 6000);
-    }
+    function startShowcaseTimer() { if (showcaseAutoTimer) clearInterval(showcaseAutoTimer); }
 
-    function pauseShowcase() { showcasePaused = true; }
-    function resumeShowcase() { showcasePaused = false; }
+    function pauseShowcase() {}
+    function resumeShowcase() {}
 
     function openLightbox() {
       const entry = showcaseData[currentShowcaseIndex];
@@ -187,6 +177,7 @@ const showcaseData = [
 
       if (modal && lbImg && item) {
         lbImg.src = item.src;
+        lbImg.alt = item.caption;
         if (lbCap) lbCap.innerText = `${item.title} — ${item.caption}`;
         modal.classList.add('active');
       }
