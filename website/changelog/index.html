@@ -130,6 +130,9 @@
       outline: 2px solid var(--accent);
     }
 
+    .gallery-loading { opacity: 0; transform: scale(.98); }
+    .gallery-fallback-visible { display: flex !important; }
+    [hidden] { display: none !important; }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.001ms !important;
@@ -2321,7 +2324,8 @@
             <li><a href="https://github.com/sinansarikaya/viewgrid" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
             <li><a href="https://github.com/sponsors/sinansarikaya" target="_blank" rel="noopener noreferrer" style="color: var(--accent); font-weight: 600;">💖 GitHub Sponsors</a></li>
             <li><a href="/privacy/" data-i18n="navPrivacy">Privacy Policy</a></li>
-            <li><a href="mailto:contact@sinansarikaya.dev">Contact Maker</a></li>
+            <li><a href="mailto:contact@sinansarikaya.dev">contact@sinansarikaya.dev</a></li>
+            <li><a href="mailto:security@sinansarikaya.dev">security@sinansarikaya.dev</a></li>
           </ul>
         </div>
       </div>

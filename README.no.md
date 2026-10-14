@@ -51,3 +51,5 @@ pnpm run package:release
 [Utgivelsesnotater](docs/RELEASE_NOTES_1.0.4.md) · [Endringslogg](CHANGELOG.md) · [Personvern](docs/PRIVACY.md) · [Sikkerhet](SECURITY.md) · [Testing](docs/TESTING.md) · [MIT-lisens](LICENSE)
 
 [Sinan Sarıkaya](https://github.com/sinansarikaya) · [Støtt prosjektet](https://github.com/sponsors/sinansarikaya)
+
+[contact@sinansarikaya.dev](mailto:contact@sinansarikaya.dev) · [security@sinansarikaya.dev](mailto:security@sinansarikaya.dev)

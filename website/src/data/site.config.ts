@@ -163,46 +163,46 @@ export const siteConfig = {
 
   screenshots: [
     {
-      id: 'workspace',
-      title: 'Multi-Viewport Matrix & Column Alignment',
-      tagline: 'Simultaneous responsive grid canvas',
-      description: 'Live testing across iPhone 15 Pro, iPad Air, Laptop 1280, and Desktop 1080p with pixel-aligned columns, freeform magnetic snap guides, and synchronized interactions.',
-      badge: 'MATRIX GRID',
-      file: '/screenshots/workspace.png',
+        "id": "workspace",
+        "title": "Workspace",
+        "tagline": "CastPost on four device sizes in one workspace.",
+        "description": "ViewGrid 1.0.4 \u2014 castpost.app/en",
+        "badge": "WORKSPACE",
+        "file": "/screenshots/workspace.png"
     },
     {
-      id: 'light-mode',
-      title: 'Light Theme & Synchronized Scroll',
-      tagline: 'Clean pastel aesthetic with fast scroll sync',
-      description: 'Switch seamlessly between Dark and Light mode. Mirror scrolling, clicks, and navigation across all devices without feedback loops.',
-      badge: 'LIGHT MODE',
-      file: '/screenshots/light-mode.png',
+        "id": "compare",
+        "title": "Compare",
+        "tagline": "Compare the same page at mobile and desktop widths.",
+        "description": "ViewGrid 1.0.4 \u2014 castpost.app/en",
+        "badge": "COMPARE",
+        "file": "/screenshots/compare.png"
     },
     {
-      id: 'compare',
-      title: 'Visual Comparison Engine (Dual Split)',
-      tagline: 'Pixel-diff slider & breakpoint inspector',
-      description: 'Inspect layout differences between any two viewports using interactive Dual-Split slider, Overlay Curtain, Side-by-Side diff, or Figma Mockup overlay.',
-      badge: 'COMPARE DIFF',
-      file: '/screenshots/compare.png',
+        "id": "local-analysis",
+        "title": "Local Performance",
+        "tagline": "Local loading observations for mobile and desktop.",
+        "description": "ViewGrid 1.0.4 \u2014 castpost.app/en",
+        "badge": "LOCAL PERFORMANCE",
+        "file": "/screenshots/local-analysis.png"
     },
     {
-      id: 'benchmark',
-      title: 'Native browser runtime',
-      tagline: 'Native browser engine execution',
-      description: 'ViewGrid runs inside Chromium and Firefox. Memory and latency depend on page content, viewport count and hardware.',
-      badge: 'Local runtime',
-      file: '/screenshots/benchmark.png',
+        "id": "seo-accessibility",
+        "title": "SEO & Accessibility",
+        "tagline": "SEO and accessibility checks with clear result states.",
+        "description": "ViewGrid 1.0.4 \u2014 castpost.app/en",
+        "badge": "SEO & ACCESSIBILITY",
+        "file": "/screenshots/seo-accessibility.png"
     },
     {
-      id: 'audit',
-      title: 'Responsive Inspector & Sync Control',
-      tagline: 'Automatic DOM scanner & granular sync',
-      description: 'Detect small tap targets, text clipping, and page overflows across viewports. Granularly toggle scroll, click, navigation, reload, and input sync.',
-      badge: 'INSPECTOR',
-      file: '/screenshots/audit.png',
-    },
-  ] as ScreenshotItem[],
+        "id": "reports",
+        "title": "Reports",
+        "tagline": "Local history and section-specific Markdown reports.",
+        "description": "ViewGrid 1.0.4 \u2014 castpost.app/en",
+        "badge": "REPORTS",
+        "file": "/screenshots/reports.png"
+    }
+] as ScreenshotItem[],
 
   faqs: [
     {

@@ -54,6 +54,8 @@ export function Footer() {
               <li><a href="/docs/">Documentation</a></li>
               <li><a href="/changelog/">Changelog</a></li>
               <li><a href="/support/">Support & Bug Reports</a></li>
+              <li><a href="mailto:contact@sinansarikaya.dev">contact@sinansarikaya.dev</a></li>
+              <li><a href="mailto:security@sinansarikaya.dev">security@sinansarikaya.dev</a></li>
               <li><a href="/privacy/">Privacy Policy</a></li>
               <li>
                 <a href={product.repositoryUrl} target="_blank" rel="noopener noreferrer">

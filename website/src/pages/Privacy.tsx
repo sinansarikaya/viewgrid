@@ -114,6 +114,8 @@ export function Privacy() {
               </p>
               <p>
                 <strong>Maintainer:</strong> Sinan Sarıkaya<br />
+                <strong>Contact:</strong> <a href="mailto:contact@sinansarikaya.dev">contact@sinansarikaya.dev</a><br />
+                <strong>Security:</strong> <a href="mailto:security@sinansarikaya.dev">security@sinansarikaya.dev</a><br />
                 <strong>Website:</strong> <a href="https://sinansarikaya.dev" target="_blank" rel="noopener noreferrer">https://sinansarikaya.dev</a><br />
                 <strong>GitHub Issues:</strong> <a href="https://github.com/sinansarikaya/viewgrid/issues" target="_blank" rel="noopener noreferrer">https://github.com/sinansarikaya/viewgrid/issues</a>
               </p>
