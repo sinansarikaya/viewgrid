@@ -1,6 +1,6 @@
 # TASKS — ViewGrid Product Promotion & Distribution Plan
 
-_Son güncelleme: 2026-10-12 | Codex_
+_Son güncelleme: 2026-10-14 | Codex_
 
 > Bu dosya projenin ana master görev ve uygulama takip listesidir.
 > Eski `TASK.md` ve `TASKS.md` birleştirilerek bu dosyada toplanmıştır.
@@ -20,20 +20,24 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - **Primary:** "Test every breakpoint at once."
 - **Supporting:** "View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction."
 - **Slogan:** "Stop resizing your browser."
-- **Current Version:** `v1.0.1` on BOTH Chrome and Firefox.
+- **Yerel geliştirme paketi:** `v1.0.4` — mağaza sürümü bu oturumda doğrulanmadı.
 
 ---
 
 ## In Progress
 
+- [~] [AUTO] INTERACTION-SCAN-FIX: altı güncel referans; tarama/PSI429/izin/state ayrımı, tooltip hit-area, gerçek checkbox tasarımı, kart reorder/drop/FLIP ve reduced motion. Başlangıç088c1df, output/ korunur; lider+uzman+Flash ortak en fazla3, test ve kaynak sahipliği ayrı.
 
 
 
-- [~] [AUTO] ViewGrid 1.0.4–1.6.0 BETA geliştirme: yeni shell/cihaz/analiz/rapor/GEO ve kontrollü testler entegre; koruma matrisi ve katalog kaynak kapıları açık. Paket1.0.3, mağaza doğrulanmadı; plan/kanıt/devir `docs/IMPLEMENTATION_PLAN.md`, `docs/FEATURE_TEST_MATRIX.md`, `docs/TEAM_HANDOFF.md`.
+
+- [~] [AUTO] ViewGrid 1.0.4–1.6.0 BETA geliştirme: yeni shell/cihaz/analiz/rapor/GEO ve kontrollü testler entegre; koruma matrisi ve katalog kaynak kapıları açık. Yerel paket1.0.4, mağaza doğrulanmadı; plan/kanıt/devir `docs/IMPLEMENTATION_PLAN.md`, `docs/FEATURE_TEST_MATRIX.md`, `docs/TEAM_HANDOFF.md`.
 
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+
+- [x] LOCAL-ANALYSIS: ViewGrid 1.0.4 yerel DOM/SEO/GEO + paketlenen axe ve gerçek yükleme gözlemleri, URL/profil/izin/iptal/sınırlar, eski geçmiş/rapor ayrımı ve yumuşak modal/menü/panel geçişleri tamamlandı. 332 unit, type/lint, iki build; Chromium 24 headed test ve Firefox yerel akışı geçti, bir isteğe bağlı canlı test atlandı. Dış analiz isteği yok; bağımsız inceleme bulguları kapandı. Firefox lint 0 hata/13 axe uyarısı; yerel ZIP hazır. Kanıt: `docs/LOCAL_ANALYSIS_VALIDATION.md`, `test-results/local-analysis/`. _(2026-10-14, Codex)_
 
 - [x] [AUTO] ICON-GRID-POLISH: ortak yerel SVG ikon/hover-focus-Escape tooltip, kompakt kart başlığı, ölçülmüş gridFit ve geçici ölçek/manualzoom ayrımı uygulandı.269unit,lint/typecheck,iki build/web-ext0error;Chromium32pass1isteğe bağlıskip ve headed6zoom;Firefoxheadedbaseline/click/6zoom/4layout geçti. Kanıt: docs/FEATURE_TEST_MATRIX.md ICON-GRID. Flash600s timeout + headless izin reddinden sonra lider devraldı, bypass yok. İki yeni referans eki görünmedi, önceki ekler ve yeni ölçümler kullanıldı; canlıGoogle/gerçekcihaz/Safari ve tüm serbestkonumFit kombinasyonları doğrulanmış sayılmaz. Sürüm1.0.3, push/yayın yok.
 
@@ -52,6 +56,7 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - [x] [AUTO] Firefox gerçek eklentide kontrollü PSI200/429 native BiDi ile geçti; dış Google trafiğine kapalı bağımsız test. `test-results/development/firefox-bidi-latest.log`. _(2026-10-11, Codex)_
 
 ## Todo
+
 
 - [ ] [AUTO] Kalan koruma senaryoları ve model bazlı katalog kaynak doğrulaması; canlı PSI429/CrUXanahtar eksikliği engelleri ayrı kalır.
 
@@ -251,6 +256,15 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 
 ## 📝 Historical Notes & Decisions (Preserved from TASKS.md)
 
+- **2026-10-14 tamamlanma:** Yeni analiz arayüzünde Google/CrUX isteği, ek kurulum veya tekrar ölçüm onayı yoktur. Lighthouse/DAST/crawl bulunmaz; yerel gözlemler ve sınırlı kurallar açıkça etiketlenir. Eski iki uzak UI E2E paketi `tests/legacy/` içinde saklandı, eski PSI normalizasyon/rapor unit testleri aktiftir. `output/` ve önceki kirli kaynak değişiklikleri korundu.
+- **2026-10-14 ekip doğrulaması:** Gemini izin engeli ve işçi pnpm salt-okunur hatası eski görev kayıtlarında korunur; lider UI/entegrasyon ve gerçek kontrolleri tamamladı. Codex bağımsız incelemesindeki dört bulgu kapandı ve `local-review-closure` kabul edildi. Çalıştırıcıda yalnız kaynak dizini okuma ve sözleşmede açıkça izinli kural kanıtı kapsamı düzeltildi; sandbox/başka kaynak kanıtı sınırı korunur.
+
+- **2026-10-14 geliştirme onayı:** Önceki görev başlatmama sınırı kullanıcı tarafından kaldırıldı. Eklenti içine paketlenen yerel motor seçildi; Google/CrUX servisi kullanılmayacak, ek kurulum zorunlu olmayacak. Tam Lighthouse/DAST ve site geneli crawl bu ilk motorun parçası değildir; yerel ölçümler ve sınırlı otomatik kontroller açıkça etiketlenecek.
+
+- **2026-10-14 hazırlık ve çalışma sınırı:** Kullanıcı yalnız ekip hazırlığı ve ürün görüşmesi istedi; yeni görev sözleşmesi/ajan/tarama/geliştirme/yayın başlatılmayacak. Mevcut kirli çalışma ağacı korunacak.
+- **2026-10-14 geçici ekip:** Claude kotası dolu; rutin roller Gemini `gemini-3.8-flash-medium`, güvenlik/bağımsız inceleme/zor mimari rolleri geçici Codex `gpt-6.1-sol`. Global routing.json içindeki Opus rol/escalation yönlendirmeleri Codex'e çevrildi; geri dönüş yedeği `/home/sinan/.local/share/ai-team/config/routing.pre-claude-pause-2026-10-14.json`. Claude sağlayıcı tanımı gelecekte geri dönmek için korunur; eski açık sözleşmeler otomatik yeniden yazılmaz/çalıştırılmaz.
+- **2026-10-14 ürün görüşmesi:** Analiz servis bağımsızlığı ve uygulama genelinde yumuşak geçişler isteniyor. Aynı Panel/Sorunlar düğmesi aç/kapat davranışı göstermeli. Yerel laboratuvar ölçümü CrUX gerçek kullanıcı verisi olarak sunulmayacak; mimari kararı kullanıcıyla görüşülecek.
+
 - **2026-10-11 ekip/model tercihi:** Codex `gpt-6.1-sol`, Antigravity seçimi `Gemini 3.8 Flash (Medium)` korunur. Antigravity'nin gerçek backend model kimliği doğrulanamadı; seçili etiket kullanım kanıtı değildir ve geliştirmeyi engellemez. Codex görev seviyeleri: rutin koordinasyon low/medium, normal geliştirme medium, mimari ve karmaşık hata teşhisi high. Kurulu CLI `-c model_reasoning_effort=...` override mekanizmasını, yerel model metadatası low/medium/high değerlerini destekliyor. Mevcut lider oturumunun seviyesini buradan değiştiren araç yok; varsayılan low korunuyor. Yeni uzman alt ajanlarda desteklenen reasoning_effort seçimi görev başında uygulanır; değiştirme veya gerçek kullanım doğrulanamazsa açıkça raporlanır. Lider + çalışan Codex alt ajanları + çalışan Antigravity yürütücüleri (varsa onun alt ajanları da) toplam en fazla 3; tamamlanan/kapanan oturumlar sayılmaz. Tam geliştirme görevi, sürüm planı ve referans görseli bekleniyor.
 
 - **2026-10-11 araç hazırlığı:** Antigravity Playwright `--isolated` kullanır; Codex kendi MCP oturumunu, E2E ayrı geçici profili yönetir. Aynı tarayıcıyı iki yürütücü yönetmez. Graph binary `/usr/bin/codebase-memory-mcp`; Codex canlı oturumunda araçlar yeniden yüklenene kadar yerel graph CLI kullanılabilir. Tam rapor `test-results/tool-readiness/READINESS.md`. Ürün kapsamı/sürüm/tasarım bekleniyor; kod veya lockfile değiştirilmedi.
@@ -267,4 +281,10 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 
 <!-- AI-TEAM-TASKS-START -->
 ## AI Team Tasks
+
+### Görev: local-review-closure — Bağımsız bulgu kapanışı
+- Durum: Tamamlandı, lider kabul etti.
+- Sağlayıcı: Codex `gpt-6.1-sol`; salt okunur inceleme.
+- Sonuç: Dört somut bulgu kapalı, açık bulgu yok.
+- Kanıt: `.ai-team/tasks/local-review-closure/result.json`, `leader-review.json`, `test-results/local-analysis/`.
 <!-- AI-TEAM-TASKS-END -->
