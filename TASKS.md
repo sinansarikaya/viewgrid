@@ -30,6 +30,8 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 
 
 
+
+
 - [~] [AUTO] INTERACTION-SCAN-FIX: altı güncel referans; tarama/PSI429/izin/state ayrımı, tooltip hit-area, gerçek checkbox tasarımı, kart reorder/drop/FLIP ve reduced motion. Başlangıç088c1df, output/ korunur; lider+uzman+Flash ortak en fazla3, test ve kaynak sahipliği ayrı.
 
 
@@ -37,9 +39,13 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 
 - [~] [AUTO] ViewGrid 1.0.4–1.6.0 BETA geliştirme: yeni shell/cihaz/analiz/rapor/GEO ve kontrollü testler entegre; koruma matrisi ve katalog kaynak kapıları açık. Yerel paket1.0.4, mağaza doğrulanmadı; plan/kanıt/devir `docs/IMPLEMENTATION_PLAN.md`, `docs/FEATURE_TEST_MATRIX.md`, `docs/TEAM_HANDOFF.md`.
 
+- [ ] [AUTO] RELEASE-GATE: güncel çalışma ağacı için gerekli yayın auditleri, Firefox13 paket uyarısının kaynak değerlendirmesi, kurulum/yükseltme ve izin/gizlilik kontrolleri; kanıt `docs/ANALYSIS_MODAL_REVIEW.md`.
+
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+
+- [x] REPORT-FEEDBACK: rapora özel yeşil/kısa/animasyonlu kopya ve indirme geri bildirimi, gecikmiş işlem koruması, ortak profil kartları, belirsiz sonuç filtresi, insan dilinde GEO ve gerçek geçen kontrol metni; toplamda türetilmiş aynı bulgu tekrar sayılmaz.358 unit, lint/type/build; Chromium25 + Firefox görünür akış ve CastPost50+18 karşılaştırması geçti.1.0.3 korundu, tam yayın onayı verilmedi. Kanıt `docs/ANALYSIS_MODAL_REVIEW.md`. _(2026-10-14, Codex)_
 
 - [x] ANALYSIS-PRESENTATION: tek tarama kapsamı açık, bölüm özeti/renkli sekme ve menü durumları, ayrı MD indirme/kopyalama, modalda sonuç koruma/URL geçerliliği, merkez zoom ve dış tık/Escape ile kapanan üst katman menüsü hazır.351unit/lint/type/build; görünür Chromium/Firefox cache ve UI akışları, CastPost50+18 karşılaştırması geçti. Yayın yok,1.0.3 korundu. Kanıt `docs/REPORT_UX_VALIDATION.md`. _(2026-10-14, Codex)_
 
