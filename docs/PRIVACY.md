@@ -31,4 +31,4 @@ Before loading a preview, ViewGrid waits for tab-scoped framing rules and remove
 
 Delete saved workspaces through the workspace menu; uninstalling the extension clears its browser-managed extension storage. Exported downloads and clipboard contents are under your control and are not removed by uninstalling.
 
-Questions: [GitHub issues](https://github.com/sinansarikaya/viewgrid/issues).
+Questions: [contact@sinansarikaya.dev](mailto:contact@sinansarikaya.dev). Security reports: [security@sinansarikaya.dev](mailto:security@sinansarikaya.dev).

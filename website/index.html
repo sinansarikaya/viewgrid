@@ -146,6 +146,8 @@
       outline: 2px solid var(--accent);
     }
 
+    .gallery-loading { opacity: 0; transform: scale(.98); }
+    [hidden] { display: none !important; }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.001ms !important;
@@ -2385,7 +2387,7 @@
               <span class="tour-frame-url">viewgrid://workspace &bull; live view</span>
             </div>
             <div class="tour-aspect-stage">
-              <img src="/screenshots/hero.png" alt="ViewGrid Workspace" class="tour-screenshot-img" id="hero-screenshot-img" onerror="onHeroImgError()" onload="onHeroImgLoaded()" />
+              <img src="/screenshots/hero.png" alt="ViewGrid Workspace" class="tour-screenshot-img" id="hero-screenshot-img" />
             </div>
             <div class="tour-frame-meta" style="border-top: 1px solid var(--border); padding: 12px 18px; font-size: 0.82rem; color: var(--text-muted);">
               ViewGrid Workspace &bull; Click to open lightbox
@@ -2598,13 +2600,14 @@
             </a>
           </div>
 
-          <!-- 4 Data-Driven Tabs -->
-          <div class="tour-tabs-bar" role="tablist">
-            <button type="button" class="tour-tab-btn active" id="tab-workspace" onclick="selectShowcaseTab(0)">Workspace</button>
-            <button type="button" class="tour-tab-btn" id="tab-compare" onclick="selectShowcaseTab(1)">Compare Diff</button>
-            <button type="button" class="tour-tab-btn" id="tab-device-frames" onclick="selectShowcaseTab(2)">Device Frames</button>
-            <button type="button" class="tour-tab-btn" id="tab-inspector" onclick="selectShowcaseTab(3)">Inspector</button>
+          <div class="tour-tabs-bar" role="tablist" aria-label="ViewGrid screenshots">
+            <a href="#showcase-img" role="tab" aria-selected="true" class="tour-tab-btn active" id="tab-workspace" data-showcase-index="0">Workspace</a>
+            <a href="#showcase-img" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-compare" data-showcase-index="1">Compare</a>
+            <a href="#showcase-img" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-local-analysis" data-showcase-index="2">Local Performance</a>
+            <a href="#showcase-img" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-seo-accessibility" data-showcase-index="3">SEO & Accessibility</a>
+            <a href="#showcase-img" role="tab" aria-selected="false" class="tour-tab-btn" id="tab-reports" data-showcase-index="4">Reports</a>
           </div>
+        </div>
         </div>
 
         <!-- 16:10 Framed Showcase -->
@@ -3166,7 +3169,8 @@
             <li><a href="https://github.com/sinansarikaya/viewgrid" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
             <li><a href="https://github.com/sponsors/sinansarikaya" target="_blank" rel="noopener noreferrer" style="color: var(--accent); font-weight: 600;">💖 GitHub Sponsors</a></li>
             <li><a href="/privacy/" data-i18n="navPrivacy">Privacy Policy</a></li>
-            <li><a href="mailto:contact@sinansarikaya.dev">Contact Maker</a></li>
+            <li><a href="mailto:contact@sinansarikaya.dev">contact@sinansarikaya.dev</a></li>
+            <li><a href="mailto:security@sinansarikaya.dev">security@sinansarikaya.dev</a></li>
           </ul>
         </div>
       </div>
@@ -3261,6 +3265,7 @@
   </div>
 
   <!-- Central JavaScript Engine -->
+  <script src="/gallery.js"></script>
   <script>
     /* -------------------------------------------------------------
        1. STORE STATUS & CONFIGURATION
@@ -3916,125 +3921,6 @@
     /* -------------------------------------------------------------
        6. SHOWCASE: DATA-DRIVEN 4 TABS + AUTO-ADVANCE + LIGHTBOX
        ------------------------------------------------------------- */
-    const showcaseData = [
-      {
-        id: 'workspace',
-        title: 'Workspace',
-        caption: 'Multi-device responsive workspace with synchronized scrolling',
-        desc: 'View phone, tablet, and desktop side by side in one tab. Zoom, pan, and rearrange frames freely.',
-        src: '/screenshots/workspace.png'
-      },
-      {
-        id: 'compare',
-        title: 'Compare Diff',
-        caption: 'Optical split-curtain comparison engine',
-        desc: 'Drag a split divider across two breakpoints to instantly reveal misaligned buttons and text wrapping bugs.',
-        src: '/screenshots/compare.png'
-      },
-      {
-        id: 'device-frames',
-        title: 'Device Frames',
-        caption: 'Realistic hardware bezels and user-agent emulation',
-        desc: 'Render with real device bezels and mobile touch characteristics so server-rendered mobile HTML loads properly.',
-        src: '/screenshots/benchmark.png'
-      },
-      {
-        id: 'inspector',
-        title: 'Inspector',
-        caption: 'Responsive breakpoint analysis and quick-switch presets',
-        desc: 'Audit active CSS @media queries across viewports simultaneously without inspecting each element individually.',
-        src: '/screenshots/audit.png'
-      }
-    ];
-
-    let currentShowcaseIndex = 0;
-    let showcaseAutoTimer = null;
-    let showcasePaused = false;
-    let showcaseUserInteracted = false;
-
-    function selectShowcaseTab(idx) {
-      currentShowcaseIndex = idx;
-      showcaseUserInteracted = true;
-      renderShowcase();
-    }
-
-    function renderShowcase() {
-      const item = showcaseData[currentShowcaseIndex];
-      if (!item) return;
-
-      // Update Tab active states
-      document.querySelectorAll('.tour-tab-btn').forEach((btn, idx) => {
-        btn.classList.toggle('active', idx === currentShowcaseIndex);
-      });
-
-      const img = document.getElementById('showcase-img');
-      const fallback = document.getElementById('showcase-fallback');
-      const caption = document.getElementById('showcase-caption');
-      const desc = document.getElementById('showcase-desc');
-      const urlText = document.getElementById('showcase-url-text');
-      const fallbackTitle = document.getElementById('fallback-title');
-      const fallbackBadge = document.getElementById('fallback-badge');
-
-      if (caption) caption.innerText = item.caption;
-      if (desc) desc.innerText = item.desc;
-      if (urlText) urlText.innerText = `viewgrid://${item.id}`;
-      if (fallbackTitle) fallbackTitle.innerText = `Screenshot: ${item.title}`;
-      if (fallbackBadge) fallbackBadge.innerText = item.title.toUpperCase();
-
-      if (img) {
-        img.style.opacity = '0';
-        img.style.transform = 'scale(0.98)';
-        setTimeout(() => {
-          img.src = item.src;
-          img.alt = item.title;
-          img.style.display = 'block';
-          if (fallback) fallback.style.display = 'none';
-          img.onload = () => {
-            img.style.opacity = '1';
-            img.style.transform = 'scale(1)';
-          };
-        }, 150);
-      }
-    }
-
-    function onShowcaseImgError(imgEl) {
-      imgEl.style.display = 'none';
-      const fallback = document.getElementById('showcase-fallback');
-      if (fallback) fallback.style.display = 'flex';
-    }
-
-    function startShowcaseTimer() {
-      if (showcaseAutoTimer) clearInterval(showcaseAutoTimer);
-      showcaseAutoTimer = setInterval(() => {
-        if (!showcasePaused && !showcaseUserInteracted) {
-          currentShowcaseIndex = (currentShowcaseIndex + 1) % showcaseData.length;
-          renderShowcase();
-        }
-      }, 6000);
-    }
-
-    function pauseShowcase() { showcasePaused = true; }
-    function resumeShowcase() { showcasePaused = false; }
-
-    function openLightbox() {
-      const item = showcaseData[currentShowcaseIndex];
-      const modal = document.getElementById('tour-lightbox');
-      const lbImg = document.getElementById('lightbox-img');
-      const lbCap = document.getElementById('lightbox-caption');
-
-      if (modal && lbImg && item) {
-        lbImg.src = item.src;
-        if (lbCap) lbCap.innerText = `${item.title} — ${item.caption}`;
-        modal.classList.add('active');
-      }
-    }
-
-    function closeLightbox(e) {
-      if (e && e.target && e.target.tagName === 'IMG') return;
-      const modal = document.getElementById('tour-lightbox');
-      if (modal) modal.classList.remove('active');
-    }
-
     /* Keyboard Shortcuts Modal Controls */
     function openShortcutsModal() {
       const modal = document.getElementById('shortcuts-modal');

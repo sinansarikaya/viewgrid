@@ -51,3 +51,5 @@ pnpm run package:release
 [Sürüm notları](docs/RELEASE_NOTES_1.0.4.md) · [Değişiklik günlüğü](CHANGELOG.md) · [Gizlilik](docs/PRIVACY.md) · [Güvenlik](SECURITY.md) · [Testler](docs/TESTING.md) · [MIT Lisansı](LICENSE)
 
 [Sinan Sarıkaya](https://github.com/sinansarikaya) · [Destekleyin](https://github.com/sponsors/sinansarikaya)
+
+[contact@sinansarikaya.dev](mailto:contact@sinansarikaya.dev) · [security@sinansarikaya.dev](mailto:security@sinansarikaya.dev)

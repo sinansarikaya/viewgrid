@@ -25,6 +25,7 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 ---
 
 ## In Progress
+- [~] WEBSITE-MEDIA-CONTACT: Beş güncel CastPost galeri görseli, güncel ana görsel, EN/TR/NO başlıklar ve contact/security adresleri; tarayıcı kontrolü geçti, PR/yayın doğrulaması bekliyor.
 - [~] RELEASE-DOCS: İngilizce varsayılan ve Türkçe/Norveççe ayrı README; mağaza görsel açıklamaları ve yayın otomasyonundaki eski notların kaldırılması son PR ile birleştiriliyor.
 
 

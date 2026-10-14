@@ -19,6 +19,7 @@ export function Support() {
             </p>
           </div>
 
+          <p><a href="mailto:contact@sinansarikaya.dev">contact@sinansarikaya.dev</a> · <a href="mailto:security@sinansarikaya.dev">security@sinansarikaya.dev</a></p>
           <div className="support-channels-grid">
             {/* Channel 1: Bug Report */}
             <div className="support-card">
