@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "ViewGrid — Responsive Viewer"
+  },
+  "extensionDescription": {
+    "message": "Test responsive layouts side by side, sync interactions and run local SEO/accessibility checks. English, Turkish and Norwegian UI."
+  },
+  "openWorkspace": {
+    "message": "Open ViewGrid workspace"
+  }
+}

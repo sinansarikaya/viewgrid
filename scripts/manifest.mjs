@@ -9,10 +9,10 @@ const packageVersion = JSON.parse(fs.readFileSync(new URL('../package.json', imp
 export function buildManifest(target, iconFiles) {
   const base = {
     manifest_version: 3,
-    name: 'ViewGrid — Responsive Viewer',
+    name: '__MSG_extensionName__',
+    default_locale: 'en',
     version: packageVersion,
-    description:
-      'Multi-viewport responsive web design & layout testing workspace with side-by-side device previews and synchronized scrolling.',
+    description: '__MSG_extensionDescription__',
     icons: iconFiles,
     host_permissions: ['<all_urls>'],
     content_scripts: [
@@ -35,7 +35,7 @@ export function buildManifest(target, iconFiles) {
     commands: {
       _execute_action: {
         suggested_key: { default: 'Alt+Shift+V', mac: 'Command+Shift+V' },
-        description: 'Open ViewGrid workspace',
+        description: '__MSG_openWorkspace__',
       },
     },
   };

@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "ViewGrid — Responsive Viewer"
+  },
+  "extensionDescription": {
+    "message": "Duyarlı düzenleri yan yana test edin, etkileşimleri eşitleyin ve yerel analiz yapın. Türkçe, İngilizce ve Norveççe arayüz."
+  },
+  "openWorkspace": {
+    "message": "ViewGrid çalışma alanını aç"
+  }
+}

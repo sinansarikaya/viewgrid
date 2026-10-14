@@ -30,6 +30,7 @@ for (const entry of fs.readdirSync(distRoot)) {
 
 fs.rmSync(targetDir, { recursive: true, force: true });
 fs.mkdirSync(targetDir, { recursive: true });
+fs.cpSync(path.join(root, 'src', '_locales'), path.join(targetDir, '_locales'), { recursive: true });
 
 // 1. UI build
 await viteBuild({
