@@ -126,6 +126,7 @@ const showcaseData = [
       document.querySelectorAll('.tour-tab-btn').forEach((btn, idx) => {
         btn.classList.toggle('active', idx === currentShowcaseIndex);
         btn.setAttribute('aria-selected', String(idx === currentShowcaseIndex));
+        btn.tabIndex = idx === currentShowcaseIndex ? 0 : -1;
         btn.textContent = (showcaseData[idx].copy[document.documentElement.lang] || showcaseData[idx].copy.en).title;
       });
 
@@ -199,6 +200,16 @@ const showcaseData = [
 
 
 document.querySelectorAll('[data-showcase-index]').forEach(link => {
+  link.addEventListener('keydown', event => {
+    const index = Number(link.dataset.showcaseIndex);
+    const next = event.key === 'ArrowRight' ? (index + 1) % showcaseData.length
+      : event.key === 'ArrowLeft' ? (index + showcaseData.length - 1) % showcaseData.length
+      : event.key === 'Home' ? 0 : event.key === 'End' ? showcaseData.length - 1 : null;
+    if (next === null) return;
+    event.preventDefault();
+    selectShowcaseTab(next);
+    document.querySelector(`[data-showcase-index="${next}"]`).focus();
+  });
   link.addEventListener('click', event => {
     event.preventDefault();
     selectShowcaseTab(Number(link.dataset.showcaseIndex));
