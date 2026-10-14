@@ -151,7 +151,7 @@ const showcaseData = [
           img.src = item.src;
           img.alt = item.title;
           img.hidden = false;
-          if (fallback) fallback.hidden = true;
+          if (fallback) { fallback.hidden = true; fallback.classList.remove('gallery-fallback-visible'); }
           img.onload = () => {
             img.classList.remove('gallery-loading');
           };
@@ -162,7 +162,7 @@ const showcaseData = [
     function onShowcaseImgError(imgEl) {
       imgEl.hidden = true;
       const fallback = document.getElementById('showcase-fallback');
-      if (fallback) fallback.hidden = false;
+      if (fallback) { fallback.hidden = false; fallback.classList.add('gallery-fallback-visible'); }
     }
 
     function startShowcaseTimer() {
