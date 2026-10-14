@@ -44,6 +44,7 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+- [x] ANALYSIS-HEIGHT-NO: Dört analiz sekmesinin yüksekliği sabitlendi; Norveççe geçmiş başlık/profil/saatleri düzeltildi. Canlı Norveççe kopyalama/indirme, 800/480 px gerçek pencere, CastPost 50 kural +18 GEO karşılaştırması ve358 unit test geçti. Kanıt: `docs/ANALYSIS_MODAL_REVIEW.md`. Sürüm1.0.3. _(2026-10-14, Codex)_
 
 - [x] REPORT-FEEDBACK: rapora özel yeşil/kısa/animasyonlu kopya ve indirme geri bildirimi, gecikmiş işlem koruması, ortak profil kartları, belirsiz sonuç filtresi, insan dilinde GEO ve gerçek geçen kontrol metni; toplamda türetilmiş aynı bulgu tekrar sayılmaz.358 unit, lint/type/build; Chromium25 + Firefox görünür akış ve CastPost50+18 karşılaştırması geçti.1.0.3 korundu, tam yayın onayı verilmedi. Kanıt `docs/ANALYSIS_MODAL_REVIEW.md`. _(2026-10-14, Codex)_
 
