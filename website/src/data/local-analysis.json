@@ -1,0 +1,86 @@
+{
+  "en": {
+    "title": "Local analysis, when you need it",
+    "intro": "Version 1.0.4 packages the analysis engine in ViewGrid: no extra installation, API key or external analysis service.",
+    "sections": [
+      [
+        "Run a scoped check",
+        "Open Analysis, choose a mobile or desktop preview and run the check. One DOM scan collects performance observations, SEO, limited accessibility checks and GEO signals. Each tab shows only its own scope."
+      ],
+      [
+        "Read the evidence",
+        "Performance shows browser navigation and First Contentful Paint (FCP) observations when available. These are not Lighthouse scores, CrUX field data or Core Web Vitals ratings. Missing observations are marked as unavailable."
+      ],
+      [
+        "SEO, accessibility and GEO",
+        "Review metadata, headings, links and structured-data signals from the current rendered page. Accessibility checks are limited automatic suggestions, not a complete WCAG audit or certification. GEO describes page structure signals; it does not measure or guarantee visibility in AI answers. No site-wide crawl or security scan is performed."
+      ],
+      [
+        "Keep and share reports",
+        "Copy or download a Markdown report for the selected tab. Results remain available after closing the dialog during the workspace session; page or viewport changes mark them as stale. Rerun the check to refresh them."
+      ],
+      [
+        "A calmer workspace",
+        "Panels and the issues drawer toggle open and closed from the same control. Softer transitions respect reduced motion. Use 21 device profiles and 5 preset sets to inspect phone, tablet, laptop and desktop layouts."
+      ]
+    ],
+    "privacyTitle": "Local analysis and report data",
+    "privacy": "Analysis reads the selected preview’s rendered DOM and browser timing entries locally, only when you request a check. No Google, CrUX or external analysis API is contacted. Reports remain in the workspace session when the dialog closes and may include page URLs, content snippets and selectors. Copying or downloading a report is your explicit action; review its contents before sharing. Previewed websites still make their own network requests and follow their own privacy policies. Workspace preferences and custom devices are stored locally."
+  },
+  "tr": {
+    "title": "İhtiyaç duyduğunuzda yerel analiz",
+    "intro": "Sürüm 1.0.4 analiz motorunu ViewGrid içinde paketler: ek kurulum, API anahtarı veya harici analiz servisi gerekmez.",
+    "sections": [
+      [
+        "Kapsamı seçip analiz edin",
+        "Analiz bölümünü açın, mobil veya masaüstü önizlemesini seçin ve kontrolü başlatın. Tek DOM taraması performans gözlemlerini, SEO, sınırlı erişilebilirlik kontrollerini ve GEO sinyallerini toplar. Her sekme yalnız kendi kapsamını gösterir."
+      ],
+      [
+        "Kanıtı okuyun",
+        "Performans, mevcut olduğunda tarayıcı gezinme ve İlk İçerikli Boyama (FCP) gözlemlerini gösterir. Bunlar Lighthouse skoru, CrUX saha verisi veya Core Web Vitals derecesi değildir. Eksik gözlemler kullanılamıyor olarak belirtilir."
+      ],
+      [
+        "SEO, erişilebilirlik ve GEO",
+        "Geçerli sayfanın işlenmiş halindeki meta verileri, başlıkları, bağlantıları ve yapılandırılmış veri sinyallerini inceleyin. Erişilebilirlik kontrolleri sınırlı otomatik önerilerdir; tam WCAG denetimi veya sertifika değildir. GEO sayfa yapısı sinyallerini açıklar; yapay zekâ yanıtlarında görünürlüğü ölçmez veya garanti etmez. Site geneli crawl ve güvenlik taraması yapılmaz."
+      ],
+      [
+        "Raporları saklayın ve paylaşın",
+        "Seçili sekmenin Markdown raporunu kopyalayın veya indirin. Sonuçlar pencere kapatıldığında çalışma alanı oturumu boyunca korunur; sayfa veya görünüm değişince eski olarak işaretlenir. Güncellemek için analizi yeniden çalıştırın."
+      ],
+      [
+        "Daha sakin çalışma alanı",
+        "Panel ve sorunlar çekmecesi aynı kontrolle açılıp kapanır. Yumuşak geçişler azaltılmış hareket tercihini dikkate alır. Telefon, tablet, dizüstü ve masaüstü düzenlerini 21 cihaz profili ve 5 hazır set ile inceleyin."
+      ]
+    ],
+    "privacyTitle": "Yerel analiz ve rapor verileri",
+    "privacy": "Analiz, yalnız kontrol başlattığınızda seçili önizlemenin işlenmiş DOM içeriğini ve tarayıcı zamanlama kayıtlarını yerel olarak okur. Google, CrUX veya harici analiz API’sine istek gönderilmez. Pencere kapatılınca raporlar çalışma alanı oturumunda kalır; sayfa URL’leri, içerik parçaları ve seçiciler içerebilir. Rapor kopyalama veya indirme sizin açık işleminizdir; paylaşmadan önce içeriği inceleyin. Önizlenen siteler kendi ağ isteklerini yapmaya ve kendi gizlilik politikalarına tabi olmaya devam eder. Çalışma alanı tercihleri ve özel cihazlar yerel olarak saklanır."
+  },
+  "no": {
+    "title": "Lokal analyse når du trenger den",
+    "intro": "Versjon 1.0.4 inkluderer analysemotoren i ViewGrid: ingen ekstra installasjon, API-nøkkel eller ekstern analysetjeneste.",
+    "sections": [
+      [
+        "Velg omfang og kjør analysen",
+        "Åpne Analyse, velg en mobil- eller desktopvisning og start kontrollen. Én DOM-skanning samler ytelsesobservasjoner, SEO, begrensede tilgjengelighetskontroller og GEO-signaler. Hver fane viser bare sitt eget omfang."
+      ],
+      [
+        "Les dokumentasjonen",
+        "Ytelse viser nettleserens navigasjons- og First Contentful Paint-observasjoner (FCP) når de er tilgjengelige. Dette er ikke Lighthouse-poeng, CrUX-feltdata eller Core Web Vitals-vurderinger. Manglende observasjoner merkes som utilgjengelige."
+      ],
+      [
+        "SEO, tilgjengelighet og GEO",
+        "Se metadata, overskrifter, lenker og signaler fra strukturerte data på den gjeldende gjengitte siden. Tilgjengelighetskontroller er begrensede automatiske forslag, ikke en full WCAG-revisjon eller sertifisering. GEO beskriver sidestruktursignaler; det måler eller garanterer ikke synlighet i KI-svar. Ingen gjennomgang av hele nettstedet eller sikkerhetsskanning utføres."
+      ],
+      [
+        "Behold og del rapporter",
+        "Kopier eller last ned en Markdown-rapport for den valgte fanen. Resultatene beholdes i arbeidsøkten når dialogen lukkes; side- eller visningsendringer markerer dem som utdaterte. Kjør analysen på nytt for å oppdatere dem."
+      ],
+      [
+        "Et roligere arbeidsområde",
+        "Paneler og problemoversikten åpnes og lukkes med samme kontroll. Mykere overganger respekterer redusert bevegelse. Bruk 21 enhetsprofiler og 5 forhåndsvalgte sett for mobil, nettbrett, bærbar PC og desktop."
+      ]
+    ],
+    "privacyTitle": "Lokal analyse og rapportdata",
+    "privacy": "Analysen leser den valgte visningens gjengitte DOM og nettlesertider lokalt, bare når du starter en kontroll. Ingen Google-, CrUX- eller ekstern analyse-API kontaktes. Rapporter beholdes i arbeidsøkten når dialogen lukkes og kan inneholde sideadresser, innholdsutdrag og selektorer. Kopiering eller nedlasting skjer på ditt initiativ; gjennomgå innholdet før du deler det. Nettstedene i visningene sender fortsatt egne nettverksforespørsler og har egne personvernregler. Arbeidsområdeinnstillinger og egne enheter lagres lokalt."
+  }
+}

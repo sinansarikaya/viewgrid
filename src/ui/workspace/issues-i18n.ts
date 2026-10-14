@@ -1,4 +1,7 @@
 const en = {
+  cancel:'Cancel scan',
+  notices:{'no-target':'No scannable viewports. Show and restore an HTTP(S) page first.',permission:'Site access is required. Enable site access from the menu, then scan again.',cancelled:'Scan cancelled. No completed result was recorded.'},
+  failureReasons:{timeout:'No response within 8 seconds',unreachable:'Page agent unavailable; wait for the page to load and retry',message:'Extension messaging failed; reload the extension and retry',measurement:'Page measurements could not be collected'},
   coverage: 'Inspected DOM elements', title: 'Responsive issues', unique: 'finding groups', occurrences: 'element/viewport observations', scanned: 'Last scan',
   note: '24px spacing concerns, ergonomic improvements and optional 44px advice are separate. Findings require review; this is not a WCAG audit.',
   html: 'Download report (HTML / print to PDF)', rescan: 'Scan again', copy: 'Copy report', json: 'Export JSON', search: 'Search findings or selectors',
@@ -20,6 +23,9 @@ const en = {
   } as Record<string, string>,
 };
 const tr: typeof en = { ...en,
+  cancel:'Taramayı iptal et',
+  notices:{'no-target':'Taranabilecek görünüm yok. HTTP(S) sayfası açın; görünümü gösterip genişletin.',permission:'Site erişimi gerekiyor. Menüden site erişimini etkinleştirip yeniden tarayın.',cancelled:'Tarama iptal edildi. Tamamlanmış sonuç kaydedilmedi.'},
+  failureReasons:{timeout:'8 saniye içinde yanıt alınamadı',unreachable:'Sayfa ajanı hazır değil; yükleme tamamlandıktan sonra yeniden deneyin',message:'Eklenti mesajlaşması başarısız; eklentiyi yenileyip yeniden deneyin',measurement:'Sayfa ölçümleri toplanamadı'},
   coverage: 'İncelenen DOM öğeleri', title: 'Duyarlı tasarım bulguları', unique: 'bulgu grubu', occurrences: 'öğe/cihaz ölçümü', scanned: 'Son tarama',
   note: '24 px mesafe şüpheleri, ergonomi iyileştirmeleri ve isteğe bağlı 44 px önerileri ayrıdır. Bulgular inceleme gerektirir; bu bir WCAG denetimi değildir.',
   html: 'Rapor indir (HTML / PDF olarak yazdır)', rescan: 'Yeniden tara', copy: 'Raporu kopyala', json: 'JSON indir', search: 'Bulgu veya seçici ara',
@@ -41,6 +47,9 @@ const tr: typeof en = { ...en,
   },
 };
 const no: typeof en = { ...en,
+  cancel:'Avbryt skanning',
+  notices:{'no-target':'Ingen skannbare visninger. Åpne og utvid en HTTP(S)-side.',permission:'Nettstedstilgang kreves. Aktiver tilgang fra menyen og prøv igjen.',cancelled:'Skanning avbrutt. Ingen fullført rapport ble lagret.'},
+  failureReasons:{timeout:'Ingen svar innen 8 sekunder',unreachable:'Sideagent utilgjengelig; vent på innlasting og prøv igjen',message:'Utvidelseskommunikasjon feilet; last inn utvidelsen på nytt',measurement:'Sidemålingene kunne ikke samles inn'},
   coverage: 'Undersøkte DOM-elementer', title: 'Responsive funn', unique: 'funngrupper', occurrences: 'element-/enhetsmålinger', scanned: 'Siste skanning',
   note: '24px-avstand, ergonomiske forbedringer og valgfrie 44px-råd vurderes separat. Funn krever gjennomgang; dette er ikke en WCAG-kontroll.',
   html: 'Last ned rapport (HTML / skriv ut til PDF)', rescan: 'Skann på nytt', copy: 'Kopier rapport', json: 'Eksporter JSON', search: 'Søk i funn eller selektorer',

@@ -1,0 +1,32 @@
+.guide {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.guide h2, .guide h3 {
+  color: var(--text-primary);
+  margin-block: 20px 10px;
+}
+.guide p {
+  margin-bottom: 16px;
+}
+.language {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+.language select {
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 44px;
+}
+.language select:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
+}

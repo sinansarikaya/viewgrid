@@ -11,6 +11,8 @@
   height: 100%;
 }
 
+@media (prefers-reduced-motion:reduce) { .sidebar { transition:none; } }
+
 .sidebarExpanded {
   width: 260px;
   overflow-y: auto;
@@ -356,4 +358,9 @@
     z-index: 90;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.55);
   }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .sidebar,.navTab,.toolBtn { transition:none; animation:none; }
+  .toolBtn:hover { transform:none; }
 }

@@ -67,3 +67,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## axe-core 4.11.0 — Mozilla Public License 2.0
+
+Copyright (c) 2015 - 2025 Deque Systems, Inc.
+
+axe-core erişilebilirlik motoru değiştirilmeden, yalnız kullanıcı yerel analizi başlatınca yüklenen eklenti paketi içinde dağıtılır. Çalışma zamanında CDN, servis veya API kullanılmaz. Kaynak: https://github.com/dequelabs/axe-core/tree/v4.11.0 ; yayımlanan kaynak https://github.com/dequelabs/axe-core/archive/refs/tags/v4.11.0.tar.gz . Lisansın tam metni dağıtım içindeki `licenses/axe-core-MPL-2.0.txt` dosyasında bulunur; axe içindeki üçüncü tarafların bildirimleri `licenses/axe-core-THIRD-PARTY.txt` içinde korunur.
+
+Lighthouse, ZAP, SEOmator, Booltools, OSAT, site-audit-seo ve securityheaders kodları bu pakete kopyalanmadı; yerel SEO/GEO kuralları ViewGrid uygulamasıdır.

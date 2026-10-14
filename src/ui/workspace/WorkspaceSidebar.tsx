@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Icon } from '../common/Icon';
+import { Checkbox } from '../common/Checkbox';
 import { useStore } from './store';
 import { getTranslation } from './i18n';
 import { getShellTranslation } from './shell-i18n';
@@ -86,6 +87,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           className={[s.navTab, activeTab === 'devices' ? s.navTabActive : ''].join(' ')}
           onClick={() => handleTabClick('devices')}
           title={stText.devices}
+          tooltipPlacement="right"
           aria-label={stText.devices}
         >
           <span className={s.tabIcon}><Icon name="deviceMobile" /></span>
@@ -97,6 +99,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           className={[s.navTab, activeTab === 'tools' ? s.navTabActive : ''].join(' ')}
           onClick={() => handleTabClick('tools')}
           title={stText.tools}
+          tooltipPlacement="right"
           aria-label={stText.tools}
         >
           <span className={s.tabIcon}><Icon name="tools" /></span>
@@ -108,6 +111,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           className={[s.navTab, activeTab === 'sync' ? s.navTabActive : ''].join(' ')}
           onClick={() => handleTabClick('sync')}
           title={stText.sync}
+          tooltipPlacement="right"
           aria-label={stText.sync}
         >
           <span className={s.tabIcon}><Icon name="refresh" /></span>
@@ -119,6 +123,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
           className={[s.navTab, activeTab === 'workspace' ? s.navTabActive : ''].join(' ')}
           onClick={() => handleTabClick('workspace')}
           title={stText.workspace}
+          tooltipPlacement="right"
           aria-label={stText.workspace}
         >
           <span className={s.tabIcon}><Icon name="folder" /></span>
@@ -321,8 +326,7 @@ export function WorkspaceSidebar({ onScan, onScrollToTop, children }: Props) {
                   return (
                     <label key={channel} className={s.syncRow}>
                       <span>{label}</span>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={st.model.sync[channel]}
                         onChange={(e) => st.setSync(channel, e.target.checked)}
                       />

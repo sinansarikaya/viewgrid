@@ -26,6 +26,8 @@
   animation: slideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@media (prefers-reduced-motion:reduce) { .overlay,.modal { animation:none; } }
+
 .header {
   display: flex;
   align-items: center;
@@ -34,6 +36,8 @@
   border-bottom: 1px solid var(--border);
   background: var(--bg-soft);
 }
+
+.modal.wide { max-width:1040px; }
 
 .title {
   font-size: 14px;
@@ -66,4 +70,17 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(8px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.closing { animation: fadeOut 180ms ease-in both; pointer-events: none; }
+.closing .modal { animation: slideOut 180ms ease-in both; }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes slideOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(8px) scale(.985); } }
+@media (prefers-reduced-motion: reduce) { .closing, .closing .modal { animation: none; } }
+
+.modal.fixedHeight { height: min(960px, 90dvh); }
+.fixedHeight .header, .fixedHeight .footer { flex-shrink: 0; }
+.fixedHeight .body { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+@media (max-height: 540px) {
+  .fixedHeight .body { display: block; overflow-y: auto; }
 }

@@ -307,6 +307,18 @@
     };
   }
 
+  // src/core/security/sync.ts
+  function isSensitiveControl(element) {
+    if (!element) return false;
+    const input = element.closest("input, textarea, select, [contenteditable]");
+    if (!input) return false;
+    if (input.getAttribute("type")?.toLowerCase() === "password") return true;
+    const tokens = (input.getAttribute("autocomplete") ?? "").toLowerCase().split(/\s+/);
+    if (tokens.some((token) => token.startsWith("cc-") || ["current-password", "new-password", "one-time-code"].includes(token))) return true;
+    return /password|passwd|passcode|otp|cvc|cvv|card.?number/i.test(`${input.getAttribute("name") ?? ""} ${input.id}`);
+  }
+  var carriesInputData = (channel) => ["input", "form", "key"].includes(channel);
+
   // src/core/security/framing.ts
   function safeHttpUrl(value) {
     if (typeof value !== "string") return false;
@@ -318,14 +330,7 @@
   }
 
   // src/content/agent.ts
-  var frameName = typeof window !== "undefined" ? window.name || "" : "";
-  if (frameName.startsWith("viewgrid:")) {
-    const g = globalThis;
-    if (!g.__viewgridAgentInstalled) {
-      g.__viewgridAgentInstalled = true;
-      initAgent(frameName.slice("viewgrid:".length));
-    }
-  } else if (typeof window !== "undefined" && window.top !== window && location.ancestorOrigins?.[0]?.startsWith("chrome-extension://")) {
+  if (typeof window !== "undefined" && window.top !== window) {
     const extBrowser = globalThis.browser || globalThis.chrome;
     const extensionOrigin = extBrowser?.runtime?.getURL("")?.replace(/\/$/, "");
     const identify = (event) => {
@@ -389,7 +394,7 @@
         epoch: guard.currentEpoch,
         seq,
         ts: Date.now(),
-        payload
+        payload: carriesInputData(channel) ? { ...payload, origin: location.origin } : payload
       };
       try {
         if (channel === "scroll") {
@@ -425,7 +430,7 @@
     for (const kind of ["keydown", "keyup"]) document.addEventListener(kind, (e) => {
       if (!e.isTrusted || e.ctrlKey || e.metaKey || e.altKey) return;
       const el = e.target instanceof Element ? e.target : null;
-      if (!el) return;
+      if (!el || isSensitiveControl(el)) return;
       emit("key", { selector: selectorPath(el), kind, key: e.key, code: e.code, shiftKey: e.shiftKey });
     }, true);
     let scrollPending = false;
@@ -485,7 +490,7 @@
       (ev) => {
         if (suppressed()) return;
         const el = ev.target;
-        if (!el || !el.tagName) return;
+        if (!el || !el.tagName || isSensitiveControl(el)) return;
         emit("input", {
           selector: selectorPath(el),
           value: el.value,
@@ -499,7 +504,7 @@
       (ev) => {
         if (suppressed()) return;
         const el = ev.target;
-        if (!el || !el.tagName) return;
+        if (!el || !el.tagName || isSensitiveControl(el)) return;
         emit("form", {
           selector: selectorPath(el),
           value: el.value,
@@ -561,10 +566,15 @@
         return;
       }
       if (msg.type === "vg/agent-scan") {
-        const metrics = collectMetrics(document, window, !Array.isArray(msg.touchViewportIds) || msg.touchViewportIds.includes(viewportId));
-        const issues = runCoreDetectors(metrics).map((i) => ({ ...i, data: { ...i.data, url: location.href, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight } }));
-        extBrowser?.runtime?.sendMessage?.({ type: "vg/scan-result", viewportId, scanId: msg.scanId, issues, scannedElements: metrics.scannedElements, truncated: metrics.truncated })?.catch?.(() => {
-        });
+        try {
+          const metrics = collectMetrics(document, window, !Array.isArray(msg.touchViewportIds) || msg.touchViewportIds.includes(viewportId));
+          const issues = runCoreDetectors(metrics).map((i) => ({ ...i, data: { ...i.data, url: location.href, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight } }));
+          extBrowser?.runtime?.sendMessage?.({ type: "vg/scan-result", viewportId, scanId: msg.scanId, issues, scannedElements: metrics.scannedElements, truncated: metrics.truncated })?.catch?.(() => {
+          });
+        } catch {
+          extBrowser?.runtime?.sendMessage?.({ type: "vg/scan-result", viewportId, scanId: msg.scanId, issues: [], errorCode: "MEASUREMENT_FAILED" })?.catch?.(() => {
+          });
+        }
       }
     });
     window.addEventListener("message", (e) => {
@@ -687,6 +697,7 @@
     }
     function apply(env) {
       const p = env.payload ?? {};
+      if (carriesInputData(env.channel) && p.origin !== location.origin) return;
       switch (env.channel) {
         case "scroll":
           userInteracted = false;
@@ -719,6 +730,7 @@
         case "key": {
           suppress(100);
           const target = document.querySelector(String(p.selector || "")) || document.activeElement;
+          if (isSensitiveControl(target)) return;
           target?.dispatchEvent(new KeyboardEvent(p.kind === "keyup" ? "keyup" : "keydown", { key: String(p.key || ""), code: String(p.code || ""), shiftKey: !!p.shiftKey, bubbles: true, cancelable: true }));
           break;
         }
@@ -726,7 +738,7 @@
         case "form": {
           suppress(100);
           const target = document.querySelector(String(p.selector ?? ""));
-          if (target) {
+          if (target && !isSensitiveControl(target)) {
             if (typeof p.value === "string" && target.value !== p.value) {
               const proto = target instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : target instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
               Object.getOwnPropertyDescriptor(proto, "value")?.set?.call(target, p.value);

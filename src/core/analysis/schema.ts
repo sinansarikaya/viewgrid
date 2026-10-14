@@ -25,10 +25,10 @@ export const normalizedAuditSchema = z.object({
 export type NormalizedAudit = z.infer<typeof normalizedAuditSchema>;
 
 export const fieldDatasetSchema = z.object({
-  source: z.enum(['psi-crux', 'crux']),
+  source: z.enum(['psi-crux', 'crux', 'local']),
   scope: z.enum(['url', 'origin']),
   status: z.enum(['available', 'partial', 'unavailable']),
-  reason: z.enum(['missing-field-data', 'missing-metrics', 'missing-scope', 'partial-metrics']).nullable(),
+  reason: z.enum(['missing-field-data', 'missing-metrics', 'missing-scope', 'partial-metrics', 'local-only']).nullable(),
   identifier: urlText.nullable(),
   formFactor: z.enum(['PHONE', 'TABLET', 'DESKTOP', 'ALL']).nullable(),
   period: z.object({ firstDate: z.iso.date(), lastDate: z.iso.date() }).nullable(),
@@ -53,14 +53,20 @@ export type GeoResult = z.infer<typeof geoResultSchema>;
 
 export const analysisResultSchema = z.object({
   schemaVersion: z.literal(1),
-  source: z.literal('google-psi'),
+  source: z.enum(['google-psi', 'viewgrid-local']),
   requestedUrl: urlText,
   finalUrl: urlText.nullable(),
   profile: analysisProfileSchema,
   analyzedAt: timestamp.nullable(),
   retrievedAt: timestamp,
   lab: z.object({
-    engine: z.object({ name: z.literal('Lighthouse'), version: shortText.nullable(), userAgent: text.nullable() }),
+    engine: z.object({ name: z.enum(['Lighthouse', 'ViewGrid']), version: shortText.nullable(), userAgent: text.nullable() }),
+    local: z.object({
+      viewportId: shortText.optional(), width: z.number().finite().nonnegative(), height: z.number().finite().nonnegative(),
+      scannedElements: z.number().int().nonnegative().max(2000), truncated: z.boolean(),
+      durationMs: z.number().finite().nonnegative(), ruleVersion: shortText,
+      navigation: z.object({ ttfbMs: metric, domContentLoadedMs: metric, loadMs: metric, observedResources: z.number().int().nonnegative().max(2000) }).optional(),
+    }).optional(),
     conditions: z.object({
       requestedProfile: analysisProfileSchema,
       reportedFormFactor: z.enum(['mobile', 'desktop']).nullable(),
@@ -69,7 +75,7 @@ export const analysisResultSchema = z.object({
       throttling: z.record(z.string().max(80), z.number().finite()).nullable(),
       screenEmulation: z.object({ width: metric, height: metric, deviceScaleFactor: metric, mobile: z.boolean().nullable() }).nullable(),
       benchmarkIndex: metric,
-      measurementContext: z.literal('remote-independent-of-preview'),
+      measurementContext: z.enum(['remote-independent-of-preview', 'local-preview']),
     }),
     scores: z.object({ performance: score, seo: score, accessibility: score }),
     metrics: z.object({ lcpMs: metric, cls: metric, fcpMs: metric, speedIndexMs: metric, tbtMs: metric }),
@@ -83,7 +89,7 @@ export const analysisResultSchema = z.object({
 export type AnalysisResult = z.infer<typeof analysisResultSchema>;
 
 export const analysisErrorSchema = z.object({
-  code: z.enum(['INVALID_TARGET', 'RATE_LIMITED', 'SERVICE_ERROR', 'NETWORK_ERROR', 'TIMEOUT', 'CANCELLED', 'INVALID_RESPONSE', 'MEASUREMENT_FAILED']),
+  code: z.enum(['INVALID_TARGET', 'RATE_LIMITED', 'SERVICE_ERROR', 'NETWORK_ERROR', 'TIMEOUT', 'CANCELLED', 'INVALID_RESPONSE', 'MEASUREMENT_FAILED', 'PREVIEW_NOT_READY', 'PROFILE_UNAVAILABLE', 'TARGET_MISMATCH', 'PERMISSION_REQUIRED']),
   messageCode: shortText,
   retryable: z.boolean(),
   httpStatus: z.number().int().min(100).max(599).nullable(),

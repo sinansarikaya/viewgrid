@@ -1,4 +1,5 @@
 import React from 'react';
+import { LocalAnalysisGuide } from '../components/LocalAnalysisGuide';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
@@ -11,14 +12,15 @@ export function Privacy() {
           <div className="legal-header">
             <span className="badge badge-emerald">100% LOCAL EXECUTION · ZERO TELEMETRY</span>
             <h1 className="legal-title">Privacy Policy for ViewGrid</h1>
-            <p className="legal-date">Effective Date: September 21, 2026 · Version 1.0</p>
+            <p className="legal-date">Updated: October 14, 2026 · Extension version 1.0.4</p>
           </div>
 
           <div className="legal-content">
+            <LocalAnalysisGuide privacy />
             <section className="legal-section">
               <h2>1. Summary & Core Principle</h2>
               <p>
-                <strong>ViewGrid does not collect, store, transmit, or monetize any personal data, browsing history, or user telemetry.</strong>
+                <strong>ViewGrid does not transmit browsing history, analysis reports or telemetry to an external collection service. Workspace preferences and custom devices are stored locally; analysis results remain in the workspace session.</strong>
               </p>
               <p>
                 ViewGrid is an open-source browser developer extension designed for responsive web design testing. All execution occurs strictly inside your local browser instance. No external API endpoints, cloud databases, analytics beacons, or remote telemetry servers exist in ViewGrid's architecture.

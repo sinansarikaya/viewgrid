@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from './Button';
 import { Icon } from './Icon';
+import { usePresence } from './usePresence';
 import s from './Modal.module.css';
 
 export interface ModalProps {
@@ -9,6 +10,8 @@ export interface ModalProps {
   title?: string;
   ariaLabel?: string;
   className?: string;
+  size?: 'default'|'wide';
+  fixedHeight?: boolean;
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -19,9 +22,12 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   ariaLabel,
   className = '',
+  size = 'default',
+  fixedHeight = false,
   children,
   footer,
 }) => {
+  const present = usePresence(isOpen);
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedElement = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
@@ -100,16 +106,16 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen]); // Only depends on isOpen, not onClose
 
-  if (!isOpen) return null;
+  if (!present) return null;
 
   return (
-    <div className={s.overlay} onClick={() => onCloseRef.current()} role="presentation">
+    <div className={`${s.overlay} ${!isOpen ? s.closing : ''}`} aria-hidden={!isOpen || undefined} {...(!isOpen ? { inert: '' } : {})} onClick={() => onCloseRef.current()} role="presentation">
       <div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel || title}
-        className={[s.modal, className].filter(Boolean).join(' ')}
+        className={[s.modal, size==='wide'?s.wide:'', fixedHeight ? s.fixedHeight : '', className].filter(Boolean).join(' ')}
         onClick={(e) => e.stopPropagation()}
         tabIndex={-1}
       >

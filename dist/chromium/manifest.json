@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ViewGrid — Responsive Viewer",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Multi-viewport responsive web design & layout testing workspace with side-by-side device previews and synchronized scrolling.",
   "icons": {
     "16": "icons/icon16.png",

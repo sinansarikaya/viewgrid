@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '../common/Icon';
+import { Checkbox } from '../common/Checkbox';
 import { Button } from '../common/Button';
 import { useStore } from './store';
 import { getTranslation } from './i18n';
@@ -33,6 +34,10 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
   const st = useStore();
   const t = getTranslation(st.language);
   const analysis = getAnalysisTranslation(st.language);
+  const summary = st.analysisSummary?.url === st.model.url && st.analysisSummary.generation === st.previewGeneration ? st.analysisSummary : null;
+  const counts = summary?.counts;
+  const failureLabel = st.language === 'tr' ? 'farklı başarısız kontrol' : st.language === 'no' ? 'unike mislykkede kontroller' : 'distinct failed checks';
+  const badge = (section: 'performance' | 'seo' | 'geo' | 'reports') => counts && counts[section] > 0 ? <span className={styles.failureBadge} title={`${counts[section]} ${failureLabel}`} aria-label={`${counts[section]} ${failureLabel}`}>{counts[section]}</span> : summary?.sections[section].state === 'pass' ? <span className={styles.passBadge} aria-label={section === 'performance' ? (st.language === 'tr' ? 'Ölçüm mevcut' : st.language === 'no' ? 'Måling tilgjengelig' : 'Measurement available') : (st.language === 'tr' ? 'Kontroller geçti' : st.language === 'no' ? 'Kontroller bestått' : 'Checks passed')}>✓</span> : null;
   const sectionTitles = SECTION_TITLES[st.language] || SECTION_TITLES.en;
 
   return (
@@ -62,7 +67,7 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
               st.showToast(t.compareSelectHint);
               return;
             }
-            st.setCompareOpen(true, 'figma');
+            st.setCompareOpen(!(st.compareOpen && st.compareMode === 'figma'), 'figma');
           }}
         >
           <Icon name="palette" /> Figma overlay / diff
@@ -70,6 +75,7 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
         <Button
           variant="default"
           className={styles.actionBtn}
+          aria-expanded={st.drawerOpen}
           onClick={onScan}
           title={t.issues}
         >
@@ -78,6 +84,7 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
         <Button
           variant="default"
           className={styles.actionBtn}
+          aria-expanded={st.drawerOpen}
           onClick={() => st.setDrawerOpen(!st.drawerOpen)}
         >
           <Icon name="columns" /> {t.panel}
@@ -113,8 +120,7 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
               return (
                 <label key={channel} className={styles.channelLabel}>
                   <span>{label}</span>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={st.model.sync[channel]}
                     onChange={(event) => st.setSync(channel, event.target.checked)}
                   />
@@ -131,32 +137,40 @@ export function WorkspaceActions({ onScan, onAnalysis }: WorkspaceActionsProps) 
         <Button
           variant="default"
           className={styles.actionBtn}
+          data-analysis-state={summary?.sections.performance.state}
           onClick={() => onAnalysis('performance')}
+          aria-label={analysis.tabPerformance}
         >
-          {analysis.tabPerformance}
+          {analysis.tabPerformance}{badge('performance')}
         </Button>
         <Button
           variant="default"
           className={styles.actionBtn}
+          data-analysis-state={summary?.sections.seo.state}
           onClick={() => onAnalysis('seo')}
+          aria-label={analysis.tabSeo}
         >
-          {analysis.tabSeo}
+          {analysis.tabSeo}{badge('seo')}
         </Button>
         <Button
           variant="default"
           className={styles.actionBtn}
+          data-analysis-state={summary?.sections.reports.state}
           onClick={() => onAnalysis('reports')}
+          aria-label={analysis.tabReports}
         >
-          {analysis.tabReports}
+          {analysis.tabReports}{badge('reports')}
         </Button>
         <Button
           variant="default"
           className={styles.actionBtn}
+          data-analysis-state={summary?.sections.geo.state}
           onClick={() => onAnalysis('geo')}
+          aria-label={analysis.tabGeo}
           title={analysis.tabGeo}
         >
           <span>{analysis.tabGeo.replace(/\s*\(Beta\)/i, '')}</span>
-          <span className={styles.betaBadge}>{analysis.geoBetaBadge || 'BETA'}</span>
+          <span className={styles.betaBadge}>{analysis.geoBetaBadge || 'BETA'}</span>{badge('geo')}
         </Button>
       </div>
     </nav>

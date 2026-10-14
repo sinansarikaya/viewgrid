@@ -9,10 +9,10 @@ export function comparisonWarnings(a: AnalysisResult, b: AnalysisResult): Compar
   const warnings: ComparisonWarning[] = [];
   if (a.requestedUrl !== b.requestedUrl || a.finalUrl !== b.finalUrl) warnings.push('different-target');
   if (a.profile !== b.profile) warnings.push('different-profile');
-  if (a.lab.engine.version !== b.lab.engine.version || (a.lab.engine.userAgent && b.lab.engine.userAgent && a.lab.engine.userAgent !== b.lab.engine.userAgent)) warnings.push('different-engine');
+  if (a.source !== b.source || a.lab.engine.name !== b.lab.engine.name || a.lab.engine.version !== b.lab.engine.version || (a.lab.engine.userAgent && b.lab.engine.userAgent && a.lab.engine.userAgent !== b.lab.engine.userAgent)) warnings.push('different-engine');
   if (a.redactions.length || b.redactions.length) warnings.push('redacted-target');
   if (!a.lab.conditions.throttlingMethod || !b.lab.conditions.throttlingMethod || !a.lab.engine.version || !b.lab.engine.version) warnings.push('unknown-conditions');
-  if (canonical(a.lab.conditions) !== canonical(b.lab.conditions)) warnings.push('different-conditions');
+  if (canonical(a.lab.conditions) !== canonical(b.lab.conditions) || canonical(a.lab.local && { width: a.lab.local.width, height: a.lab.local.height, ruleVersion: a.lab.local.ruleVersion }) !== canonical(b.lab.local && { width: b.lab.local.width, height: b.lab.local.height, ruleVersion: b.lab.local.ruleVersion })) warnings.push('different-conditions');
   return warnings;
 }
 

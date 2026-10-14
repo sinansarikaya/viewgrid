@@ -2,13 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 const mock = vi.hoisted(() => {
   const rules = vi.fn(async (..._args: any[]) => {}), dynamic = vi.fn(async (..._args: any[]) => {});
   const listeners: { message?: (msg: any, sender: any) => any; updated?: (...args: any[]) => any; removed?: (id: number) => any } = {};
+  const saved: {agentFrames?: unknown[]} = {};
   const tabs = [{ id: 42, url: 'chrome-extension://ours/workspace.html', active: true, windowId: 1 }, { id: 99, url: 'https://ordinary.test/workspace.html', active: true, windowId: 1 }];
-  return { rules, dynamic, listeners, tabs, removeWorkers: vi.fn(async (..._args: any[]) => {}), reload: vi.fn(async (..._args: any[]) => {}) };
+  return { saved, sent: vi.fn(async (..._args: any[]) => ({})), execute: vi.fn(async (..._args: any[]) => [{result:true,documentId:"direct-document"}]), rules, dynamic, listeners, tabs, removeWorkers: vi.fn(async (..._args: any[]) => {}), reload: vi.fn(async (..._args: any[]) => {}) };
 });
 vi.mock('../../src/platform/browser', () => ({ b: {
   runtime: { getURL: (p: string) => `chrome-extension://ours/${p}`, onMessage: { addListener: (fn: any) => { mock.listeners.message = fn; } } },
-  tabs: { query: async () => mock.tabs, get: async (id: number) => mock.tabs.find(t => t.id === id), reload: mock.reload, onUpdated: { addListener: (fn: any) => { mock.listeners.updated = fn; } }, onRemoved: { addListener: (fn: any) => { mock.listeners.removed = fn; } } },
-  storage: { session: { get: async () => ({}), set: async () => {} } },
+  tabs: { query: async () => mock.tabs, get: async (id: number) => mock.tabs.find(t => t.id === id), reload: mock.reload, sendMessage: mock.sent, onUpdated: { addListener: (fn: any) => { mock.listeners.updated = fn; } }, onRemoved: { addListener: (fn: any) => { mock.listeners.removed = fn; } } },
+  scripting: { executeScript: mock.execute },
+  storage: { session: { get: async () => mock.saved, set: async (data: any) => { Object.assign(mock.saved,data); } } },
   browsingData: { removeServiceWorkers: mock.removeWorkers },
   declarativeNetRequest: { updateDynamicRules: mock.dynamic, updateSessionRules: mock.rules },
 } }));
@@ -20,6 +22,23 @@ describe('actual background entrypoint', () => {
     expect(mock.dynamic).toHaveBeenCalledWith({ removeRuleIds: [1001] });
     expect(mock.rules.mock.calls.at(-1)?.[0]).toMatchObject({ addRules: [{ condition: { tabIds: [42], resourceTypes: ['sub_frame'] } }] });
     expect(await mock.listeners.message!({ type: 'vg/workspace-hello', tabId: 99 }, { url: mock.tabs[1]!.url })).toMatchObject({ ok: false });
+  });
+  it('rejects nested registration and verifies frame/document identity', async () => {
+    const sender={tab:{id:42},frameId:3,url:'https://fixture.test/',documentId:'direct-document'};
+    expect(await mock.listeners.message!({type:'vg/agent-hello',viewportId:'phone'},sender)).toMatchObject({ok:true});
+    mock.execute.mockResolvedValueOnce([{result:false,documentId:'nested-document'}]);
+    expect(await mock.listeners.message!({type:'vg/agent-hello',viewportId:'phone'},{...sender,frameId:4,documentId:'nested-document'})).toMatchObject({ok:false});
+    const workspace={url:mock.tabs[0]!.url};
+    expect(await mock.listeners.message!({type:'vg/verify-agent',tabId:42,viewportId:'phone',frameId:3,documentId:'direct-document'},workspace)).toMatchObject({ok:true});
+    expect(await mock.listeners.message!({type:'vg/verify-agent',tabId:42,viewportId:'phone',frameId:4,documentId:'nested-document'},workspace)).toMatchObject({ok:false});
+  });
+  it('retains same-origin sync metadata after a worker restart', async () => {
+    const rows=mock.saved.agentFrames as any[];expect(rows.find(row=>row[1]==='phone')).toEqual([42,'phone',3,'https://fixture.test','direct-document']);
+    rows.push([42,'peer',5,'https://fixture.test','peer-document'],[42,'foreign',6,'https://other.test','foreign-document']);
+    vi.resetModules();await import('../../src/background/index');
+    mock.sent.mockClear();
+    const result=await mock.listeners.message!({type:'vg/sync-apply',tabId:42,env:{sourceViewportId:'phone',channel:'input',payload:{origin:'https://fixture.test',value:'public'}}},{url:mock.tabs[0]!.url});
+    expect(result.ok).toBe(true);expect(mock.sent).toHaveBeenCalledTimes(1);expect(mock.sent.mock.calls[0]?.[2]).toEqual({frameId:5});
   });
   it('uses browser bypass-cache reload without a site data clearing API', async () => {
     const result = await mock.listeners.message!({ type: 'vg/hard-reload', tabId: 42 }, { url: mock.tabs[0]!.url });

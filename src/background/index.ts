@@ -8,6 +8,9 @@ const workspaceUrl = b.runtime.getURL('workspace.html');
 const firefox = isFirefoxWorkspace(workspaceUrl);
 const workspaceTabs = new Set<number>();
 const agents = new Map<number, Map<string, number>>();
+const agentDocuments = new Map<string, string>();
+const agentOrigins = new Map<string, string>();
+const localJobs = new Map<string, { jobId: string; cancelled: boolean }>();
 let hydrated: Promise<void> | undefined;
 let ruleQueue = Promise.resolve();
 const preparing = new Map<string, Promise<void>>();
@@ -42,17 +45,19 @@ function syncRules() {
   return ruleQueue;
 }
 async function persist() {
-  await b.storage?.session?.set({ agentFrames: [...agents].flatMap(([tab, frames]) => [...frames].map(([vp, frame]) => [tab, vp, frame])) });
+  await b.storage?.session?.set({ agentFrames: [...agents].flatMap(([tab, frames]) => [...frames].map(([vp, frame]) => [tab, vp, frame, agentOrigins.get(`${tab}:${vp}`), agentDocuments.get(`${tab}:${vp}`)])) });
 }
 async function hydrate() {
   return hydrated ??= (async () => {
     const tabs = await b.tabs.query({});
     for (const tab of tabs) if (tab.id !== undefined && isWorkspaceUrl(tab.url, workspaceUrl)) workspaceTabs.add(tab.id);
     const saved = await b.storage?.session?.get('agentFrames');
-    if (Array.isArray(saved?.agentFrames)) for (const [tab, vp, frame] of saved.agentFrames) {
+    if (Array.isArray(saved?.agentFrames)) for (const [tab, vp, frame, origin, documentId] of saved.agentFrames) {
       if (!workspaceTabs.has(tab) || typeof frame !== 'number') continue;
       if (!agents.has(tab)) agents.set(tab, new Map());
       agents.get(tab)!.set(vp, frame);
+      if (typeof origin === 'string' && safeHttpUrl(origin)) agentOrigins.set(`${tab}:${vp}`, new URL(origin).origin);
+      if (typeof documentId === 'string') agentDocuments.set(`${tab}:${vp}`, documentId);
     }
     await syncRules();
   })();
@@ -109,12 +114,22 @@ b.runtime.onMessage.addListener((msg: any, sender: any) => {
     if (msg.type === 'vg/agent-hello') {
       const id = sender.tab?.id, frame = sender.frameId;
       if (typeof id !== 'number' || !workspaceTabs.has(id) || typeof frame !== 'number' || frame <= 0) return { ok: false };
+      if (typeof msg.viewportId !== 'string' || !/^[\w:-]{1,200}$/.test(msg.viewportId) || !b.scripting) return { ok: false };
+      const evidence = await b.scripting.executeScript({ target: { tabId: id, frameIds: [frame] }, func: () => window.parent === window.top }).catch(() => null) as Array<{result?: boolean; documentId?: string}> | null;
+      if (!evidence?.[0]?.result || (sender.documentId && evidence[0].documentId && sender.documentId !== evidence[0].documentId)) return { ok: false };
+      const key = `${id}:${msg.viewportId}`;
+      agentDocuments.set(key, sender.documentId ?? '');
+      try { agentOrigins.set(key, new URL(sender.url).origin); } catch { return { ok: false }; }
       if (!agents.has(id)) agents.set(id, new Map());
       agents.get(id)!.set(String(msg.viewportId), frame);
       await persist(); return { ok: true, frameId: frame };
     }
     const tabId = await workspaceTab(msg, sender);
     if (tabId === undefined) return { ok: false, error: 'Unverified workspace' };
+    if (msg.type === 'vg/verify-agent') {
+      const key = `${tabId}:${msg.viewportId}`;
+      return { ok: agents.get(tabId)?.get(msg.viewportId) === msg.frameId && (!agentDocuments.get(key) || agentDocuments.get(key) === msg.documentId) };
+    }
     if (msg.type === 'vg/workspace-hello') {
       workspaceTabs.add(tabId); await syncRules(); return { ok: true, tabId };
     }
@@ -126,7 +141,10 @@ b.runtime.onMessage.addListener((msg: any, sender: any) => {
     if (msg.type === 'vg/sync-apply') {
       const source = String(msg.env?.sourceViewportId);
       if (!agents.get(tabId)?.has(source)) return { ok: false };
-      const target = [...(agents.get(tabId)?.keys() ?? [])].filter(id => id !== source);
+      const sensitive = ['input', 'form', 'key'].includes(msg.env?.channel);
+      const origin = agentOrigins.get(`${tabId}:${source}`);
+      if (sensitive && (!origin || msg.env?.payload?.origin !== origin)) return { ok: false };
+      const target = [...(agents.get(tabId)?.keys() ?? [])].filter(id => id !== source && (!sensitive || agentOrigins.get(`${tabId}:${id}`) === origin));
       await route(tabId, target, { type: 'vg/agent-apply', env: msg.env }); return { ok: true };
     }
     if (msg.type === 'vg/agent-cmd') {
@@ -135,6 +153,28 @@ b.runtime.onMessage.addListener((msg: any, sender: any) => {
       if (msg.cmd === 'goto' && !safeHttpUrl(msg.url)) return { ok: false, error: 'Invalid URL' };
       const reached = await route(tabId, Array.isArray(msg.target) ? msg.target : 'all', { ...msg, type: 'vg/agent-do' });
       return { ok: reached.length > 0, reached };
+    }
+    if (msg.type === 'vg/local-analysis-run' || msg.type === 'vg/local-analysis-cancel') {
+      if (typeof msg.viewportId !== 'string' || msg.viewportId.length > 200 || typeof msg.jobId !== 'string' || msg.jobId.length > 200) return { ok: false, code: 'INVALID_TARGET' };
+      const frameId = agents.get(tabId)?.get(msg.viewportId);
+      if (frameId === undefined) return { ok: false, code: 'PREVIEW_NOT_READY' };
+      const key = `${tabId}:${msg.viewportId}`;
+      if (msg.type === 'vg/local-analysis-cancel') {
+        const job = localJobs.get(key);
+        if (job && job.jobId === msg.jobId) job.cancelled = true;
+        await b.tabs.sendMessage(tabId, { type: 'vg/local-analysis-abort', jobId: msg.jobId }, { frameId }).catch(() => {});
+        return { ok: true };
+      }
+      if (!b.scripting || localJobs.has(key)) return { ok: false, code: 'PREVIEW_NOT_READY' };
+      const job = { jobId: msg.jobId, cancelled: false };
+      localJobs.set(key, job);
+      try {
+        const ready = await b.tabs.sendMessage(tabId, { type: 'vg/local-analysis-ping' }, { frameId }).catch(() => null) as { ok?: boolean } | null;
+        if (!ready?.ok) await b.scripting.executeScript({ target: { tabId, frameIds: [frameId] }, files: ['content/local-analysis.js'] });
+        if (job.cancelled) return { ok: false, code: 'CANCELLED' };
+        return await b.tabs.sendMessage(tabId, { type: 'vg/local-analysis-collect', jobId: msg.jobId, request: msg.request }, { frameId }) ?? { ok: false, code: 'PREVIEW_NOT_READY' };
+      } catch { return { ok: false, code: 'PREVIEW_NOT_READY' }; }
+      finally { if (localJobs.get(key) === job) localJobs.delete(key); }
     }
     if (msg.type === 'vg/scan-run') {
       const reached = await route(tabId, Array.isArray(msg.target) ? msg.target : 'all', { type: 'vg/agent-scan', scanId: msg.scanId, touchViewportIds: msg.touchViewportIds });

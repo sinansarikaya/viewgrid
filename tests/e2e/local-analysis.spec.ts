@@ -1,0 +1,143 @@
+import { test, expect, chromium } from '@playwright/test';
+import { createServer } from 'node:http';
+import { mkdtemp, mkdir, rm, writeFile, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+const content = (broken: boolean) => `<!doctype html><html lang="en"><head><title>${broken ? '' : 'ViewGrid local fixture'}</title><meta name="viewport" content="width=device-width, initial-scale=1">${broken ? '' : '<meta name="description" content="Local fixture description">'}<link rel="canonical" href="/"><script type="application/ld+json">${broken ? '{invalid' : '{"@context":"https://schema.org","@type":"WebPage"}'}</script></head><body><main><h1>Local analysis fixture</h1>${broken ? '<h3>Skipped heading</h3><img><input><button></button>' : '<h2>Details</h2><input aria-label="Name"><button type="button">Action</button>'}<a href="/guide">Documentation guide</a></main></body></html>`;
+
+test('headed local motor: findings, profiles, reports and soft toggle without external traffic', async () => {
+  test.setTimeout(180000);
+  if (!process.env.DISPLAY) throw new Error('A real desktop is required; no headless fallback');
+  const out = 'test-results/local-analysis'; await mkdir(out, { recursive: true });
+  const server = createServer((request, response) => { response.setHeader('Content-Type', 'text/html'); response.end(content(request.url?.startsWith('/broken') ?? false)); });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const profile = await mkdtemp(path.join(tmpdir(), 'viewgrid-local-'));
+  const extension = path.resolve('dist/chromium');
+  const context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: false, chromiumSandbox: true, viewport: null, locale: 'en-US', slowMo: 60, args: ['--ozone-platform=x11', `--disable-extensions-except=${extension}`, `--load-extension=${extension}`] });
+  const external: string[] = [], errors: string[] = [], timings: number[] = [];
+  try {
+    await context.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (['http:', 'https:'].includes(url.protocol) && url.origin !== base) { external.push(url.origin); return route.abort(); }
+      return route.continue();
+    });
+    const worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
+    const id = worker.url().split('/')[2], page = await context.newPage();
+    page.setDefaultTimeout(10000);
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(`chrome-extension://${id}/workspace.html?url=${encodeURIComponent(base + '/broken')}`);
+    // Verify the test owns a real visible compositor window.
+    if (process.env.HYPRLAND_INSTANCE_SIGNATURE) {
+      const cdp = await context.browser()!.newBrowserCDPSession();
+      const info = await cdp.send('SystemInfo.getProcessInfo'), pid = info.processInfo.find(p => p.type === 'browser')?.id;
+      const clients = JSON.parse(execFileSync('hyprctl', ['-j', 'clients'], { encoding: 'utf8' }));
+      expect(clients.some((client: { pid: number; hidden?: boolean }) => client.pid === pid && !client.hidden)).toBe(true);
+      await cdp.detach();
+    }
+    await expect.poll(() => page.frames().filter(frame => frame.url() === base + '/broken').length).toBe(4);
+    for (const frame of page.frames().filter(f => f.parentFrame() === page.mainFrame())) await expect(frame.locator('h1')).toHaveText('Local analysis fixture');
+    await page.getByRole('button', { name: 'Fit to screen', exact: true }).click();
+    const firstCard = page.locator('[data-viewport-id]').first();
+    const zoom = firstCard.getByRole('combobox', { name: 'Display zoom (CSS size unchanged)' });
+    await expect(zoom).toBeVisible();
+    const header = firstCard.locator('[draggable]').first();
+    const zbox = await zoom.boundingBox(), hbox = await header.boundingBox();
+    expect(Math.abs(zbox!.x + zbox!.width / 2 - hbox!.x - hbox!.width / 2)).toBeLessThan(2);
+    const settings = firstCard.getByRole('button', { name: /device settings$/i });
+    await settings.click(); await expect(settings).toHaveAttribute('aria-expanded', 'true');
+    await page.getByRole('button', { name: 'Fit to screen', exact: true }).click();
+    await expect(settings).toHaveAttribute('aria-expanded', 'false');
+    const sidebar = page.getByRole('complementary', { name: 'Workspace tools and devices' });
+    const issues = sidebar.getByRole('button', { name: 'Scan Issues', exact: true });
+    // Tools tab has a scan action, WorkspaceActions also has an issues action.
+    const actionIssues = sidebar.getByRole('button', { name: 'Issues', exact: true });
+    await actionIssues.click();
+    const drawer = page.getByRole('complementary', { name: 'Responsive issues' }); await expect(drawer).toBeVisible();
+    await expect.poll(() => drawer.getByRole('button', { name: 'Scan again', exact: true }).isEnabled()).toBe(true);
+    await actionIssues.click(); await expect(drawer).toBeHidden();
+    const closing = page.locator('[data-kind="drawer"][data-state="closing"]');
+    await expect(closing).toHaveCount(0, { timeout: 2000 });
+    const panel = sidebar.getByRole('button', { name: 'Panel', exact: true });
+    await panel.click(); await expect(drawer).toBeVisible();
+    expect(await drawer.evaluate(element => getComputedStyle(element).animationName)).toContain('drawerIn');
+    await panel.click(); await expect(drawer).toBeHidden();
+    await page.getByRole('button', { name: 'Local Performance', exact: true }).click();
+    const dialog = page.getByRole('dialog'), status = dialog.getByRole('region', { name: 'Analysis status' });
+    await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'SEO & Accessibility', exact: true }).focus();
+    for (const key of ['d', 'a', 'g', 'c']) await page.keyboard.press(key);
+    await expect(page.getByRole('dialog')).toHaveCount(1);
+    await expect(page.locator('[data-layout]')).toHaveAttribute('data-layout', 'grid');
+    await expect(dialog.getByRole('combobox', { name: 'Run Count' })).toHaveCount(0);
+    await expect(dialog.getByRole('combobox', { name: 'Target Profile' })).toHaveValue('both');
+    const started = Date.now(); await dialog.getByRole('button', { name: 'Run All Analyses', exact: true }).click();
+    await expect(status.locator('[data-analysis-status]')).toHaveText('Measurements captured', { timeout: 20000 }); timings.push(Date.now() - started);
+    await expect(dialog.getByText('Inspected DOM elements', { exact: false })).toHaveCount(2);
+    await expect(dialog.locator('[class*="scoreBadge"]')).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Local Performance', exact: true })).toHaveAttribute('data-analysis-state', 'pass');
+    await expect(dialog.locator('[class*=resultOverview]')).toHaveCount(0);
+    const perfEvent = page.waitForEvent('download'); await dialog.getByRole('button', { name: 'Download Markdown', exact: true }).click();
+    const perf = await perfEvent; expect(perf.suggestedFilename()).toBe('viewgrid-performance-report.md'); await perf.saveAs(`${out}/performance.md`);
+    const perfText = await readFile(`${out}/performance.md`, 'utf8'); expect(perfText).not.toContain('Document title'); expect(perfText).toContain('TTFB');
+    await dialog.getByRole('button', { name: 'SEO & Accessibility', exact: true }).click();
+    await expect(dialog.getByText('Document title', { exact: true })).toHaveCount(1);
+    await expect(dialog.getByRole('button', { name: 'SEO & Accessibility', exact: true })).toHaveAttribute('data-analysis-state', 'fail');
+    const seoEvent = page.waitForEvent('download'); await dialog.getByRole('button', { name: 'Download Markdown', exact: true }).click();
+    const seo = await seoEvent; await seo.saveAs(`${out}/seo.md`); expect(seo.suggestedFilename()).toBe('viewgrid-seo-report.md');
+    const seoText = await readFile(`${out}/seo.md`, 'utf8'); expect(seoText).toContain('Document title'); expect(seoText).not.toContain('TTFB');
+    await expect(sidebar.locator('[class*=failureBadge]').first()).toBeVisible();
+    await expect(dialog.getByText('JSON-LD syntax and basic shape', { exact: true })).toHaveCount(1);
+    await expect(dialog.getByText('Accessible button names', { exact: true })).not.toHaveCount(0);
+    await page.screenshot({ path: `${out}/chromium-local-findings.png` });
+    await dialog.getByRole('button', { name: 'GEO Signals (Beta)', exact: true }).click();
+    await expect(dialog.getByText('Unknown / No Data', { exact: false })).not.toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Reports & History', exact: true }).click();
+    const mdEvent = page.waitForEvent('download');
+    await dialog.getByRole('button', { name: 'Download Markdown', exact: true }).click();
+    const md = await mdEvent; expect(md.suggestedFilename()).toBe('viewgrid-report.md'); await md.saveAs(`${out}/report.md`);
+    await dialog.getByRole('button', { name: 'Copy Report', exact: true }).click();
+    await expect(dialog.getByText('All Analyses report copied to the clipboard.', { exact: true })).toBeVisible();
+    const download = page.waitForEvent('download');
+    await dialog.getByRole('button', { name: 'Export JSON', exact: true }).click();
+    const jsonDownload = await download; await jsonDownload.saveAs(`${out}/report.json`);
+    const history = await page.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('viewgrid.analysis.history')));
+    expect(history).toBeTruthy();
+    await dialog.getByRole('button', { name: 'Close dialog', exact: true }).click();
+    await expect(dialog).toBeHidden();
+    await sidebar.getByRole('button', { name: 'Local Performance', exact: true }).click();
+    await expect(status.locator('[data-analysis-status]')).toHaveText('Measurements captured');
+    await expect(dialog.getByText('Inspected DOM elements', { exact: false })).toHaveCount(2);
+    const afterHistory = await page.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('viewgrid.analysis.history')));
+    expect(afterHistory).toEqual(history);
+    await dialog.getByRole('button', { name: 'Close dialog', exact: true }).click(); await expect(dialog).toBeHidden();
+    await page.locator('header input').fill(base + '/'); await page.locator('header input').press('Enter');
+    await expect.poll(() => page.frames().filter(frame => frame.url() === base + '/').length).toBe(4);
+    await expect(sidebar.locator('[class*=failureBadge]')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Local Performance', exact: true }).click();
+    await dialog.getByRole('combobox', { name: 'Target Profile' }).selectOption('both');
+    await dialog.getByRole('button', { name: 'Run All Analyses', exact: true }).click();
+    await expect(status.locator('[data-analysis-status]')).toHaveText('Measurements captured', { timeout: 20000 });
+    await dialog.getByRole('button', { name: 'SEO & Accessibility', exact: true }).click();
+    await dialog.getByRole('combobox', { name: 'Audit Status' }).selectOption('failed');
+    await expect(dialog.getByText('Document title', { exact: true })).toHaveCount(0);
+    await dialog.getByRole('textbox', { name: 'Target URL' }).fill(base + '/not-open');
+    await dialog.getByRole('button', { name: 'Run All Analyses', exact: true }).click();
+    await expect(status.getByRole('alert').first()).toContainText('does not match an open preview');
+    await dialog.getByRole('button', { name: 'Close dialog', exact: true }).click();
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await panel.click(); await expect(drawer).toBeVisible();
+    expect(await drawer.evaluate(element => getComputedStyle(element).animationName)).toBe('none');
+    await panel.click(); await expect(drawer).toBeHidden();
+    await page.screenshot({ path: `${out}/chromium-workspace.png` });
+    expect(external).toEqual([]); expect(errors).toEqual([]);
+    // Ensure normal browsing and sync functionality remain available.
+    expect(await page.locator('[data-viewport-id]').count()).toBe(4);
+    void issues;
+  } finally {
+    await writeFile(`${out}/chromium-evidence.json`, JSON.stringify({ externalRequests: external, pageErrors: errors, observedRunWallMs: timings, headed: true, display: process.env.DISPLAY }, null, 2));
+    await context.close(); server.close(); await rm(profile, { recursive: true, force: true });
+  }
+});

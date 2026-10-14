@@ -1,37 +1,38 @@
-# Analiz profilleri ve ücretsiz işletim sınırları
+# ViewGrid yerel analiz — 1.0.3
 
-Doğrulama: 2026-10-11. Eklenti paket sürümü hâlâ1.0.3 geliştirme; mağazaya yayınlanmadı. Temel viewport/sync/compare/capture için sunucu veya Google hesabı gerekmez.
+2026-10-14: Analiz ekranı artık ViewGrid'in eklentiye paketlenen yerel motorunu kullanır. Google PageSpeed, CrUX, ücretli servis, API anahtarı, CDN veya ayrı yardımcı uygulama gerekmez. Lighthouse ve ZAP çalıştırılmaz.
 
-| Profil | Anahtar/hesap | Veri aktarımı ve koşul | Durum |
-| --- | --- | --- | --- |
-| Temel eklenti | Yok | Seçilen siteler doğrudan tarayıcıda | Chromium/Firefox yerel fixture testleri geçti |
-| İsteğe bağlı PSI keyless | Anahtar yok | Kullanıcı onayıyla URL/profil/dil Google'a | Bu ortamda HTTP429; başarılı canlı servis engelli |
-| Ayrı CrUX API | Google Cloud proje/API anahtarı | URL veya origin; aggregate p75 ve dönem | Ücretsiz150 sorgu/dakika/proje resmî belgeli, anahtar yok; çağrı yapılmadı |
-| Yerel Lighthouse CLI | Google anahtarı/hesabı yok | Yerel Chrome/Chromium siteyi yükler | Alternatif araştırıldı; ViewGrid otomatik runner/server entegrasyonu henüz yok |
-| Kullanıcı sunucusu | İsteğe bağlı | Sahip olunan sunucunun CPU/RAM/ağ/disk kaynakları | Tasarım profili; kurulmadı veya yayınlanmadı |
+## Kullanım
 
-## Kamu API şartları
+1. Hedef HTTP/HTTPS sayfasını çalışma alanında açın ve yüklenmesini bekleyin. localhost ve yerel ağ adresleri desteklenir.
+2. Yerel Performans veya SEO & Erişilebilirlik ekranını açın.
+3. Mobil, masaüstü veya ikisini seçip analizi başlatın. Dokunmatik profil mobil grubundadır; gerçek görünüm boyutu sonuçta gösterilir. Her profil için eşleşen ilk açık görünüm incelenir; gizli veya küçültülmüş görünümler taranmaz.
+4. Bulguları, GEO kontrol listesini ve yerel raporu inceleyin. HTML/JSON dışa aktarımı ve tarayıcının PDF yazdırması kullanılabilir.
 
-[PSI resmî başlangıç](https://developers.google.com/speed/docs/insights/v5/get-started) anahtarsız örnek içerir ve sık kullanımda anahtar önerir; sayfa sabit keyless günlük kota veya kesintisiz erişim garantisi vermez. Eski blog sayılarından garanti türetilmedi. Hesaba özgü kota gerekiyorsa kullanıcı kendi Cloud Console'unda kontrol eder. [Google API koşulları](https://developers.google.com/terms) ayrıca geçerlidir.
+Hedef başka bir adrese yönlendiyse son adresi kullanın. Açık görünüm olmayan adresler arka planda yüklenmez. Site izni, hazır olmayan görünüm, eksik profil ve yanlış hedef ayrı açıklanır. Bir profil başarısız olduğunda diğer başarılı sonuç korunur.
 
-[CrUX resmî belge](https://developer.chrome.com/docs/crux/api) API anahtarını zorunlu kılar,150 sorgu/dakika/proje ücretsiz limitini ve ücretle artırılamadığını belirtir. Veri her URL için mevcut değildir. PSI CrUX alanları kaldırılabilecek olduğundan yalnız yanıtta bulunan saha verisi gösterilir; tarih/form factor yoksa bilinmiyor kaydedilir. TBT lab metrik, INP gerçek kullanıcı metrikidir; birbirinin yerine geçmez.
+## Kontroller ve ölçüm sınırları
 
-Bu projede keyless başarısızlığı sahte/örnek puanla doldurulmaz. Mock test fixture'ı `tests/fixtures/psi-response.json`; dosyada ve örnek raporda gerçek servis ölçümü olmadığı belirtilir. İstemciye key eklemek veya sırf key saklamak için ücretli proxy satın almak çözüm değildir.
+- ViewGrid kuralları: title, meta description, canonical URL sözdizimi, viewport, başlık sırası, ana içerik bölgesi, bağlantı adları/URL'leri, görsel alt öznitelikleri, robots meta, hreflang sözdizimi/self referans ve JSON-LD sözdizimi/temel yapı.
+- Paketlenen axe-core 4.11.0: düğme/giriş/seçim adları, form etiketleri, ARIA öznitelikleri/rolleri, belge dili ve ARIA kimlik referanslarından oluşan sabit 12 kural. Kontrast, gölge DOM, iç içe frame'ler ve tüm WCAG kapsamı bu sınırlı taramanın garantisi değildir.
+- Yerel performans: tarayıcının verdiği Navigation Timing (TTFB, DOMContentLoaded, load), gözlenen kaynak sayısı ve varsa FCP. Bunlar yüklenen önizlemenin gözlemleridir; yeni sayfa yüklemesi veya bağımsız laboratuvar testi değildir. Sayfanın mevcut önbelleği, frame bağlamı ve cihaz yükü sonucu etkiler.
+- Lighthouse puanı, LCP/CLS/Speed Index/TBT ve CrUX p75 metrikleri hesaplanmaz; eksik veriler sıfır yapılmaz. GEO sonuçları sıralama veya AI görünürlüğü garantisi değildir.
+- Robots.txt, sitemap, karşılıklı hreflang, HTTP güvenlik başlıkları, site genelinde crawl ve DAST çalıştırılmaz. ViewGrid'in değiştirdiği iframe başlıklarından güvenlik sonucu çıkarılmaz; bu kontroller manuel olarak belirtilir.
 
-## Lighthouse: kendi makinesi/sunucusu alternatifi
+## Kaynak bütçesi ve gizlilik
 
-[Resmî Lighthouse deposu](https://github.com/GoogleChrome/lighthouse) Node CLI/programmatic kullanım, Chrome/Chromium gereksinimi, HTML/JSON çıktı ve Apache-2.0 lisansını belgeler. Güncel main `package.json` Node>=22.19 gerektirir; main sürümü yayımlanmış npm sürümü kabul edilmedi. Kurulumda seçilen release'in engines ve Chrome uyumluluğu kontrol edilip sürüm pinlenmelidir.
+Motor yalnız analiz başlatıldığında seçili frame'e yüklenir. Profiller sırayla çalışır; aynı frame'de aynı anda tek iş yürütülür. Normal gezintide DOM taraması veya axe işi başlamaz.
 
-Basit manuel alternatif: Chrome DevTools Lighthouse panelini açın, mobile/desktop profiliyle rapor üretin ve HTML/JSON'u yerel kaydedin. Bu ViewGrid içinde otomatik runner desteği olarak sunulmaz. Linux headless CLI için resmî [headless Chrome kılavuzu](https://github.com/GoogleChrome/lighthouse/blob/main/docs/headless-chrome.md) izlenebilir; Node ve Chromium yüklendikten sonra seçilen pinli Lighthouse CLI `--help` ile doğrulanır. Bu aşamada global paket kurulmadı, Docker daemon veya production değiştirilmedi.
+DOM yürüyüşü en fazla 2.000 öğe, 6.000 düğüm ve 100.000 karakterle sınırlıdır; 100 düğümde bir tarayıcıya işlem sırası bırakılır. JavaScript/CSS gövdeleri tarama metin bütçesine dahil edilmez. Etkilenen öğeler 20 kayıtla sınırlıdır. Kapsam aşılırsa eksik kontroller bilinmiyor olarak gösterilir ve axe taraması atlanır.
 
-Platform: Chrome/Chromium bulunan Linux/macOS/Windows'ta CLI kullanılabilir; bu ortam yalnız Linux'tur. Firefox eklenti desteği Lighthouse motorunun Firefox ölçtüğü anlamına gelmez; Safari/gerçek cihaz sonucu değildir. Headless browser CPU ve bellek tüketir; bu projede gerçek benchmark yapılmadığından MB/çekirdek/saniye kapasite rakamı üretilmedi. İşler sıraya alınmalı, profile/engine/throttling/cihaz koşulları raporda saklanmalı; mevcut iframe yükünden bağımsız ayrı browser profile/process kullanılmalı.
+Axe beklemesi 1,5 saniye, profil beklemesi varsayılan 12 saniyeyle sınırlıdır. İptal sonuçları geçersiz kılar ve DOM yürüyüşünü durdurur; başlamış axe çalışması zorla öldürülemez, bitene kadar aynı kolektörde yeni axe işi açılmaz. Tamamlanmayan kontrol başarılı sayılmaz.
 
-Sunucu profili ileride gerekirse açık kaynak container/CLI, minimum privileges, browser sandbox korunması, timeout/queue/concurrency sınırı, Zod girdi doğrulaması, DNS+redirect boyunca SSRF/özel ağ engeli, yetkilendirme/rate limit, sansürlü log ve sınırlı retention gerektirir. Public keyless ölçüm endpointi kendiliğinden açılmaz. Browser sandbox'ını devre dışı bırakmak bu profil için kabul edilen çözüm değildir. Sunucunun elektrik/CPU/RAM/ağ/disk/backup/bakım maliyeti kullanıcınındır; ücretsiz yazılım sıfır işletim maliyeti değildir.
+Analiz servisine hiçbir URL/HTML gönderilmez; axe kaynak ön yüklemesi kapalıdır. Siteler kendi normal ağ isteklerini yapabilir. Form değerleri, HTML parçaları, kişisel metinler veya axe hedef seçicileri analiz sonucuna eklenmez. Geçmiş 20 kayıt/256 KiB ile sınırlıdır; sorgu/fragment, kullanıcı ajanı ve öğe içeriği dışa aktarımda sansürlenir. Kullanıcının ayrıca eklediği ekran görüntüsünün pikselleri otomatik sansürlenmez.
 
-Yerel Lighthouse saha CrUX geçmişini üretmez. Çerezli/localhost hedefleri ölçmek ayrı yetki ve izolasyon gerektirir; mevcut public URL analizinden otomatik açılmaz. Anahtar gerekiyorsa yalnız kullanıcı sunucusunun environment secret'ı; istemci/log/rapor içinde bulunmaz. BYO-key seçeneği mevcut değil.
+Eski Google/Lighthouse kayıtları korunur ve harici kaynak olarak etiketlenir; yeni yerel sonuçlarla aynı motor gibi karşılaştırılmaz. Eski PSI istemci/birim testleri tarihsel uyumluluk içindir; paketlenmiş arayüz bunları çağırmaz.
 
-## Kullanım ve veri saklama
+## Dağıtım
 
-Performance alanında hedef public URL ve profil seçilir, dış gönderim onayı verilir. Kota/timeout/iptal ayrı gösterilir; eski sonuç yeni URL sonucuymuş gibi sunulmaz. Analiz geçmişi20 kayıt/256KiB sınırlıdır, silinebilir. Exportlar query ve içerik detaylarını sansürler; PDF tarayıcının yazdır/PDF kaydet akışıdır. Her raporda kaynak, engine, tarih, koşullar, lab/field ayrımı ve atlanan kontroller görünmelidir.
+Firefox ve Chromium paketleri ayrı üretilir. axe-core MPL-2.0 ve üçüncü taraf bildirimleri paketle birlikte korunur; kaynak bağlantısı ve tam lisans metni `THIRD_PARTY_NOTICES.md` ve `licenses/axe-core-MPL-2.0.txt` içinde bulunur. Kullanıcıya npm/Node/Docker kurulumu yaptırılmaz.
 
-Yeni runtime bağımlılığı Zod4.6.5 (MIT); [bildirim](../THIRD_PARTY_NOTICES.md). Lighthouse yalnız araştırıldı, bağımlılık olarak eklenmedi.
+Bu makinede Chromium ve Firefox gerçek görünür eklenti testleri yerel fixture üzerinde çalıştırıldı. Dış servisler engellendi; analiz sırasında dış istek gözlenmedi. Bu kanıt Windows/macOS, gerçek telefon, Safari veya tüm internet siteleri için doğrulama değildir. Kanıt dizini: `test-results/local-analysis/`.

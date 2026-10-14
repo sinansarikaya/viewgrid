@@ -1,5 +1,20 @@
 # ViewGrid Özellik Test Matrisi
 
+## INTERACTION-SCAN-FIX — aktif doğrulama, 2026-10-12
+
+Önceki paket kanıtları aşağıda korunur. Bu görevin yeni Firefox ve son regresyon kapıları henüz geçilmiş değildir.
+
+| Senaryo / ortam / adım | Beklenen | Gerçekleşen / durum | Kanıt |
+| --- | --- | --- | --- |
+| Chromium izole headed eklenti; Sync tooltip açıkken Devices tıklama | Tooltip tıklamayı engellemez | Geçti; pointer-events:none ve komşu işlem açıldı | interaction-headed-3.log |
+| Chromium gerçek checkbox; Space ve label tıklama | Native checked state değişir | Geçti | interaction-headed-3.log |
+| Chromium yerel bulgulu / temiz sayfa, Sorunları Tara | Bulgu veya açık bulgusuz sonuç, kapsam bilgisi | Geçti; iki durum ayrı doğrulandı | interaction-headed-3.log; interaction/issues-found.png |
+| Chromium dört kart, sağ altı sol üste bırakma | Deterministik sıra, iframe içeriği ve kalıcılık korunur | Geçti; pointerup, yeni sıra, form değeri, storage ve reload; AltArrow ve reduced-motion da geçti | interaction-headed-final.log; interaction/chromium-evidence.json |
+| Kontrollü analiz 429/ağ/503/eksik yanıt/45s timeout/iptal, tüm sekmeler | Hata boş başarılı sonuç gibi görünmez; otomatik retry yok | Geçti; her hata başına tek istek, 429 yalnız manuel retry ile ikinci istek. Uyarılı mock başarı doğru kısmi sonuç; SEO bulgusu ve GEO görünür | interaction-headed-final.log; interaction/quota-all-tabs.png; interaction/analysis-success-geo.png |
+| Gerçek CastPost dört iframe ve yerel Sorunları Tara | Gerçek içerik yüklenir, tarama kapsamı ve sonuç görünür | Geçti; site içeriğine müdahale edilmedi; Google ölçümü değil | interaction/castpost-live-scan.png; chromium-evidence.json |
+| Firefox yeni tooltip/checkbox/scan/reorder senaryoları | Chromium ile ayrı gerçek eklenti doğrulaması | Ara sonuç: baseline click-sync, altı gerçek browser zoom, consent ve yeni tooltip/checkbox/tarama geçti; ilk drag action dizisi başarısız, tek W3C action dizisiyle tanılama/retest sürüyor | interaction-firefox.log; interaction-firefox-retest.log |
+| Gerçek PSI/CrUX | Gerçek ölçüm, kota veya anahtar engeli açık | Engelli önceki servis doğrulaması; mock başarı gerçek servis sayılmaz | Önceki Google 429 / CrUX anahtar kayıtları |
+
 ## ICON-GRID-POLISH kabul kayıtları — 2026-10-12
 
 Bu paket önceki1.0.4–1.6geniş kapsamın tamamlanması veya mağaza yayını değildir. Sürüm package1.0.3; mağaza sürümü doğrulanmadı. Kanıt kökü `test-results/development/`.
@@ -170,3 +185,7 @@ Aşağıdaki kapsam 2026-10-11 kullanıcı görevinden gelir; tarihsel PRD yol h
 | v1.4 | CrUX/SEO/a11y | URL/origin/dönem, eksik veri, filtre/manual/error audit | Analiz | Lab TBT saha INP'den ayrı, eksik puan uydurulmaz | Çalıştırılmadı |
 | v1.5 | Raporlar | HTML/JSON/PDF aç/render, history/delete/limit, before-after/median ve koşul farkı | Analiz/field | Doğru metadata ve atlanan kontroller, okunaklı dosyalar | Çalıştırılmadı |
 | v1.6 BETA | GEO | Crawl/semantic/source/date/schema; otomatik vs manuel | Rapor | Sürümlü kriter, passed/improve/manual durumları, görünürlük garantisi yok | Çalıştırılmadı |
+
+## 2026-10-14 — LOCAL-ANALYSIS 1.0.4
+
+Yerel analiz motoru ve panel geçişleri tamamlandı. 332 unit; Chromium 24 headed test + Firefox yerel akışı geçti; bir isteğe bağlı canlı CastPost testi atlandı. Dış audit isteği gözlenmedi. Lint/type/build geçti; Firefox paket lint 0 hata/13 axe uyarısı. Tam kapsam, kısıtlar ve ekip engelleri: [Yerel analiz doğrulaması](LOCAL_ANALYSIS_VALIDATION.md). Kurulum: [Yerel analiz](ANALYSIS_SETUP.md). İki ZIP `release/viewgrid-1.0.4-{chromium,firefox}.zip` içinde; mağaza/push yapılmadı. Önceki Claude tercihi geçici Gemini/Codex yönlendirmesiyle değiştirildi; Claude çağrılmadı.

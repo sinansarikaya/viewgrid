@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Icon } from '../common/Icon';
+import { Checkbox } from '../common/Checkbox';
 import { Button } from '../common/Button';
 import s from './IssuesDrawer.module.css';
 import { useStore } from './store';
@@ -7,7 +8,7 @@ import { groupIssues, issueReport, reportDocument } from '../../core/issues/repo
 import { issuesText } from './issues-i18n';
 import { downloadBlob, sendAgentCmd } from './bridge';
 import { b } from '../../platform/browser';
-import { startScan } from './scan';
+import { startScan, cancelScan } from './scan';
 
 export function IssuesDrawer() {
   const st = useStore(), t = issuesText(st.language);
@@ -36,11 +37,12 @@ export function IssuesDrawer() {
     <header className={s.header}><strong>{t.title}</strong><Button aria-label="Close issues" onClick={() => st.setDrawerOpen(false)}><Icon name="close" /></Button></header>
     <div className={s.summary}><b>{filtered.length}</b> {t.unique} <span>· {filtered.reduce((n, g) => n + g.occurrences.length, 0)} {t.occurrences}</span></div>
     <p className={s.note}>{t.note}</p>
-    <label className={s.note}><input type="checkbox" checked={includeOptional} onChange={event => setIncludeOptional(event.target.checked)} /> {t.optionalToggle} ({optionalCount})</label>
+    <Checkbox className={s.note} checked={includeOptional} onChange={event => setIncludeOptional(event.target.checked)}>{t.optionalToggle} ({optionalCount})</Checkbox>
     {st.scannedAt && <p className={s.note}>{t.scanned}: <time dateTime={new Date(st.scannedAt).toISOString()}>{new Date(st.scannedAt).toLocaleString(st.language === 'no' ? 'nb-NO' : st.language)}</time></p>}
     {st.scannedAt && <p className={s.note}>{t.coverage}: {Object.entries(st.scanCoverage).map(([id, count]) => `${name(id)}: ${count}`).join(" · ")}</p>}
     <div className={s.actions}>
       <Button onClick={() => void startScan()} disabled={st.scanning}>{t.rescan}</Button>
+      {st.scanning && <Button onClick={cancelScan}>{t.cancel}</Button>}
       <Button disabled={!st.scannedAt || st.scanning} onClick={() => void copy(issueReport(filtered, name, context))}>{t.copy}</Button>
       <Button disabled={!st.scannedAt || st.scanning} onClick={() => downloadBlob(new Blob([JSON.stringify({ schemaVersion: 3, extensionVersion: context.version, ...context, coverage: st.scanCoverage, heuristic: true, failedViewports: context.failed, truncatedViewports: context.truncated, findings: filtered }, null, 2)], { type: 'application/json' }), 'viewgrid-issues.json')}>{t.json}</Button>
     </div>
@@ -53,9 +55,10 @@ export function IssuesDrawer() {
     </div>
     <div className={s.body} aria-live="polite">
       {st.scanning && <p role="status">{t.pending}: {st.scanPending.length}</p>}
-      {!!st.scanFailed.length && <p className={s.warning}>{t.failed}: {st.scanFailed.map(name).join(', ')}</p>}
+      {st.scanNotice && <p role="status">{t.notices[st.scanNotice]}</p>}
+      {!!st.scanFailed.length && <p className={s.warning} role="alert">{t.failed}: {st.scanFailed.map(id=>`${name(id)} — ${t.failureReasons[st.scanFailureReasons[id]??'unreachable']}`).join(', ')}</p>}
       {!!st.scanTruncated.length && <p className={s.warning}>{t.partial}: {st.scanTruncated.map(name).join(', ')}</p>}
-      {!st.scanning && !groups.length && <p>{st.scannedAt ? (st.scanFailed.length ? '' : t.none) : t.notScanned}</p>}
+      {!st.scanning && !groups.length && !st.scanNotice && <p>{st.scannedAt ? (st.scanFailed.length ? '' : t.none) : t.notScanned}</p>}
       {!!groups.length && !filtered.length && <p>{!includeOptional && optionalCount === groups.length && !query && device === 'all' && rule === 'all' && severity === 'all' ? t.onlyOptional : t.empty}</p>}
       {filtered.map(g => <article key={g.key} className={s.card}>
         <div className={s.rule}><span data-severity={g.issue.severity}>{g.issue.severity}</span><code>{g.issue.rule}</code></div>

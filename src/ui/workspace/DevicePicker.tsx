@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Icon } from '../common/Icon';
+import { Checkbox } from '../common/Checkbox';
 import { useStore } from './store';
 import { MAX_VIEWPORTS, type DeviceCategory, type Orientation } from '../../core/types';
 import { Modal } from '../common/Modal';
@@ -269,9 +270,7 @@ export function DevicePicker() {
                   role="listitem"
                 >
                   <label className={s.cardSelectArea}>
-                    <input
-                      type="checkbox"
-                      className={s.checkbox}
+                    <Checkbox
                       checked={isSelected}
                       disabled={isLimitReached && !isSelected}
                       onChange={() => toggleSelect(device.id)}

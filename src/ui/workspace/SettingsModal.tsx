@@ -39,7 +39,6 @@ export function SettingsModal() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [recordingAction, st]);
 
-  if (!st.settingsOpen) return null;
 
   const handleRecordKey = (e: React.KeyboardEvent, actionKey: string) => {
     e.preventDefault();

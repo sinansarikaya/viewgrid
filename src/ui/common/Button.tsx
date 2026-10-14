@@ -6,7 +6,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'default' | 'primary' | 'danger';
   iconOnly?: boolean;
   tooltip?: string;
-  tooltipPlacement?: 'top' | 'bottom';
+  tooltipPlacement?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 export const Button: React.FC<ButtonProps> = ({

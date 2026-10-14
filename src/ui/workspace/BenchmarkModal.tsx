@@ -6,7 +6,6 @@ import s from './BenchmarkModal.module.css';
 export function BenchmarkModal() {
   const st = useStore(), tr = st.language === 'tr';
   useEffect(() => { const close = (e: KeyboardEvent) => { if (e.key === 'Escape') st.setBenchmarkOpen(false); }; window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close); }, [st]);
-  if (!st.benchmarkOpen) return null;
   return <div className={s.overlay} onClick={() => st.setBenchmarkOpen(false)}><div className={s.modal} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
     <div className={s.header}><strong>{tr ? 'Çalışma biçimi ve sınırlar' : 'Runtime and limitations'}</strong><Button iconOnly aria-label={tr ? 'Kapat' : st.language === 'no' ? 'Lukk' : 'Close'} onClick={() => st.setBenchmarkOpen(false)}><Icon name="close" /></Button></div>
     <div className={s.body}>

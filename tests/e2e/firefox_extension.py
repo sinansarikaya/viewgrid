@@ -18,6 +18,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
 FIXTURE = '<!doctype html><h1>ViewGrid Firefox fixture</h1><button id="action" onclick="document.querySelector(\'#count\').textContent=Number(document.querySelector(\'#count\').textContent)+1">Count</button><span id="count">0</span><input id="name"><div style="height:1800px"></div>'
+INTERACTION_FIXTURE = '<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:8px;font:16px sans-serif}input{height:44px;width:250px;max-width:90%}</style><h1>{title} fixture</h1><input aria-label="Name">{finding}'
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -33,6 +34,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header('X-Frame-Options', 'DENY')
             self.send_header('Content-Security-Policy', "frame-ancestors 'none'; default-src 'self' 'unsafe-inline'")
         self.end_headers()
+        if self.path in ['/interaction-issues', '/interaction-clean']:
+            finding = '<p id="clipped" style="width:80px;overflow:hidden;white-space:nowrap">This text is accidentally clipped and must be detected</p>' if self.path == '/interaction-issues' else ''
+            self.wfile.write(INTERACTION_FIXTURE.replace('{title}', 'Issues' if finding else 'Clean').replace('{finding}', finding).encode())
+            return
         self.wfile.write(('<iframe src="/protected"></iframe>' if self.path == '/host' else FIXTURE).encode())
 
     def log_message(self, *_):
@@ -54,6 +59,9 @@ if headed:
 else:
     options.add_argument('-headless')
 options.set_preference('extensions.webextensions.uuids', json.dumps({'viewgrid@viewgrid.dev': uuid}))
+if os.environ.get('VIEWGRID_INTERACTION_FIXES') == '1':
+    assert headed, 'VIEWGRID_INTERACTION_FIXES requires VIEWGRID_FIREFOX_HEADED=1'
+    options.set_preference('ui.prefersReducedMotion', 1)
 driver = webdriver.Firefox(options=options)
 if headed and os.environ.get('HYPRLAND_INSTANCE_SIGNATURE'):
     pid = driver.capabilities['moz:processID']
@@ -92,6 +100,138 @@ def frame_script(script, index=0, *args):
         return driver.execute_script(script, *args)
     finally:
         driver.switch_to.default_content()
+
+
+def interaction_fixes():
+    """Optional real-input checks in this runner's isolated Firefox profile."""
+    from selenium.webdriver import ActionChains
+    from selenium.webdriver.common.keys import Keys
+
+    evidence = {'controlledFixture': True, 'actualAddon': True, 'headed': headed}
+    driver.execute_async_script('const done=arguments[arguments.length-1]; browser.tabs.getCurrent().then(t=>browser.tabs.setZoom(t.id,1)).then(()=>done(true));')
+    driver.set_window_size(1280, 800)
+    actual = driver.execute_script('return [innerWidth,innerHeight]')
+    driver.set_window_size(2560 - actual[0], 1600 - actual[1])
+    wait.until(lambda d: d.execute_script('return [innerWidth,innerHeight]') == [1280, 800])
+    wait.until(lambda d: d.execute_script("return matchMedia('(prefers-reduced-motion:reduce)').matches"))
+    evidence['reducedMotion'] = True
+
+    def sidebar():
+        return driver.find_element(By.CSS_SELECTOR, 'aside[aria-label="Workspace tools and devices"]')
+
+    def sidebar_button(label):
+        return sidebar().find_element(By.XPATH, f".//button[@aria-label='{label}']")
+
+    def card_ids():
+        return driver.execute_script("return [...document.querySelectorAll('[data-viewport-id]')].map(card=>card.dataset.viewportId)")
+
+    def stored_ids():
+        return driver.execute_async_script("const done=arguments[arguments.length-1]; browser.storage.local.get('viewgrid.store.v1').then(data=>done(data['viewgrid.store.v1']?.model.viewports.map(viewport=>viewport.id))); ")
+
+    def navigate_fixture(path, title):
+        address = driver.find_element(By.CSS_SELECTOR, 'header input')
+        address.clear()
+        address.send_keys(base + path, Keys.ENTER)
+        wait.until(lambda _: all(frame_script('return location.href', index) == base + path for index in range(4)))
+        wait.until(lambda _: all(f'{title} fixture' in frame_text(index) for index in range(4)))
+
+    # A tooltip stays visible over neighbouring controls but never owns the hit.
+    ActionChains(driver).move_to_element(sidebar_button('Sync')).perform()
+    tooltip = wait.until(lambda d: next((element for element in d.find_elements(By.CSS_SELECTOR, '[role="tooltip"]') if element.is_displayed() and element.text == 'Sync'), None))
+    assert driver.execute_script('return getComputedStyle(arguments[0]).pointerEvents', tooltip) == 'none'
+    sidebar_button('Devices').click()
+    wait.until(lambda _: sidebar().find_element(By.XPATH, ".//button[contains(., '+ Add Device')]").is_displayed())
+    evidence['tooltipNeighbourClick'] = True
+
+    sidebar_button('Sync').click()
+    label = wait.until(lambda _: sidebar().find_element(By.XPATH, ".//label[normalize-space(.)='Sync scroll']"))
+    checkbox = label.find_element(By.CSS_SELECTOR, 'input[type="checkbox"]')
+    assert checkbox.is_selected()
+    checkbox.send_keys(Keys.SPACE)
+    wait.until(lambda _: not checkbox.is_selected())
+    label.click()
+    wait.until(lambda _: checkbox.is_selected())
+    evidence['nativeCheckboxSpaceAndLabel'] = True
+
+    sidebar_button('Tools').click()
+    navigate_fixture('/interaction-issues', 'Issues')
+    sidebar().find_element(By.XPATH, ".//button[@title='Scan Issues']").click()
+    drawer = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, 'aside[aria-label="Responsive issues"]'))
+    wait.until(lambda _: len(drawer.find_elements(By.TAG_NAME, 'article')) > 0)
+    wait.until(lambda _: 'Inspected DOM elements' in drawer.text)
+    assert '#clipped' in drawer.text
+    driver.save_screenshot(str(out / 'interaction-issues-found.png'))
+    drawer.find_element(By.CSS_SELECTOR, 'button[aria-label="Close issues"]').click()
+    navigate_fixture('/interaction-clean', 'Clean')
+    sidebar().find_element(By.XPATH, ".//button[@title='Scan Issues']").click()
+    drawer = wait.until(lambda d: d.find_element(By.CSS_SELECTOR, 'aside[aria-label="Responsive issues"]'))
+    wait.until(lambda _: 'No findings in the scanned content.' in drawer.text)
+    assert not drawer.find_elements(By.TAG_NAME, 'article')
+    assert 'Could not scan' not in drawer.text
+    driver.save_screenshot(str(out / 'interaction-clean-scan.png'))
+    drawer.find_element(By.CSS_SELECTOR, 'button[aria-label="Close issues"]').click()
+    evidence['responsiveScanFindingsAndEmpty'] = True
+
+    driver.find_element(By.XPATH, "//button[@title='Grid']").click()
+    driver.find_element(By.XPATH, "//button[@title='Fit to screen']").click()
+    original = card_ids()
+    assert len(original) == 4 and len(set(original)) == 4, original
+    cards = driver.find_elements(By.CSS_SELECTOR, '[data-viewport-id]')
+    cards[0].find_element(By.CSS_SELECTOR, 'button[aria-label^="Drag to reorder: iPhone"]')
+    desktop_grip = cards[3].find_element(By.CSS_SELECTOR, 'button[aria-label^="Drag to reorder: Desktop"]')
+    geometry = driver.execute_script("return [...document.querySelectorAll('[data-viewport-id]')].map(card=>{const box=card.getBoundingClientRect();return {x:box.x,y:box.y,width:box.width,height:box.height}})")
+    assert abs(geometry[0]['y'] - geometry[1]['y']) <= 1 and abs(geometry[2]['y'] - geometry[3]['y']) <= 1, geometry
+    assert geometry[1]['x'] > geometry[0]['x'] and geometry[2]['y'] > geometry[0]['y'], geometry
+    evidence['grid2x2'] = geometry
+    driver.switch_to.frame(cards[3].find_element(By.TAG_NAME, 'iframe'))
+    driver.find_element(By.CSS_SELECTOR, 'input[aria-label="Name"]').send_keys('keep me')
+    driver.switch_to.default_content()
+    driver.execute_script("window.__dragEvents=[]; for(const type of ['pointerdown','pointermove','pointerup','pointercancel','dragstart'])document.addEventListener(type,e=>window.__dragEvents.push({type,id:e.pointerId??null,drag:!!document.querySelector('[data-reordering=true]')}),true);")
+    ActionChains(driver).move_to_element(desktop_grip).click_and_hold().pause(.2).move_to_element(cards[0]).pause(.3).release().perform()
+    drag_events = driver.execute_script('return window.__dragEvents')
+    print('FIREFOX POINTER DRAG', drag_events, flush=True)
+    # Grip contract: pointer capture owns the gesture. A native dragstart from the
+    # draggable header would make Firefox cancel the pointer stream instead.
+    drag_types = [event['type'] for event in drag_events]
+    assert 'pointerdown' in drag_types, drag_types
+    after_down = drag_events[drag_types.index('pointerdown') + 1:]
+    assert not [event for event in after_down if event['type'] in ('dragstart', 'pointercancel')], drag_types
+    assert any(event['type'] == 'pointermove' for event in after_down), drag_types
+    pointer_ups = [event for event in after_down if event['type'] == 'pointerup']
+    assert len(pointer_ups) == 1 and pointer_ups[0]['drag'], drag_events
+    evidence['firefoxGripPointerEvents'] = drag_types
+    reordered = [original[3], original[0], original[1], original[2]]
+    wait.until(lambda _: card_ids() == reordered)
+    assert frame_script("return document.querySelector('input[aria-label=\"Name\"]').value") == 'keep me'
+    wait.until(lambda _: stored_ids() == reordered)
+    driver.refresh()
+    wait.until(lambda _: card_ids() == reordered)
+    wait.until(lambda _: all('Clean fixture' in frame_text(index) for index in range(4)))
+    evidence['desktopToPhonePointerReorderAndReload'] = {'before': original, 'after': reordered}
+
+    first_grip = driver.find_elements(By.CSS_SELECTOR, '[data-viewport-id]')[0].find_element(By.CSS_SELECTOR, 'button[aria-label^="Drag to reorder:"]')
+    first_grip.send_keys(Keys.ALT, Keys.ARROW_DOWN, Keys.NULL)
+    keyboard_order = [reordered[1], reordered[0], reordered[2], reordered[3]]
+    wait.until(lambda _: card_ids() == keyboard_order)
+    assert driver.execute_script("return [...document.querySelectorAll('[data-viewport-id]')].flatMap(card=>card.getAnimations()).length") == 0
+    wait.until(lambda _: stored_ids() == keyboard_order)
+    evidence['altArrowReorderReducedMotion'] = keyboard_order
+    logical = driver.execute_script("return [...document.querySelectorAll('iframe[name^=\"viewgrid:\"]')].map(frame=>[frame.clientWidth,frame.clientHeight])")
+    for label, expected in [('Row', 'row'), ('Column', 'col'), ('Freeform', 'free'), ('Grid', 'grid')]:
+        driver.find_element(By.XPATH, f"//button[@title='{label}']").click()
+        wait.until(lambda d: d.find_element(By.CSS_SELECTOR, 'main [data-layout]').get_attribute('data-layout') == expected)
+        assert driver.execute_script("return [...document.querySelectorAll('iframe[name^=\"viewgrid:\"]')].map(frame=>[frame.clientWidth,frame.clientHeight])") == logical
+        if expected == 'free':
+            first_grip = driver.find_elements(By.CSS_SELECTOR, '[data-viewport-id]')[0].find_element(By.CSS_SELECTOR, 'button[aria-label^="Drag to reorder:"]')
+            first_grip.send_keys(Keys.ALT, Keys.ARROW_RIGHT, Keys.NULL)
+            assert card_ids() == keyboard_order
+    fit = driver.find_element(By.XPATH, "//button[@title='Fit to screen']")
+    ActionChains(driver).move_to_element(fit).perform()
+    assert driver.execute_script('return getComputedStyle(arguments[0]).transform', fit) == 'none'
+    evidence['fourLayoutsPreserveLogicalDimensions'] = logical
+    driver.save_screenshot(str(out / 'interaction-final-grid.png'))
+    (out / 'interaction-evidence.json').write_text(json.dumps(evidence, indent=2))
+    print('PASS Firefox: optional real tooltip, native checkbox, scan, 2x2 pointer/keyboard reorder, persistence and reduced motion', flush=True)
 
 
 try:
@@ -230,6 +370,8 @@ try:
     print('PASS Firefox: analysis consent/public URL validation UI; no analysis request sent', flush=True)
     driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
     wait.until(lambda d: not d.find_elements(By.CSS_SELECTOR, '[role="dialog"]'))
+    if os.environ.get('VIEWGRID_INTERACTION_FIXES') == '1':
+        interaction_fixes()
     if os.environ.get('VIEWGRID_LIVE_TEST_URL'):
         url = os.environ['VIEWGRID_LIVE_TEST_URL']
         main = driver.current_window_handle

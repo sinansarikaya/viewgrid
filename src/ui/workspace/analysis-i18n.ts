@@ -20,6 +20,15 @@ export interface AnalysisTranslations {
   statusSuccess: string;
   statusError: string;
   statusCancelled: string;
+  analysisStatusLabel: string;
+  statusIdle: string;
+  statusConsentRequired: string;
+  statusPartial: string;
+  statusNoData: string;
+  latestRunNoData: string;
+  statusSaving: string;
+  cancellationNotice: string;
+  quotaRetryNotice: string;
   previousBatchStale: string;
   previousBatchTargetChanged: string;
   // Repetition UI keys
@@ -177,7 +186,7 @@ export interface AnalysisTranslations {
 export const ANALYSIS_I18N: Record<'tr' | 'en' | 'no', AnalysisTranslations> = {
   tr: {
     title: 'Sayfa Analizi & Raporlama',
-    tabPerformance: 'Performans & CrUX',
+    tabPerformance: 'Yerel Performans',
     tabSeo: 'SEO & Erişilebilirlik',
     tabGeo: 'GEO Sinyalleri (Beta)',
     tabReports: 'Raporlar & Geçmiş',
@@ -197,6 +206,15 @@ export const ANALYSIS_I18N: Record<'tr' | 'en' | 'no', AnalysisTranslations> = {
     statusSuccess: 'Başarılı',
     statusError: 'Hata Oluştu',
     statusCancelled: 'İptal Edildi',
+    analysisStatusLabel: 'Analiz durumu',
+    statusIdle: 'Analiz başlatılmadı. Hedefi ve profili seçip Analizi Başlat düğmesini kullanın.',
+    statusConsentRequired: 'Analizi başlatmak için URL’nin Google’a gönderilmesine onay verin.',
+    statusPartial: 'Kısmi sonuç: bazı ölçümler başarısız, eksik veya karşılaştırılamaz.',
+    statusNoData: 'Başarılı ölçüm verisi yok. Skor veya bulgu sonucu üretilmedi.',
+    latestRunNoData: 'Son ölçüm turunda başarılı analiz verisi yok. Bu tur için bulgu sonucu üretilmedi.',
+    statusSaving: 'Ölçüm tamamlandı; geçmiş kaydediliyor…',
+    cancellationNotice: 'Bekleyen analiz iptal edildi. Gecikmiş yanıtlar bu analize eklenmeyecek.',
+    quotaRetryNotice: 'Otomatik yeniden deneme yapılmadı. Biraz bekledikten sonra Yeniden Dene düğmesini kullanabilirsiniz.',
     previousBatchStale: '(Önceki / Eski Analiz Sonucu)',
     previousBatchTargetChanged: 'Hedef URL veya profil değiştirildi. Gösterilen sonuç önceki analize aittir.',
     runCountLabel: 'Tekrar Sayısı',
@@ -344,7 +362,7 @@ export const ANALYSIS_I18N: Record<'tr' | 'en' | 'no', AnalysisTranslations> = {
   },
   en: {
     title: 'Page Analysis & Reports',
-    tabPerformance: 'Performance & CrUX',
+    tabPerformance: 'Local Performance',
     tabSeo: 'SEO & Accessibility',
     tabGeo: 'GEO Signals (Beta)',
     tabReports: 'Reports & History',
@@ -364,6 +382,15 @@ export const ANALYSIS_I18N: Record<'tr' | 'en' | 'no', AnalysisTranslations> = {
     statusSuccess: 'Success',
     statusError: 'Error',
     statusCancelled: 'Cancelled',
+    analysisStatusLabel: 'Analysis status',
+    statusIdle: 'No analysis started. Select a target and profile, then use Run Analysis.',
+    statusConsentRequired: 'Allow sending the URL to Google before starting analysis.',
+    statusPartial: 'Partial result: some measurements failed, are incomplete or cannot be compared.',
+    statusNoData: 'No successful measurement data. No score or findings result was produced.',
+    latestRunNoData: 'The latest measurement round has no successful analysis data. No findings result was produced for this round.',
+    statusSaving: 'Measurement complete; saving history…',
+    cancellationNotice: 'The pending analysis was cancelled. Late responses will not be added to this analysis.',
+    quotaRetryNotice: 'No automatic retry was made. Wait a moment before using Retry.',
     previousBatchStale: '(Previous / Stale Run Result)',
     previousBatchTargetChanged: 'Target URL or profile changed. Displayed result belongs to the earlier analysis.',
     runCountLabel: 'Run Count',
@@ -511,7 +538,7 @@ export const ANALYSIS_I18N: Record<'tr' | 'en' | 'no', AnalysisTranslations> = {
   },
   no: {
     title: 'Sideanalyse & Rapporter',
-    tabPerformance: 'Ytelse & CrUX',
+    tabPerformance: 'Lokal ytelse',
     tabSeo: 'SEO & Tilgjengelighet',
     tabGeo: 'GEO-signaler (Beta)',
     tabReports: 'Rapporter & Historikk',
@@ -531,6 +558,15 @@ export const ANALYSIS_I18N: Record<'tr' | 'en' | 'no', AnalysisTranslations> = {
     statusSuccess: 'Vellykket',
     statusError: 'Feil',
     statusCancelled: 'Avbrutt',
+    analysisStatusLabel: 'Analysestatus',
+    statusIdle: 'Ingen analyse startet. Velg mål og profil, og bruk Kjør analyse.',
+    statusConsentRequired: 'Godkjenn sending av URL-en til Google før du starter analysen.',
+    statusPartial: 'Delvis resultat: noen målinger mislyktes, er ufullstendige eller kan ikke sammenlignes.',
+    statusNoData: 'Ingen vellykkede måledata. Ingen poengsum eller funnresultat ble produsert.',
+    latestRunNoData: 'Den siste målerunden har ingen vellykkede analysedata. Ingen funnresultat ble produsert for denne runden.',
+    statusSaving: 'Måling fullført; lagrer historikk…',
+    cancellationNotice: 'Den ventende analysen ble avbrutt. Forsinkede svar legges ikke til denne analysen.',
+    quotaRetryNotice: 'Ingen automatisk gjentakelse ble gjort. Vent litt før du bruker Prøv igjen.',
     previousBatchStale: '(Tidligere / Gammelt analyseresultat)',
     previousBatchTargetChanged: 'Måladresse eller profil ble endret. Vist resultat tilhører den tidligere analysen.',
     runCountLabel: 'Antall kjøringer',
@@ -736,3 +772,45 @@ export function getGeoRecommendationText(code: string, lang: 'tr' | 'en' | 'no')
   if (item && item[lang]) return item[lang];
   return code;
 }
+
+export const LOCAL_ANALYSIS_COPY = {
+  tr: {
+    navigation: 'Sayfa yükleme gözlemleri', ttfb: 'Sunucu yanıtı (TTFB)', domReady: 'DOM hazır', loaded: 'Yükleme tamamlandı', resources: 'Gözlenen kaynak isteği', tab: 'Yerel Performans', disclosure: 'Analiz bu bilgisayardaki hazır ViewGrid görünümünde çalışır. URL ve sayfa içeriği analiz servisine gönderilmez; ek kurulum gerekmez. Önce hedef sayfayı çalışma alanında açın.',
+    snapshot: 'Yerel sayfa gözlemi', scope: 'Gerçek görünüm ve tarama kapsamı', legacy: 'Geçmiş harici servis raporu',
+    metricsNote: 'Bu bir Lighthouse testi değildir. Skor üretilmez; yalnız tarayıcının sunduğu gözlemler gösterilir. Yeniden yükleme, CPU/ağ yavaşlatma ve gerçek telefon emülasyonu yapılmaz.',
+    fieldNote: 'CrUX gerçek kullanıcı verisi yerel taramada alınmaz. Google veya başka bir analiz API’sine bağlanılmaz.',
+    coverage: 'İncelenen DOM öğesi', duration: 'Tarama süresi', truncated: 'Kapsam sınırlı; tüm sayfa incelenmedi.',
+    checks: 'Kontrol sonuçları', passed: 'geçti', failed: 'bulgu', review: 'manuel / bilinmiyor',
+    err_PREVIEW_NOT_READY: 'Hedef görünüm henüz hazır değil. Sayfanın yüklenmesini bekleyin; görünüm açılmıyorsa site erişimini kontrol edin.',
+    err_PROFILE_UNAVAILABLE: 'Seçilen profil için açık görünüm yok. Çalışma alanına uygun mobil veya masaüstü görünümü ekleyin.',
+    err_TARGET_MISMATCH: 'Analiz adresi açık görünümle eşleşmiyor. Hedef adresi önce çalışma alanında açın; yönlendirme varsa son adresi kullanın.',
+    err_PERMISSION_REQUIRED: 'Yerel analiz için site erişimi gerekiyor. Çalışma alanındaki site erişim iznini verin.',
+    invalidUrl: 'Geçerli bir HTTP/HTTPS adresi girin. localhost ve yerel ağ desteklenir; kullanıcı adı veya parola içeren adresler kabul edilmez.',
+  },
+  en: {
+    navigation: 'Page load observations', ttfb: 'Server response (TTFB)', domReady: 'DOM ready', loaded: 'Load completed', resources: 'Observed resource requests', tab: 'Local Performance', disclosure: 'Analysis runs in a ready ViewGrid preview on this computer. No URL or page content is sent to an audit service; no extra installation is required. Open the target in the workspace first.',
+    snapshot: 'Local page observation', scope: 'Actual preview and scan coverage', legacy: 'Historical external-service report',
+    metricsNote: 'This is not a Lighthouse test. No scores are generated; only browser-provided observations are shown. No reload, CPU/network throttling or real phone emulation is performed.',
+    fieldNote: 'CrUX real-user data is not retrieved in local scans. No Google or other audit API is contacted.',
+    coverage: 'Inspected DOM elements', duration: 'Scan duration', truncated: 'Limited coverage; not all page content was inspected.',
+    checks: 'Check results', passed: 'passed', failed: 'findings', review: 'manual / unknown',
+    err_PREVIEW_NOT_READY: 'The target preview is not ready. Wait for it to load; if it cannot open, check site access.',
+    err_PROFILE_UNAVAILABLE: 'There is no open preview for the selected profile. Add a matching mobile or desktop preview to the workspace.',
+    err_TARGET_MISMATCH: 'The analysis URL does not match an open preview. Open the target in the workspace first; use the final URL after a redirect.',
+    err_PERMISSION_REQUIRED: 'Site access is required for local analysis. Grant site access in the workspace.',
+    invalidUrl: 'Enter a valid HTTP/HTTPS URL. localhost and LAN are supported; URLs containing a username or password are not accepted.',
+  },
+  no: {
+    navigation: 'Observasjoner av sidelasting', ttfb: 'Serversvar (TTFB)', domReady: 'DOM klar', loaded: 'Lasting fullført', resources: 'Observerte ressursforespørsler', tab: 'Lokal ytelse', disclosure: 'Analysen kjøres i en klar ViewGrid-forhåndsvisning på denne maskinen. Ingen nettadresse eller sideinnhold sendes til en analysetjeneste; ekstra installasjon er ikke nødvendig. Åpne målsiden i arbeidsområdet først.',
+    snapshot: 'Lokal sideobservasjon', scope: 'Faktisk forhåndsvisning og analysedekning', legacy: 'Historisk rapport fra ekstern tjeneste',
+    metricsNote: 'Dette er ikke en Lighthouse-test. Ingen poengsum beregnes; bare nettleserens observasjoner vises. Ingen ny lasting, CPU-/nettverksbegrensning eller ekte telefonemulering utføres.',
+    fieldNote: 'CrUX-data fra virkelige brukere hentes ikke i lokale analyser. Ingen Google- eller annen analyse-API kontaktes.',
+    coverage: 'Undersøkte DOM-elementer', duration: 'Analysetid', truncated: 'Begrenset dekning; ikke alt sideinnhold ble undersøkt.',
+    checks: 'Kontrollresultater', passed: 'bestått', failed: 'funn', review: 'manuelt / ukjent',
+    err_PREVIEW_NOT_READY: 'Forhåndsvisningen er ikke klar. Vent til siden er lastet; kontroller nettstedstilgangen hvis den ikke åpnes.',
+    err_PROFILE_UNAVAILABLE: 'Ingen åpen forhåndsvisning for valgt profil. Legg til en passende mobil- eller skrivebordsvisning.',
+    err_TARGET_MISMATCH: 'Analyseadressen samsvarer ikke med en åpen forhåndsvisning. Åpne målsiden i arbeidsområdet først; bruk sluttadressen etter omdirigering.',
+    err_PERMISSION_REQUIRED: 'Nettstedstilgang er nødvendig for lokal analyse. Gi tilgang i arbeidsområdet.',
+    invalidUrl: 'Skriv inn en gyldig HTTP/HTTPS-adresse. localhost og lokalnett støttes; adresser med brukernavn eller passord godtas ikke.',
+  },
+} as const;

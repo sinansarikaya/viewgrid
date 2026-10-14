@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { localAnalysisUrlSchema } from '../../lib/validation/local-analysis';
 import { publicAnalysisUrlSchema } from '../../lib/validation/analysis';
 import { analysisBatchSchema, type AnalysisBatch } from './schema';
 
@@ -9,7 +10,7 @@ export type AnalysisHistoryEntry = z.infer<typeof historyEntrySchema>;
 
 /** Queries/fragments are always removed, not just parameters with familiar names. */
 export function redactAnalysisUrl(value: string): string | null {
-  const parsed = publicAnalysisUrlSchema.safeParse(value);
+  const parsed = localAnalysisUrlSchema.safeParse(value);
   if (!parsed.success) return null;
   const url = new URL(parsed.data);
   url.search = '';
@@ -29,7 +30,7 @@ export function sanitizeAnalysisBatch(value: unknown): AnalysisBatch | null {
   const parsed = analysisBatchSchema.safeParse(value);
   if (!parsed.success) return null;
   const batch = parsed.data, requestedUrl = redactAnalysisUrl(batch.requestedUrl);
-  if (!requestedUrl) return null;
+  if (!requestedUrl || (batch.results.some(outcome => outcome.status === 'success' && outcome.data.source === 'google-psi') && !publicAnalysisUrlSchema.safeParse(batch.requestedUrl).success)) return null;
   return {
     ...batch, requestedUrl,
     results: batch.results.map(outcome => {

@@ -121,3 +121,26 @@
   color: var(--accent);
   margin-left: auto;
 }
+
+.failureBadge {
+  margin-left: auto;
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.betaBadge + .failureBadge {
+  margin-left: 0;
+}
+
+.actionBtn[data-analysis-state='pass'] { border-color: #22c55e !important; }
+.actionBtn[data-analysis-state='fail'] { border-color: #ef4444 !important; }
+.actionBtn[data-analysis-state='review'] { border-color: #d97706 !important; }
+.actionBtn[data-analysis-state='unavailable'] { border-color: var(--border) !important; }
+.passBadge { margin-left: auto; color: #22c55e; font-weight: 700; }
+.betaBadge + .passBadge { margin-left: 0; }

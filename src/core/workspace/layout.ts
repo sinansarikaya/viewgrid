@@ -125,6 +125,30 @@ export function autoAlignPositions(
   return result;
 }
 
+/** Alignment only changes rendered positions in free layout. */
+export function canAutoAlignViewports(
+  layout: LayoutMode,
+  visible: ViewportState[],
+  profileOf: (viewport: ViewportState) => DeviceProfile,
+): boolean {
+  if (layout !== 'free' || visible.length === 0) return false;
+  const bounds = visible.map((viewport) => {
+    const size = effectiveSize(profileOf(viewport), viewport.orientation);
+    return {
+      id: viewport.id,
+      width: Math.round(size.width * viewport.zoom) + 24,
+      height: Math.round(size.height * viewport.zoom) + 60,
+    };
+  });
+  const positions = autoAlignPositions(bounds, gridColumns(visible.length, 'grid'), 40, 40, 24, 24);
+  return visible.some((viewport) => {
+    const target = positions.get(viewport.id)!;
+    const x = Number.isFinite(viewport.position?.x) ? viewport.position!.x : 24;
+    const y = Number.isFinite(viewport.position?.y) ? viewport.position!.y : 24;
+    return x !== target.x || y !== target.y;
+  });
+}
+
 export function calculateSnapGuides(
   target: { x: number; y: number; width: number; height: number },
   others: Bounds[],

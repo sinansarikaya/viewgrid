@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useId, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useId, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import s from './Tooltip.module.css';
 import { useGeometryClass } from './useGeometryClass';
@@ -6,7 +6,7 @@ import { useGeometryClass } from './useGeometryClass';
 export interface TooltipProps {
   content?: React.ReactNode;
   children: React.ReactElement;
-  placement?: 'top' | 'bottom';
+  placement?: 'top' | 'bottom' | 'left' | 'right';
   disabled?: boolean;
   className?: string;
 }
@@ -25,11 +25,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const triggerRef = useRef<HTMLElement | null>(null);
   const id = useId();
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const showTimer = useRef<ReturnType<typeof setTimeout>>();
   const focused = useRef(false);
   const tooltipHovered = useRef(false);
   const triggerHovered = useRef(false);
   const clearHide = useCallback(() => { clearTimeout(hideTimer.current); }, []);
-  useEffect(() => () => clearTimeout(hideTimer.current), []);
+  useEffect(() => () => { clearTimeout(hideTimer.current); clearTimeout(showTimer.current); }, []);
 
   const updatePosition = useCallback(() => {
     if (!triggerRef.current) return;
@@ -42,34 +43,44 @@ export const Tooltip: React.FC<TooltipProps> = ({
     left = Math.max(8, Math.min(window.innerWidth - tooltipWidth - 8, left));
 
     let top = placement === 'top' ? rect.top - tooltipHeight - 6 : rect.bottom + 6;
+    if (placement === 'left' || placement === 'right') {
+      left = placement === 'right' ? rect.right + 8 : rect.left - tooltipWidth - 8;
+      if (left + tooltipWidth > innerWidth - 8) left = rect.left - tooltipWidth - 8;
+      if (left < 8) left = rect.right + 8;
+      left = Math.max(8, Math.min(innerWidth - tooltipWidth - 8, left));
+      top = rect.top + (rect.height - tooltipHeight) / 2;
+    }
     if (top < 8) {
       top = rect.bottom + 6;
     } else if (top + tooltipHeight > window.innerHeight - 8) {
       top = rect.top - tooltipHeight - 6;
     }
 
-    setCoords({ top, left });
+    setCoords({ top: Math.max(8,Math.min(innerHeight-tooltipHeight-8,top)), left });
   }, [placement]);
 
   const show = useCallback(() => {
     clearHide();
     if (disabled || !content) return;
-    setVisible(true);
+    clearTimeout(showTimer.current);
+    showTimer.current = setTimeout(() => setVisible(true), 250);
   }, [disabled, content, clearHide]);
 
   const hide = useCallback(() => {
     clearHide();
+    clearTimeout(showTimer.current);
     tooltipHovered.current = false;
     setVisible(false);
   }, [clearHide]);
   const deferHide = useCallback(() => {
     clearHide();
+    if (!focused.current) clearTimeout(showTimer.current);
     hideTimer.current = setTimeout(() => {
       if (!focused.current && !tooltipHovered.current && !triggerHovered.current) hide();
     }, 150);
   }, [clearHide, hide]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (visible) {
       updatePosition();
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -78,16 +89,26 @@ export const Tooltip: React.FC<TooltipProps> = ({
       const handleScroll = () => {
         updatePosition();
       };
+      const handlePointer = (event: PointerEvent) => {
+        const box=tooltipRef.current?.getBoundingClientRect();
+        const inside=!!box && event.clientX>=box.left && event.clientX<=box.right && event.clientY>=box.top && event.clientY<=box.bottom;
+        if (inside) { tooltipHovered.current=true; clearHide(); }
+        else if (tooltipHovered.current) { tooltipHovered.current=false; deferHide(); }
+      };
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', updatePosition);
+      window.addEventListener('pointermove',handlePointer);
+      window.addEventListener('pointerdown',hide,true);
       return () => {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('scroll', handleScroll, true);
         window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('pointermove',handlePointer);
+        window.removeEventListener('pointerdown',hide,true);
       };
     }
-  }, [visible, updatePosition, hide]);
+  }, [visible, updatePosition, hide, clearHide, deferHide]);
 
   if (!content || disabled) {
     return children;

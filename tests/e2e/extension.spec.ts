@@ -1,9 +1,9 @@
 import { test, expect, chromium, type BrowserContext, type Page, type Frame } from '@playwright/test';
 import { createServer, type Server } from 'node:http';
-import { readFileSync } from 'node:fs';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { nativeSize } from './headed-window';
 let server: Server, context: BrowserContext, page: Page, profile: string, base: string, extensionId: string;
 const fixture = `<!doctype html><meta name="viewport" content="width=device-width"><style>body{margin:0;font:16px sans-serif}button{width:60px;height:44px}#small{width:30px;height:30px}#clipped{width:100px;overflow:hidden;white-space:nowrap}#intentional{width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{height:1800px}</style><h1>ViewGrid fixture</h1><input id="name"><button id="action" onclick="document.querySelector('#count').textContent=Number(document.querySelector('#count').textContent)+1">Count</button><span id="count">0</span><button id="small">Tiny</button><p id="clipped">This long text is accidentally clipped</p><p id="intentional">This long text is intentionally clipped</p><a id="next" href="/next">Next</a><button id="spa" onclick="history.pushState({},'', '/spa')">SPA</button><div style="overflow:hidden"><button id="wrapped-small" style="width:25px;height:25px">S</button><p id="vertical-clip" style="height:10px;width:80px;overflow:hidden">This wrapped text has several hidden lines</p></div><div id="crowded-row" style="display:flex;gap:0;margin-top:40px"><button id="crowded-a" class="crowded" style="width:16px;height:16px"><span>A</span></button><button id="crowded-b" class="crowded" style="width:16px;height:16px" aria-label="B">B</button></div><button id="optional" style="width:160px;height:42px;margin:40px 0">Optional target</button><div class="spacer"></div><footer>End</footer>`;
 const frames = () => page.frames().filter(f => f.parentFrame() === page.mainFrame());
@@ -69,10 +69,12 @@ test.beforeAll(async () => {
   base = `http://127.0.0.1:${(server.address() as any).port}`;
   profile = await mkdtemp(path.join(tmpdir(), 'viewgrid-e2e-'));
   const extension = path.resolve('dist/chromium');
-  context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: true, viewport: { width: 1280, height: 800 }, args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`] });
+  context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: false, viewport: null, args: ['--ozone-platform=x11', `--disable-extensions-except=${extension}`, `--load-extension=${extension}`] });
   const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
   extensionId = worker.url().split('/')[2]!;
   page = await context.newPage();
+  page.setDefaultTimeout(10000);
+  await nativeSize(context, page, 1280, 800);
 });
 test.afterAll(async () => { await context?.close(); server?.close(); if(profile) await rm(profile,{recursive:true,force:true}); });
 test.beforeEach(reset);
@@ -99,13 +101,15 @@ test('custom device rejects invalid values instead of silently substituting defa
 test('viewport duplicate and removal preserve previews, and compare modes remain usable', async () => {
   const originalIds = await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')));
   const first = page.locator('[data-viewport-id]').first();
-  await first.locator('summary').click();
+  await first.getByRole('button', { name: /device settings$/i }).click();
   await first.getByRole('button', { name: 'Duplicate', exact: true }).click();
   await expect(page.locator('[data-viewport-id]')).toHaveCount(5);
   const newId = (await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).find(id => !originalIds.includes(id));
   expect(newId).toBeTruthy();
   const added = page.locator(`[data-viewport-id="${newId}"]`);
-  await added.locator('summary').click();
+  await page.getByRole('button', { name: 'Fit to screen', exact: true }).click();
+  await added.scrollIntoViewIfNeeded();
+  await added.getByRole('button', { name: /device settings$/i }).click();
   await added.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(page.locator('[data-viewport-id]')).toHaveCount(4);
   expect(await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).toEqual(originalIds);
@@ -116,8 +120,9 @@ test('viewport duplicate and removal preserve previews, and compare modes remain
     await page.getByRole('button', { name: mode, exact: false }).click();
     await expect.poll(() => frames().filter(f => f.url().startsWith(base)).length).toBe(6);
   }
+  await page.getByRole('button', { name: 'Dual Split', exact: false }).focus();
   await page.keyboard.press('Escape');
-  await expect(page.getByText('Visual Comparison / Diff', { exact: true })).toHaveCount(0);
+  await expect(page.locator('[data-kind="modal"]')).toHaveCount(0);
   await expect.poll(() => frames().length).toBe(4);
 });
 
@@ -200,44 +205,29 @@ test('multi-selection group and recent devices persist without deduplicating ind
   expect(new Set(await page.locator('[data-viewport-id]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-viewport-id')))).size).toBe(8);
 });
 
-test('controlled analysis requires consent, keeps lab and field separate and handles quota without a fake score', async () => {
-  const mocked = JSON.parse(readFileSync('tests/fixtures/psi-response.json', 'utf8'));
+test('local analysis needs no consent or audit service and rejects unopened targets', async () => {
   let requests = 0;
-  await context.route('https://pagespeedonline.googleapis.com/**', async route => {
-    requests++;
-    expect(new URL(route.request().url()).searchParams.has('key')).toBe(false);
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mocked) });
-  });
+  await context.route('https://pagespeedonline.googleapis.com/**', route => { requests++; return route.abort(); });
   try {
-    await page.getByRole('button', { name: 'Performance & CrUX', exact: true }).click();
+    await page.getByRole('button', { name: 'Local Performance', exact: true }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByRole('textbox', { name: 'Target URL' }).fill('https://example.com/');
-    await expect(dialog.getByRole('button', { name: 'Run Analysis', exact: true })).toBeDisabled();
+    await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Run All Analyses', exact: true }).click();
+    await expect(dialog.getByRole('region', { name: 'Analysis status' }).locator('[data-analysis-status]')).toHaveText('Measurements captured');
+    await expect(dialog.locator('[class*="scoreBadge"]')).toHaveCount(0);
+    await dialog.getByRole('textbox', { name: 'Target URL' }).fill(base + '/unopened');
+    await dialog.getByRole('button', { name: 'Run All Analyses', exact: true }).click();
+    await expect(dialog.getByRole('alert')).toHaveCount(2);
+    await expect(dialog.getByRole('alert').first()).toContainText('does not match an open preview');
     expect(requests).toBe(0);
-    await dialog.getByRole('checkbox').check();
-    await dialog.getByRole('button', { name: 'Run Analysis', exact: true }).click();
-    await expect(dialog.getByText('82', { exact: true })).toBeVisible();
-    await expect(dialog.getByText('Total Blocking Time (TBT)', { exact: true })).toBeVisible();
-    await expect(dialog.getByText('p75 INP: 180 ms', { exact: true })).toBeVisible();
-    expect(requests).toBe(1);
-    await page.screenshot({ path: 'test-results/development/analysis-controlled-chromium.png' });
-    await dialog.getByRole('textbox', { name: 'Target URL' }).fill('https://example.org/');
-    await expect(dialog.getByText('82', { exact: true })).toHaveCount(0);
-    await context.unroute('https://pagespeedonline.googleapis.com/**');
-    await context.route('https://pagespeedonline.googleapis.com/**', route => route.fulfill({ status: 429, contentType: 'application/json', body: '{}' }));
-    await dialog.getByRole('button', { name: 'Run Analysis', exact: true }).click();
-    await expect(dialog.getByText(/quota|rate limit/i).first()).toBeVisible({ timeout: 15000 });
-    await expect(dialog.getByText('82', { exact: true })).toHaveCount(0);
-  } finally {
-    await context.unroute('https://pagespeedonline.googleapis.com/**');
-  }
+  } finally { await context.unroute('https://pagespeedonline.googleapis.com/**'); }
 });
 
 test('loads four actual frames, applies device dimensions and rotates', async () => {
   const first = page.locator('[data-viewport-id]').first();
   const frame = frames()[0]!;
   const before = await frame.evaluate(() => ({ width: innerWidth, height: innerHeight }));
-  await first.locator('summary').click();
+  await first.getByRole('button', { name: /device settings$/i }).click();
   await first.locator('button[title*="Rotate"],button[title*="orientation" i]').first().click();
   await expect.poll(() => frame.evaluate(() => innerWidth)).toBe(before.height);
 });
@@ -260,7 +250,7 @@ test('workspace shell preserves logical viewports, collapse state and card actio
   await expect(sidebar.getByRole('button', { name: 'Collapse sidebar' })).toBeVisible();
   await expect.poll(() => page.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('viewgrid.sidebar.collapsed'))['viewgrid.sidebar.collapsed'])).toBe(false);
   const first = page.locator('[data-viewport-id]').first();
-  await first.locator('summary').click();
+  await first.getByRole('button', { name: /device settings$/i }).click();
   await first.getByRole('button', { name: /Minimize/i }).click();
   await expect(first.locator('iframe')).toHaveCount(0);
   await first.getByRole('button', { name: /Restore/i }).click();
@@ -287,12 +277,12 @@ test('balanced grid uses independent display scales and preserves saved manual z
   expect(Math.max(...scales.map(scale => scale.height)) / Math.min(...scales.map(scale => scale.height))).toBeLessThan(1.4);
   for (const scale of scales) expect(Math.abs(scale.x - scale.y)).toBeLessThan(0.001);
   expect(await Promise.all(frames().map(frame => frame.evaluate(() => [innerWidth, innerHeight])))).toEqual(cssSizes);
-  await page.locator('[data-viewport-id]').first().locator('summary').click();
+  await page.locator('[data-viewport-id]').first().getByRole('button', { name: /device settings$/i }).click();
   const zoom = page.locator('[data-viewport-id]').first().getByRole('combobox', { name: 'Display zoom (CSS size unchanged)' });
   await zoom.selectOption('0.5');
   await expect.poll(() => page.evaluate(async () => (await (globalThis as any).chrome.storage.local.get('viewgrid.store.v1'))['viewgrid.store.v1']?.model?.viewports?.[0]?.zoom)).toBe(0.5);
   await page.reload();
-  await page.locator('[data-viewport-id]').first().locator('summary').click();
+  await page.locator('[data-viewport-id]').first().getByRole('button', { name: /device settings$/i }).click();
   await expect(zoom).toHaveValue('0.5');
   await page.setViewportSize({ width: 1280, height: 800 });
 });
@@ -496,9 +486,11 @@ test('CastPost loads from a worker-warmed profile, reopens and survives a browse
     if (phase === 'browser restart') {
       await context.close();
       const extension = path.resolve('dist/chromium');
-      context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: true, viewport: { width: 1280, height: 800 }, args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`] });
+      context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: false, viewport: null, args: ['--ozone-platform=x11', `--disable-extensions-except=${extension}`, `--load-extension=${extension}`] });
     } else await page.close();
     page = await context.newPage();
+  page.setDefaultTimeout(10000);
+  await nativeSize(context, page, 1280, 800);
     const diagnostics: string[] = [];
     page.on('console', m => diagnostics.push(`${m.type()}: ${m.text()}`));
     page.on('requestfailed', r => diagnostics.push(`failed: ${r.url()} ${r.failure()?.errorText}`));
@@ -517,7 +509,7 @@ test('CastPost loads from a worker-warmed profile, reopens and survives a browse
       if (phase === 'first warm open') await measureScrollSync('castpost.app warm profile');
       if (phase === 'first warm open') {
         await page.getByRole('button', { name: 'Issues', exact: true }).click();
-        const drawer = page.getByRole('complementary');
+        const drawer = page.getByRole('complementary', { name: 'Responsive issues' });
         await expect(drawer.getByText('Last scan', { exact: false })).toBeVisible();
         await expect(drawer.getByText('Inspected DOM elements', { exact: false })).toBeVisible();
 

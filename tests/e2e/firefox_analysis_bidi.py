@@ -186,12 +186,35 @@ def main():
             button.click()
             return dialog
 
+        def analysis_status(dialog):
+            return dialog.find_element(By.CSS_SELECTOR, '[aria-label="Analysis status"]')
+
+        def psi_count(status):
+            with evidence_lock:
+                return len([item for item in evidence['provided'] if item['kind'] == 'psi' and item['status'] == status])
+
+        analysis_tabs = ['Performance & CrUX', 'SEO & Accessibility', 'GEO Signals (Beta)']
+
         dialog = open_analysis()
         tbt = wait.until(lambda _: dialog.find_element(By.XPATH, ".//span[normalize-space(.)='Total Blocking Time (TBT)']/.."))
         wait.until(lambda _: '210 ms' in tbt.text)
         wait.until(lambda _: 'p75 INP: 180 ms' in dialog.text)
         assert dialog.find_elements(By.CSS_SELECTOR, '[class*="scoreBadge"]')
         assert fixture['lighthouseResult']['lighthouseVersion'] in dialog.text
+        # The controlled fixture has a Lighthouse runWarning. Measurements are
+        # successful, but their shared UI summary must acknowledge partial data.
+        expected_success_status = 'Partial result: some measurements failed, are incomplete or cannot be compared.' if fixture['lighthouseResult'].get('runWarnings') else 'Success'
+        evidence['successTabStates'] = []
+        for tab in analysis_tabs:
+            dialog.find_element(By.XPATH, f".//button[normalize-space(.)='{tab}']").click()
+            wait.until(lambda _: analysis_status(dialog).find_element(By.CSS_SELECTOR, '[role="status"]').text == expected_success_status)
+            assert not analysis_status(dialog).find_elements(By.CSS_SELECTOR, '[role="alert"]')
+            if tab == 'SEO & Accessibility':
+                assert dialog.find_elements(By.CSS_SELECTOR, '[class*="auditCard"]')
+            if tab == 'GEO Signals (Beta)':
+                assert dialog.find_elements(By.CSS_SELECTOR, '[class*="geoTable"] tbody tr')
+            evidence['successTabStates'].append({'tab': tab, 'status': expected_success_status})
+        dialog.find_element(By.XPATH, ".//button[normalize-space(.)='Performance & CrUX']").click()
         driver.save_screenshot(str(OUT / 'controlled-200.png'))
         wait.until(lambda _: len([item for item in evidence['provided'] if item['kind'] == 'psi' and item['status'] == 200]) == 1)
         print('PASS Firefox actual addon: controlled 200 laboratory TBT 210 ms / separate field p75 INP 180 ms', flush=True)
@@ -204,11 +227,38 @@ def main():
         wait.until(lambda _: len([item for item in evidence['provided'] if item['kind'] == 'psi' and item['status'] == 429]) >= 1)
         quota_count = len([item for item in evidence['provided'] if item['kind'] == 'psi' and item['status'] == 429])
         assert quota_count == 1, quota_count
+        evidence['quotaTabStates'] = []
+        for tab in analysis_tabs:
+            dialog.find_element(By.XPATH, f".//button[normalize-space(.)='{tab}']").click()
+            region = analysis_status(dialog)
+            assert region.is_displayed()
+            wait.until(lambda _: region.find_element(By.CSS_SELECTOR, '[role="alert"]').is_displayed())
+            assert 'Google PageSpeed rate limit exceeded' in region.text and 'HTTP 429' in region.text
+            assert 'No automatic retry was made.' in region.text
+            assert region.find_element(By.CSS_SELECTOR, '[role="status"]').text == 'No successful measurement data. No score or findings result was produced.'
+            assert not dialog.find_elements(By.CSS_SELECTOR, '[class*="scoreBadge"]')
+            assert 'No audits match the selected filters.' not in dialog.text
+            assert not dialog.find_elements(By.CSS_SELECTOR, '[class*="auditCard"], [class*="geoTable"] tbody tr')
+            assert psi_count(429) == 1
+            evidence['quotaTabStates'].append({'tab': tab, 'alert': 'HTTP 429', 'fakeScores': 0})
+        # Wait beyond the ordinary client's retry backoff; tab changes and time
+        # alone must not make another request in the UI's explicit-retry runner.
+        driver.execute_async_script('const done=arguments[arguments.length-1]; setTimeout(()=>done(true),1200);')
+        assert psi_count(429) == 1
+        region = analysis_status(dialog)
+        region.find_element(By.XPATH, ".//button[normalize-space(.)='Retry']").click()
+        wait.until(lambda _: psi_count(429) == 2)
+        wait.until(lambda _: analysis_status(dialog).find_element(By.CSS_SELECTOR, '[role="alert"]').is_displayed())
+        driver.execute_async_script('const done=arguments[arguments.length-1]; setTimeout(()=>done(true),1200);')
+        assert psi_count(429) == 2
+        assert not dialog.find_elements(By.CSS_SELECTOR, '[class*="scoreBadge"]')
+        evidence['quotaRetry'] = {'initialRequests': 1, 'automaticRetries': 0, 'manualRetries': 1, 'totalRequests': 2}
+        driver.save_screenshot(str(OUT / 'controlled-429-all-tabs-manual-retry.png'))
         assert not evidence['callbackErrors'], evidence['callbackErrors']
         assert not [item for item in evidence['proxyDenied'] if 'google' in (item['host'] or '')], evidence['proxyDenied']
         assert not [item for item in evidence['blockedUnexpected'] if 'google' in (item['host'] or '')], evidence['blockedUnexpected']
         evidence['outcome'] = 'passed'
-        print('PASS Firefox actual addon: controlled 429, no fabricated scores, one request; zero Google proxy attempts / zero outbound forwarding', flush=True)
+        print('PASS Firefox actual addon: controlled 200/429 status across Performance/SEO/GEO, no fabricated scores, one initial request and one explicit manual retry; zero Google proxy attempts / zero outbound forwarding', flush=True)
     except Exception as error:
         evidence['outcome'] = 'failed-or-unsupported'
         evidence['failure'] = {'type': type(error).__name__, 'message': str(error)[:2000]}

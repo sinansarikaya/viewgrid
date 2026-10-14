@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '../common/Icon';
 import { Tooltip } from '../common/Tooltip';
 import { useFitTracking } from './useFitTracking';
+import { useReorderMotion } from './useReorderMotion';
 import s from './styles.module.css';
 import { useStore } from './store';
 import { ViewportCard } from './ViewportCard';
@@ -19,7 +20,7 @@ import { startScan } from './scan';
 import { groupIssues, primaryIssues } from '../../core/issues/report';
 import { captureViewport, isCapturing } from './capture';
 import { LoopGuard } from '../../core/sync/protocol';
-import { effectiveSize, gridColumns, calculateSnapGuides, type GuideLine, type Bounds } from '../../core/workspace/layout';
+import { effectiveSize, gridColumns, canAutoAlignViewports, calculateSnapGuides, type GuideLine, type Bounds } from '../../core/workspace/layout';
 import type { AlignItemsMode, JustifyContentMode } from '../../core/types';
 import { ZOOM_PRESETS } from '../../core/types';
 import { getTranslation, type Language } from './i18n';
@@ -33,6 +34,7 @@ import { Button } from '../common/Button';
 import { WorkspaceSidebar } from './WorkspaceSidebar';
 import { WorkspaceActions } from './WorkspaceActions';
 import { AnalysisPanel } from './AnalysisPanel';
+import { AnimatedPresence } from '../common/AnimatedPresence';
 import { sanitizeReportScreenshot, MAX_REPORT_SCREENSHOT_BYTES, type ReportScreenshot } from '../../core/reports/screenshots';
 import { loadBuildFingerprint } from '../../lib/api/build-info';
 
@@ -135,7 +137,12 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     else contentRefs.current.delete(id);
   }, []);
 
-  const doScan = useCallback(() => { void startScan(); }, []);
+  const doScan = useCallback(() => {
+    const state = useStore.getState();
+    if (state.drawerOpen) state.setDrawerOpen(false);
+    else if (state.scannedAt || state.scanning) state.setDrawerOpen(true);
+    else void startScan();
+  }, []);
   const captureReportViewport = useCallback(async (): Promise<ReportScreenshot> => {
     const state = useStore.getState();
     const visible = state.visibleViewports().filter(viewport => !viewport.minimized);
@@ -218,6 +225,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const sState = useStore.getState();
+      if (document.querySelector('[role="dialog"]') || sState.settingsOpen || sState.compareOpen || sState.pickerOpen || sState.benchmarkOpen) return;
       const key = e.key.toLowerCase();
       if (e.key === 'Escape') {
         sState.setPickerOpen(false);
@@ -280,6 +288,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
   }, [shotOne, shotAll, doScan, handleHardReload]);
 
   const visible = st.visibleViewports();
+  useReorderMotion(visible.map(viewport=>viewport.id).join('|'),st.model.layout);
   const canvasClass =
     st.model.layout === 'grid'
       ? s.canvasGrid
@@ -296,43 +305,56 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     draggingId: null,
     targetIndex: null,
   });
+  const dragRef=useRef(dragState);
+  const pointerCleanup=useRef<(()=>void)|null>(null);
+  useEffect(()=>()=>pointerCleanup.current?.(),[]);
 
   const handleDragStart = useCallback((id: string) => {
-    setDragState({ draggingId: id, targetIndex: null });
+    dragRef.current={draggingId:id,targetIndex:null};setDragState(dragRef.current);
   }, []);
 
   const handleDragEnd = useCallback(() => {
-    setDragState({ draggingId: null, targetIndex: null });
+    dragRef.current={draggingId:null,targetIndex:null};setDragState(dragRef.current);
   }, []);
 
   const handleDragOverCard = useCallback((idx: number) => {
-    setDragState((curr) => (curr.targetIndex === idx ? curr : { ...curr, targetIndex: idx }));
+    if(dragRef.current.targetIndex===idx)return;
+    dragRef.current={...dragRef.current,targetIndex:idx};setDragState(dragRef.current);
   }, []);
 
   const handleDropCard = useCallback((idx: number) => {
-    setDragState((curr) => {
-      if (curr.draggingId) {
-        const fromIndex = visible.findIndex((v) => v.id === curr.draggingId);
-        if (fromIndex !== -1 && idx !== -1 && fromIndex !== idx) {
-          st.reorder(fromIndex, idx);
-        }
-      }
-      return { draggingId: null, targetIndex: null };
-    });
-  }, [visible, st]);
+    const state=useStore.getState(),target=state.visibleViewports()[idx];
+    if(state.model.layout!=='free' && target && dragRef.current.draggingId && target.id!==dragRef.current.draggingId) state.reorderById(dragRef.current.draggingId,target.id);
+    handleDragEnd();
+  }, [handleDragEnd]);
 
-  const handleDropOnSkeleton = useCallback(() => {
-    setDragState((curr) => {
-      if (curr.draggingId && curr.targetIndex !== null) {
-        const fromIndex = visible.findIndex((v) => v.id === curr.draggingId);
-        const target = curr.targetIndex;
-        if (fromIndex !== -1 && target !== -1 && fromIndex !== target) {
-          st.reorder(fromIndex, target);
-        }
-      }
-      return { draggingId: null, targetIndex: null };
-    });
-  }, [visible, st]);
+  const handlePointerReorder=useCallback((id:string,event:React.PointerEvent<HTMLButtonElement>)=>{
+    if(event.button!==0)return;
+    event.preventDefault();event.stopPropagation();
+    pointerCleanup.current?.();
+    const handle=event.currentTarget,start={x:event.clientX,y:event.clientY};
+    handle.setPointerCapture(event.pointerId);
+    let moving=false;
+    const move=(pointer:PointerEvent)=>{
+      if(pointer.pointerId!==event.pointerId)return;
+      if(!moving && Math.hypot(pointer.clientX-start.x,pointer.clientY-start.y)<6)return;
+      if(!moving){moving=true;handleDragStart(id);}
+      const cards=[...document.querySelectorAll<HTMLElement>('main [data-viewport-id]')];
+      const index=cards.findIndex(card=>{const b=card.getBoundingClientRect();return pointer.clientX>=b.left && pointer.clientX<=b.right && pointer.clientY>=b.top && pointer.clientY<=b.bottom;});
+      handleDragOverCard(index);
+    };
+    const cleanup=()=>{
+      document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',cancel);document.removeEventListener('keydown',key);
+      if(handle.hasPointerCapture(event.pointerId))handle.releasePointerCapture(event.pointerId);
+      pointerCleanup.current=null;
+    };
+    const up=(pointer:PointerEvent)=>{if(pointer.pointerId!==event.pointerId)return;cleanup();if(moving)handleDropCard(dragRef.current.targetIndex??-1);};
+    const abort=()=>{cleanup();handleDragEnd();};
+    const cancel=(pointer:PointerEvent)=>{if(pointer.pointerId===event.pointerId)abort();};
+    const key=(keyboard:KeyboardEvent)=>{if(keyboard.key==='Escape')abort();};
+    pointerCleanup.current=cleanup;
+    document.addEventListener('pointermove',move);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',cancel);document.addEventListener('keydown',key);
+  },[handleDragStart,handleDragOverCard,handleDropCard,handleDragEnd]);
 
   const [activeGuides, setActiveGuides] = useState<GuideLine[]>([]);
 
@@ -392,12 +414,6 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     [],
   );
 
-  const draggedVp = visible.find((v) => v.id === dragState.draggingId);
-  const draggedProf = draggedVp ? st.profileOf(draggedVp) : null;
-  const draggedLogical = draggedProf && draggedVp ? effectiveSize(draggedProf, draggedVp.orientation) : null;
-  const skeletonW = draggedLogical && draggedVp ? Math.round(draggedLogical.width * draggedVp.zoom) + 24 : 260;
-  const skeletonH = draggedLogical && draggedVp ? Math.round(draggedLogical.height * draggedVp.zoom) + 60 : 340;
-  const fromIdx = dragState.draggingId ? visible.findIndex((v) => v.id === dragState.draggingId) : -1;
 
   // Dynamic CSSOM stylesheet manager (eliminates all inline style JSX)
   useEffect(() => {
@@ -409,9 +425,6 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     }
 
     const rules: string[] = [];
-
-    // 1. Drop skeleton dimensions
-    rules.push(`[data-skeleton-drop] { width: ${skeletonW}px !important; height: ${skeletonH}px !important; }`);
 
     // 2. Free-form card positions & guides
     if (st.model.layout === 'free') {
@@ -436,7 +449,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
     return () => {
       styleEl?.remove();
     };
-  }, [st.model.layout, visible, activeGuides, skeletonW, skeletonH]);
+  }, [st.model.layout, visible, activeGuides]);
 
   return (
     <div className={s.app}>
@@ -512,7 +525,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         <Button variant="default" onClick={() => setMenuOpen(!menuOpen)} title={t.menu} aria-label={t.menu} aria-expanded={menuOpen}><Icon name="menu" /></Button>
         </div>
 
-        {menuOpen && (
+        <AnimatedPresence open={menuOpen} kind="menu">
           <div className={s.menu}>
             <div className={s.menuRow}>
               <input
@@ -555,7 +568,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
               </Button>
             )}
           </div>
-        )}
+        </AnimatedPresence>
       </header>
 
       {/* Host Permission Banner */}
@@ -593,7 +606,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         <WorkspaceSidebar
           onScan={doScan}
           onScrollToTop={handleScrollToTopAll}
-        ><WorkspaceActions onScan={doScan} onAnalysis={setAnalysisSection} /></WorkspaceSidebar>
+        ><WorkspaceActions onScan={doScan} onAnalysis={section => setAnalysisSection(current => current === section ? null : section)} /></WorkspaceSidebar>
 
         <div className={s.canvasContainer}>
           {/* Canvas Header: Layout Mode, Fit to Screen, Auto Align, Align/Justify */}
@@ -641,6 +654,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
               <Button
                 variant="default"
                 onClick={() => st.autoAlignAll()}
+                disabled={!canAutoAlignViewports(st.model.layout, visible, st.profileOf)}
                 title={t.autoAlignGrid}
               >
                 <Icon name="gridAlign" /> {t.autoAlignGrid}
@@ -694,6 +708,7 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
               <div
                 className={canvasClass}
                 data-layout={st.model.layout}
+                data-reordering={Boolean(dragState.draggingId)}
                 data-cols={gridColumns(visible.length, st.model.layout)}
                 data-align={st.model.alignItems || 'flex-start'}
                 data-justify={st.model.justifyContent || 'flex-start'}
@@ -728,42 +743,15 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                     );
                   }
 
-                  const showSkeletonBefore =
-                    Boolean(dragState.draggingId) &&
-                    dragState.targetIndex === idx &&
-                    idx < fromIdx;
-
-                  const showSkeletonAfter =
-                    Boolean(dragState.draggingId) &&
-                    dragState.targetIndex === idx &&
-                    idx > fromIdx;
 
                   return (
                     <React.Fragment key={v.id}>
-                      {showSkeletonBefore && (
-                        <div
-                          data-skeleton-drop="true"
-                          className={s.dropSkeleton}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            e.dataTransfer.dropEffect = 'move';
-                          }}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            handleDropOnSkeleton();
-                          }}
-                        >
-                          <div className={s.skeletonInner}>
-                            <span className={s.skeletonIcon}><Icon name="inbox" /></span>
-                            <span>{t.dropHere}</span>
-                          </div>
-                        </div>
-                      )}
                       <ViewportCard
                         vp={v}
                         index={idx}
                         isDragging={dragState.draggingId === v.id}
-                        isDropTarget={Boolean(dragState.draggingId) && dragState.targetIndex === idx && idx !== fromIdx}
+                        isDropTarget={Boolean(dragState.draggingId) && dragState.targetIndex === idx && v.id !== dragState.draggingId}
+                        isReordering={Boolean(dragState.draggingId)}
                         onRegister={registerContent}
                         onShot={() => void shotOne(v.id)}
                         onInjected={() => void injectAgents()}
@@ -771,50 +759,11 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
                         onDragEndCard={handleDragEnd}
                         onDragOverCard={handleDragOverCard}
                         onDropCard={handleDropCard}
+                        onPointerReorder={handlePointerReorder}
                       />
-                      {showSkeletonAfter && (
-                        <div
-                          data-skeleton-drop="true"
-                          className={s.dropSkeleton}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            e.dataTransfer.dropEffect = 'move';
-                          }}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            handleDropOnSkeleton();
-                          }}
-                        >
-                          <div className={s.skeletonInner}>
-                            <span className={s.skeletonIcon}><Icon name="inbox" /></span>
-                            <span>{t.dropHere}</span>
-                          </div>
-                        </div>
-                      )}
                     </React.Fragment>
                   );
                 })}
-                {dragState.draggingId &&
-                  dragState.targetIndex === visible.length &&
-                  fromIdx !== visible.length - 1 && (
-                    <div
-                      data-skeleton-drop="true"
-                      className={s.dropSkeleton}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        handleDropOnSkeleton();
-                      }}
-                    >
-                      <div className={s.skeletonInner}>
-                        <span className={s.skeletonIcon}><Icon name="inbox" /></span>
-                        <span>{t.dropHere}</span>
-                      </div>
-                    </div>
-                  )}
               </div>
             )}
           </main>
@@ -832,12 +781,12 @@ export function App({ hub: _hub }: { hub: LoopGuard }) {
         <span>{st.language === 'tr' ? 'Yerel önizleme · analiz isteğe bağlı' : st.language === 'no' ? 'Lokal forhåndsvisning · valgfri analyse' : 'Local previews · optional analysis'}</span>
       </footer>
 
-      {st.pickerOpen && <DevicePicker />}
-      {st.drawerOpen && <IssuesDrawer />}
-      {st.compareOpen && <CompareModal />}
-      {analysisSection && <AnalysisPanel section={analysisSection} onClose={() => setAnalysisSection(null)} onCaptureViewport={captureReportViewport} />}
-      <SettingsModal />
-      <BenchmarkModal />
+      <AnimatedPresence open={st.pickerOpen}><DevicePicker /></AnimatedPresence>
+      <AnimatedPresence open={st.drawerOpen} kind="drawer"><IssuesDrawer /></AnimatedPresence>
+      <AnimatedPresence open={st.compareOpen}><CompareModal /></AnimatedPresence>
+      <AnalysisPanel section={analysisSection ?? 'performance'} isOpen={analysisSection !== null} onClose={() => setAnalysisSection(null)} onCaptureViewport={captureReportViewport} />
+      <AnimatedPresence open={st.settingsOpen}><SettingsModal /></AnimatedPresence>
+      <AnimatedPresence open={st.benchmarkOpen}><BenchmarkModal /></AnimatedPresence>
       <Toast message={st.toast} onClose={() => st.showToast('')} />
     </div>
   );

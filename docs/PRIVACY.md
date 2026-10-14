@@ -1,18 +1,16 @@
-# ViewGrid privacy — version 1.0.3
+# ViewGrid privacy — version 1.0.4
 
 ViewGrid does not send analytics, crash reports, screenshots, issue results or workspace settings to a ViewGrid server. There is no cloud proxy, account service or AI provider integration in this release.
 
-## 2026-10-11 geliştirme profili: isteğe bağlı analiz
+## 2026-10-14: yerel analiz
 
-Temel responsive çalışma alanı sunucusuz çalışır. Yeni Performance eylemi yalnız kullanıcının açık onayıyla hedef herkese açık URL'yi, seçilen mobile/desktop profilini ve dili Google PageSpeed Insights'a gönderir. Google ayrıca isteğin IP/ağ metadatasını görebilir; kullanıcı sitesi kendi ağ isteklerini üretir. Workspace çerezleri, oturum credential'ları veya API anahtarı gönderilmez. Local/private hedefler desteklenmez; hostname denetimi DNS çözümlemesi yapmaz ve internet domaininin özel IP'ye çözülmesini garantiyle tespit edemez. Hassas query parametrelerini göndermeden önce URL'yi temizleyin.
+Yerel Performans, SEO/erişilebilirlik ve GEO kontrolleri eklentiye paketlenen ViewGrid motorunda çalışır. Hedef URL, sayfa içeriği veya sonuçlar Google/CrUX, ViewGrid sunucusu ya da başka bir analiz servisine gönderilmez. API anahtarı veya ayrı uygulama kurulumu yoktur. Seçilen siteler normal tarayıcı isteklerini üretmeye devam eder; bu sitelerin gizlilik politikaları geçerlidir. localhost ve yerel ağdaki hazır görünümler de desteklenir.
 
-Hiçbir zorunlu ücretli servis, ViewGrid proxy/SaaS, telemetri veya dış AI sağlayıcısı eklenmez. Anahtar girme/saklama ekranı yok; anahtar paket, istemci, Git, log veya görsele yazılmaz. İsteğe bağlı gelecekteki kullanıcı sunucusu profilinin anahtarı yalnız sunucu environment'ında tutulmalıdır.
+Motor yalnız kullanıcı başlatınca yüklenir; hazır önizlemenin DOM'unu ve mevcut tarayıcı yükleme zamanlarını inceler. Form değerleri, HTML parçaları ve axe öğe hedefleri sonuçlara eklenmez. Ayrıntılı kapsam/bütçe: [Yerel analiz](ANALYSIS_SETUP.md).
 
-Analiz geçmişi cihazdaki extension storage içinde en fazla20 kayıt ve256KiB sınırıyla saklanır. Geçmiş/analiz dışa aktarımında query/fragment, kullanıcı ajanı ve etkilenen öğenin metin/selector/snippet içeriği çıkarılır; raporda redaction bilgisi tutulur. Başarısız/iptal sonuçlar sıfır puan yapılmaz. Geçmiş silme ile bu kayıtlar kaldırılır; indirilen HTML/JSON/PDF dosyaları ayrıca kullanıcı tarafından silinmelidir. Eski Issues raporu ve viewport capture çıktıları farklıdır; paylaşmadan içerik/URL kontrolü gerektirir.
+Analiz geçmişi cihazdaki extension storage içinde en fazla 20 kayıt ve 256 KiB sınırıyla saklanır. Geçmiş/dışa aktarımda URL query/fragment, kullanıcı ajanı ve etkilenen öğenin metin/selector/snippet içeriği çıkarılır. Başarısız veya eksik ölçüm sıfır puan yapılmaz. Önceki harici analiz kayıtları kaynak etiketi korunarak okunabilir. İndirilen HTML/JSON/PDF dosyalarını kullanıcı ayrıca silmelidir. Responsive sorun raporları farklıdır; paylaşmadan içerik ve URL'leri inceleyin.
 
-Gerçek Google ölçümü bu ortamda kota/anahtar engellidir. Kontrollü test örnekleri mock olarak etiketlidir. Kurulum/servis seçenekleri ve maliyet sınırları: [Analiz kurulumu](ANALYSIS_SETUP.md).
-
-Rapor için isteğe bağlı viewport görüntüsü kullanıcı tarafından ayrıca seçilir. Görüntü yalnız mevcut çalışma alanında bellekte tutulur; Google'a veya ViewGrid sunucusuna gönderilmez, analiz geçmişine otomatik yazılmaz. Kaldırma/kapatma ile bellekten bırakılır; dışa aktarılan HTML/JSON/PDF içine kullanıcının seçimiyle gömülür. En fazla6MiB/32 megapiksel tek PNG kabul edilir. URL query/fragment metadata'dan çıkarılır; görüntünün pikselleri site içeriği veya kişisel veri içerebilir ve otomatik sansürlenmez. Paylaşmadan görseli inceleyin. Yapılandırılmış preview URL'si analiz hedefinden veya yönlendirme sonrası sayfadan farklı olabilir; bu görüntü laboratuvar ölçümü değildir.
+Rapor için ayrıca seçilen ekran görüntüsü çalışma alanında bellekte tutulur; dışarı gönderilmez ve analiz geçmişine yazılmaz. HTML/JSON/PDF içine kullanıcı seçimiyle eklenir. En fazla 6 MiB/32 megapiksel PNG kabul edilir. Görüntü pikselleri kişisel veri içerebilir; otomatik sansürlenmez. Paylaşmadan inceleyin.
 
 ## Data on your device
 
