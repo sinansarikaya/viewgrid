@@ -20,12 +20,12 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - **Primary:** "Test every breakpoint at once."
 - **Supporting:** "View phone, tablet, and desktop layouts side-by-side in one browser tab, with synchronized scrolling and interaction."
 - **Slogan:** "Stop resizing your browser."
-- **Yerel geliştirme paketi:** `v1.0.3` — mağaza sürümü bu oturumda doğrulanmadı.
+- **Güncel sürüm:** `v1.0.4` — Firefox herkese açık; Chrome güncellemesi inceleme bekliyor.
 
 ---
 
 ## In Progress
-- [~] RELEASE-PUBLISH: Güvenlik kapanışı, TR/EN/NO GitHub ve tanıtım metinleri, PR push/merge, mağaza girişleri ve güncelleme gönderimi kullanıcı onayıyla hazırlanıyor.
+- [~] RELEASE-DOCS: İngilizce varsayılan ve Türkçe/Norveççe ayrı README; mağaza görsel açıklamaları ve yayın otomasyonundaki eski notların kaldırılması son PR ile birleştiriliyor.
 
 
 
@@ -45,6 +45,7 @@ Turn ViewGrid into a polished, high-trust developer tool across:
 - [ ] [MANUAL] Phase 5 — Manual User Tasks & Launch Checklist (Awaiting user execution)
 
 ## Done
+- [x] RELEASE-PUBLISH 1.0.4: PR#2/#3 birleştirildi; GitHub release, üç dilde tanıtım sayfası ve gerçek CastPost görselleri güncellendi. Chrome üç dil açıklama, beş genel ve TR/NO yerel görsel ile gönderildi; inceleme bekliyor. Firefox 1.0.4 herkese açık indirme bağlantısıyla doğrulandı; beş yeni CastPost görseli, her görsele EN/TR/NO açıklama ve üç dil ürün/teknik metni kaydedildi. _(2026-10-14, Codex)_
 - [x] RELEASE-SECURITY kapanışı: Hassas alan yakalama/uygulama ve aynı-origin sınırı; gerçek parent kimliği, direct-frame/document bağlama ve gelen mesaj kontrolü; sahte worker mesajı dışlandı. Worker restart origin/document session kaydı ve negatif testler geçti. Bağımsız kaynak incelemesi açık engel bulmadı;362 unit,Chromium veFirefox akışları geçti. _(2026-10-14, Codex)_
 - [x] RELEASE-READINESS değerlendirmesi: Gemini paket/Codex güvenlik incelemesi ve lider runtime kontrolleri tamamlandı. Karar yayına hazır değil; SEC-01 hassas alan sync/SEC-02 frame bağlama kaynak eksikleri açık.358 unit,24 Chromium+canlı restart,Firefox,UI axe0 ihlal. Runner başarısız/onaylanmamış sonuçlar başarılı sayılmadı. Rapor `docs/RELEASE_READINESS_1.0.3.md`. _(2026-10-14, Codex)_
 - [x] ANALYSIS-HEIGHT-NO: Dört analiz sekmesinin yüksekliği sabitlendi; Norveççe geçmiş başlık/profil/saatleri düzeltildi. Canlı Norveççe kopyalama/indirme, 800/480 px gerçek pencere, CastPost 50 kural +18 GEO karşılaştırması ve358 unit test geçti. Kanıt: `docs/ANALYSIS_MODAL_REVIEW.md`. Sürüm1.0.3. _(2026-10-14, Codex)_

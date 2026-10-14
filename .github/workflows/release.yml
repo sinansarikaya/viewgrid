@@ -152,7 +152,6 @@ jobs:
             }
             const marker = `<!-- tested-build:${info.build} -->`;
             if (!(release.body || '').includes(marker)) {
-              const notes = fs.readFileSync('docs/releases/same-version-fixes.md', 'utf8');
-              const body = `${marker}\n## Corrected ${info.version} build: ${info.build}\n\n${notes}\n\nTested commit: ${process.env.SOURCE_COMMIT}\n\n${links.map(link => '- ' + link).join('\n')}\n- [${sumsName}](${sums.browser_download_url})\n\n---\n\n${release.body || ''}`;
+              const body = `${marker}\n## Build artifacts · Derleme paketleri · Byggpakker\n\n${info.version} / ${info.build}\n\nCommit: ${process.env.SOURCE_COMMIT}\n\n${links.map(link => '- ' + link).join('\n')}\n- [${sumsName}](${sums.browser_download_url})\n\n---\n\n${release.body || ''}`;
               await github.rest.repos.updateRelease({ ...context.repo, release_id: release.id, body });
             }
